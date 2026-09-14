@@ -90,7 +90,7 @@
   .path-monster { background: #7c2d12; }
   .pac { background: #ffd93d !important; }
 
-  /* Слепой режим (игрок) */
+  /* Слепой режим */
   .unknown { background: #0a1628; }
   .trail { background: #3a4a63; }
 
@@ -188,7 +188,6 @@
 </head>
 <body>
 
-<!-- Экран 1: выбор роли -->
 <div id="roleScreen">
   <h1>迷宫 — Игра «Направления»</h1>
   <p>Выберите роль:</p>
@@ -196,7 +195,6 @@
   <button id="roleClient" class="secondary">🐱 Игрок (видит только путь)</button>
 </div>
 
-<!-- Экран 2: ввод кода -->
 <div id="joinScreen">
   <h1>🐱 Игрок</h1>
   <p>Введите код комнаты от Ведущего:</p>
@@ -206,7 +204,6 @@
   <div class="conn-status" id="joinStatus"></div>
 </div>
 
-<!-- Экран 3: игра -->
 <div id="gameScreen">
   <h1>迷宫 — Игра «Направления»</h1>
 
@@ -271,9 +268,6 @@ const SUPABASE_URL = 'https://mlmnwpuyfqwhkijcvihx.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_QwOp4V8Klk2QIsR8d7aopg_Jb9zAV9V';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-/* ============================================================
-   СОСТОЯНИЕ
-   ============================================================ */
 let role = null;
 let channel = null;
 let roomCode = null;
@@ -753,7 +747,7 @@ function startAsHost() {
   roomCodeBox.style.display = 'block';
   resetBtn.style.display = 'block';
   statsBox.style.display = 'flex';
-  dpad.style.display = 'none';         // у ведущего стрелок нет
+  dpad.style.display = 'none';
 
   channel = supabaseClient.channel('room-' + roomCode);
   channel
@@ -810,21 +804,6 @@ function broadcastState() {
   });
 }
 
-function broadcastRollback(reason) {
-  if (!game || !channel) return;
-  channel.send({
-    type: 'broadcast',
-    event: 'rollback',
-    payload: {
-      player: { ...game.player },
-      trail: game.trail,
-      moves: game.moves,
-      finished: game.finished,
-      reason,
-    },
-  });
-}
-
 /* ============================================================
    КЛИЕНТ
    ============================================================ */
@@ -833,7 +812,7 @@ function startAsClient() {
   roomCodeBox.style.display = 'none';
   resetBtn.style.display = 'none';
   statsBox.style.display = 'none';
-  dpad.style.display = 'grid';         // стрелки только у игрока
+  dpad.style.display = 'grid';
 
   channel = supabaseClient.channel('room-' + roomCode);
   channel
@@ -854,30 +833,20 @@ function startAsClient() {
     .on('broadcast', { event: 'state' }, (msg) => {
       if (!clientState) return;
       const p = msg.payload;
+      const prevMoves = clientState.moves;
       clientState.player = p.player;
       clientState.trail = p.trail;
       clientState.moves = p.moves;
       clientState.finished = p.finished;
       renderClient();
+
       if (p.result === 'win') {
         soundWin();
         infoEl.innerHTML = '<span class="good">🎉 ПОБЕДА! Ты нашёл выход!</span>';
       } else if (p.result === 'lose') {
         infoEl.innerHTML = '<span class="bad">💀 Игра окончена</span>';
-      }
-    })
-    .on('broadcast', { event: 'rollback' }, (msg) => {
-      if (!clientState) return;
-      const p = msg.payload;
-      clientState.player = p.player;
-      clientState.trail = p.trail;
-      clientState.moves = p.moves;
-      clientState.finished = p.finished;
-      renderClient();
-      if (p.reason === 'wall') { soundWallHit(); setTimeout(soundLose, 200); }
-      else if (p.reason === 'monster') { soundMonster(); setTimeout(soundLose, 500); }
-      if (p.finished) {
-        infoEl.innerHTML = '<span class="bad">💀 Игра окончена</span>';
+      } else if (p.moves > prevMoves) {
+        soundStep(p.moves);
       }
     })
     .subscribe((status) => {
@@ -893,7 +862,7 @@ function startAsClient() {
 }
 
 /* ============================================================
-   НОВАЯ ИГРА (только хост)
+   НОВАЯ ИГРА
    ============================================================ */
 function newGame() {
   if (role !== 'host') return;
@@ -918,7 +887,7 @@ function newGame() {
 }
 
 /* ============================================================
-   РЕНДЕР: ХОСТ (видит всё)
+   РЕНДЕР: ХОСТ
    ============================================================ */
 function renderHost() {
   const { grid, start, goal, wallMonsters, pathMonsters, player } = game;
@@ -958,7 +927,7 @@ function renderHost() {
 }
 
 /* ============================================================
-   РЕНДЕР: КЛИЕНТ (слепой)
+   РЕНДЕР: КЛИЕНТ
    ============================================================ */
 function renderClient() {
   if (!clientState) return;
@@ -995,7 +964,7 @@ function updateStats() {
 }
 
 /* ============================================================
-   ДВИЖЕНИЕ
+   ДВИЖЕНИЕ (на хосте)
    ============================================================ */
 const DIRS = {
   up:    { dx: 0,  dy: -1 },
@@ -1022,14 +991,14 @@ function tryMove(dir) {
   const ny = game.player.y + d.dy;
   const key = `${nx},${ny}`;
 
-  // выход за границы
+  // границы
   if (ny < 0 || ny >= game.grid.length || nx < 0 || nx >= game.grid[0].length) {
     game.finished = true;
     game.won = false;
     soundWallHit();
     setTimeout(soundLose, 200);
     infoEl.innerHTML = '<span class="bad">💥 Игрок врезался в стену!</span>';
-    broadcastRollback('wall');
+    broadcastState();
     return;
   }
 
@@ -1041,13 +1010,12 @@ function tryMove(dir) {
       soundMonster();
       setTimeout(soundLose, 500);
       infoEl.innerHTML = '<span class="bad">💀 Из стены выскочил монстр!</span>';
-      broadcastRollback('monster');
     } else {
       soundWallHit();
       setTimeout(soundLose, 200);
       infoEl.innerHTML = '<span class="bad">💥 Игрок врезался в стену!</span>';
-      broadcastRollback('wall');
     }
+    broadcastState();
     return;
   }
 
@@ -1058,7 +1026,7 @@ function tryMove(dir) {
     soundMonster();
     setTimeout(soundLose, 500);
     infoEl.innerHTML = '<span class="bad">💀 Игрок наступил на спящего дракона!</span>';
-    broadcastRollback('monster');
+    broadcastState();
     return;
   }
 
@@ -1080,38 +1048,12 @@ function tryMove(dir) {
     return;
   }
 
-  // обычный валидный ход — не рассылаем state, клиент уже нарисовал сам
+  // обычный ход — рассылаем state, чтобы клиент нарисовал
   if (isMonsterNearby(nx, ny)) soundNearMonster();
   else soundStep(game.moves);
+
   infoEl.textContent = 'Ход сделан. Слушайте следующую подсказку.';
-}
-
-/* ============================================================
-   ОПТИМИСТИЧНОЕ ДВИЖЕНИЕ У КЛИЕНТА
-   ============================================================ */
-function clientOptimisticMove(dir) {
-  if (!clientState || clientState.finished) return;
-  const d = DIRS[dir];
-  if (!d) return;
-
-  const nx = clientState.player.x + d.dx;
-  const ny = clientState.player.y + d.dy;
-
-  // за границами — не двигаем локально, просто шлём хосту
-  if (nx < 0 || ny < 0 || nx >= clientState.cols || ny >= clientState.rows) {
-    if (channel) channel.send({ type: 'broadcast', event: 'move', payload: { dir } });
-    return;
-  }
-
-  // локально двигаем сразу
-  clientState.player = { x: nx, y: ny };
-  clientState.trail = clientState.trail.concat([[nx, ny]]);
-  clientState.moves++;
-  renderClient();
-  soundStep(clientState.moves);
-
-  // шлём хосту на валидацию
-  if (channel) channel.send({ type: 'broadcast', event: 'move', payload: { dir } });
+  broadcastState();
 }
 
 /* ============================================================
@@ -1121,14 +1063,13 @@ dpad.addEventListener('click', (e) => {
   const btn = e.target.closest('button');
   if (!btn) return;
   ensureAudio();
-  if (role === 'client') {
-    clientOptimisticMove(btn.dataset.dir);
+  if (role === 'client' && channel) {
+    channel.send({ type: 'broadcast', event: 'move', payload: { dir: btn.dataset.dir } });
   }
-  // у хоста стрелок нет — игнорируем
 });
 
 document.addEventListener('keydown', (e) => {
-  if (role !== 'client') return;      // хост не двигает
+  if (role !== 'client') return;
   const map = {
     ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right',
     w: 'up', s: 'down', a: 'left', d: 'right',
@@ -1138,7 +1079,7 @@ document.addEventListener('keydown', (e) => {
   if (!dir) return;
   e.preventDefault();
   ensureAudio();
-  clientOptimisticMove(dir);
+  if (channel) channel.send({ type: 'broadcast', event: 'move', payload: { dir } });
 });
 
 document.getElementById('roleHost').addEventListener('click', () => {
