@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>迷宫 — Игра «Направления»</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Segoe UI", sans-serif;
+    background: #1a1a2e; color: #eee;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 16px; margin: 0; min-height: 100vh;
+    -webkit-tap-highlight-color: transparent;
+  }
+  h1 { font-size: 22px; margin: 0 0 16px; text-align: center; }
+  button {
+    background: #e94560; color: #fff; border: none;
+    padding: 12px 26px; border-radius: 8px; cursor: pointer;
+    font-size: 16px; font-weight: 700; transition: 0.15s;
+    font-family: inherit;
+  }
+  button:hover { background: #ff5d78; }
+  button:active { transform: scale(0.96); }
+  button:disabled { background: #4a5568; cursor: default; }
+
+  /* Экран выбора роли */
+  #roleScreen {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 16px; max-width: 420px; margin-top: 60px;
+    text-align: center;
+  }
+  #roleScreen h1 { font-size: 26px; margin-bottom: 8px; }
+  #roleScreen p { color: #8f9bb3; margin: 0 0 8px; }
+  #roleScreen button { width: 100%; padding: 18px; font-size: 17px; }
+  #roleScreen .secondary { background: #0f3460; color: #a5c9ff; }
+  #roleScreen .secondary:hover { background: #14477e; }
+
+  /* Экран ввода кода */
+  #joinScreen {
+    display: none; flex-direction: column; align-items: center;
+    gap: 16px; max-width: 420px; margin-top: 60px;
+    text-align: center; width: 100%;
+  }
+  #joinScreen input {
+    width: 100%; padding: 18px;
+    font-size: 28px; text-align: center; letter-spacing: 8px;
+    background: #0f3460; color: #ffd93d;
+    border: 2px solid #1e4d80; border-radius: 8px;
+    font-family: monospace; font-weight: 700;
+    text-transform: uppercase;
+  }
+  #joinScreen input:focus { outline: none; border-color: #e94560; }
+
+  /* Игровой экран */
+  #gameScreen { display: none; flex-direction: column; align-items: center; width: 100%; }
+
+  .room-code {
+    background: #0f3460; padding: 10px 20px; border-radius: 8px;
+    margin-bottom: 14px; font-size: 14px;
+  }
+  .room-code b {
+    font-family: monospace; font-size: 20px;
+    letter-spacing: 3px; color: #ffd93d;
+    margin-left: 8px;
+  }
+
+  .layout {
+    display: flex; gap: 30px; align-items: flex-start;
+    flex-wrap: wrap; justify-content: center;
+  }
+
+  #maze {
+    display: grid; gap: 2px;
+    background: #0f3460; padding: 6px; border-radius: 12px;
+    box-shadow: 0 0 40px #0f346066;
+    max-width: 100%;
+  }
+  .cell {
+    width: 26px; height: 26px; border-radius: 3px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px;
+  }
+  .wall { background: #16213e; }
+  .path { background: #e8e8e8; }
+  .start { background: #4ade80; font-weight: bold; color: #052e16; }
+  .goal  { background: #fbbf24; font-weight: bold; color: #422006; }
+  .wall-monster { background: #3a1020; }
+  .path-monster { background: #7c2d12; }
+  .pac { background: #ffd93d !important; }
+
+  /* Слепой режим (игрок) */
+  .unknown { background: #0a1628; }
+  .trail { background: #3a4a63; }
+
+  .side {
+    display: flex; flex-direction: column; gap: 12px;
+    min-width: 260px;
+  }
+  .stats {
+    background: #16213e; padding: 12px 16px; border-radius: 10px;
+    display: flex; flex-direction: column; gap: 5px;
+    font-size: 14px;
+  }
+  .stats b { color: #a5c9ff; }
+
+  .dpad {
+    display: grid;
+    grid-template-columns: repeat(3, 76px);
+    grid-template-rows: repeat(2, 76px);
+    gap: 10px;
+    justify-content: center;
+  }
+  .dpad button {
+    font-size: 30px; padding: 0;
+    background: #e94560; color: #fff;
+    border-radius: 12px; cursor: pointer;
+    font-weight: 700; user-select: none;
+    touch-action: manipulation;
+  }
+  .dpad button:hover { background: #ff5d78; }
+  .dpad button:active { transform: scale(0.94); }
+  .dpad .up    { grid-column: 2; grid-row: 1; }
+  .dpad .left  { grid-column: 1; grid-row: 2; }
+  .dpad .down  { grid-column: 2; grid-row: 2; }
+  .dpad .right { grid-column: 3; grid-row: 2; }
+
+  .info {
+    margin-top: 14px; font-size: 15px; color: #a5c9ff;
+    max-width: 720px; text-align: center; line-height: 1.7;
+    min-height: 26px;
+  }
+  .bad { color: #ff9aa2; }
+  .good { color: #86efac; }
+
+  #soundBtn, #resetBtn {
+    background: #4a5568; font-size: 14px; padding: 10px 16px;
+  }
+  #soundBtn:hover, #resetBtn:hover { background: #5c6b82; }
+
+  .cheatsheet {
+    margin-top: 24px;
+    background: #16213e;
+    border-radius: 12px;
+    padding: 16px 20px;
+    max-width: 720px; width: 100%;
+    box-shadow: 0 4px 20px #00000044;
+  }
+  .cheatsheet-title {
+    font-size: 14px; color: #8f9bb3; margin-bottom: 10px; font-weight: 600;
+  }
+  .cheatsheet-hints {
+    display: flex; flex-direction: column; gap: 6px;
+    font-size: 14px; color: #c5cfe0; margin-bottom: 14px;
+  }
+  .cheatsheet-hints code {
+    background: #0f3460; color: #ffd93d;
+    padding: 2px 8px; border-radius: 5px;
+    font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+    font-size: 15px; margin-right: 4px;
+  }
+  .cheatsheet-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+  .cheatsheet-buttons .phrase {
+    background: #0f3460; color: #ffd93d;
+    border: 1px solid #1e4d80;
+    padding: 8px 14px; border-radius: 7px; cursor: pointer;
+    font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+    font-size: 16px; font-weight: 600;
+    transition: 0.12s;
+  }
+  .cheatsheet-buttons .phrase:hover { background: #1a4b85; }
+  .cheatsheet-buttons .phrase:active { transform: scale(0.95); }
+
+  .conn-status {
+    font-size: 12px; color: #8f9bb3; text-align: center; padding: 4px;
+  }
+  .conn-status.online { color: #86efac; }
+  .conn-status.offline { color: #ff9aa2; }
+  .conn-status.waiting { color: #fbbf24; }
+
+  @media (max-width: 600px) {
+    .cell { width: 22px; height: 22px; font-size: 13px; }
+    .dpad { grid-template-columns: repeat(3, 68px); grid-template-rows: repeat(2, 68px); }
+    h1 { font-size: 18px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Экран 1: выбор роли -->
+<div id="roleScreen">
+  <h1>迷宫 — Игра «Направления»</h1>
+  <p>Выберите роль:</p>
+  <button id="roleHost">👀 Ведущий (видит лабиринт)</button>
+  <button id="roleClient" class="secondary">🐱 Игрок (видит только путь)</button>
+</div>
+
+<!-- Экран 2: ввод кода -->
+<div id="joinScreen">
+  <h1>🐱 Игрок</h1>
+  <p>Введите код комнаты от Ведущего:</p>
+  <input id="joinCode" type="text" maxlength="6" placeholder="ABC123" autocomplete="off" autocapitalize="characters">
+  <button id="joinBtn" style="width:100%; padding:16px;">Подключиться</button>
+  <button id="backBtn" class="secondary" style="width:100%; padding:14px; background:#4a5568;">← Назад</button>
+  <div class="conn-status" id="joinStatus"></div>
+</div>
+
+<!-- Экран 3: игра -->
+<div id="gameScreen">
+  <h1>迷宫 — Игра «Направления»</h1>
+
+  <div class="room-code" id="roomCodeBox" style="display:none;">
+    Код комнаты: <b id="roomCodeValue">—</b>
+  </div>
+
+  <div class="layout">
+    <div>
+      <div id="maze"></div>
+      <div class="info" id="info">—</div>
+    </div>
+
+    <div class="side">
+      <div class="stats" id="statsBox">
+        <div>Ходов: <b id="statMoves">0</b></div>
+        <div>Старт: <b id="statStart">—</b></div>
+        <div>Выход: <b id="statGoal">—</b></div>
+        <div>Мин. путь: <b id="statLen">—</b></div>
+      </div>
+
+      <div class="dpad" id="dpad">
+        <button class="up"    data-dir="up">↑</button>
+        <button class="left"  data-dir="left">←</button>
+        <button class="down"  data-dir="down">↓</button>
+        <button class="right" data-dir="right">→</button>
+      </div>
+
+      <button id="resetBtn" style="display:none;">🔄 Новая игра</button>
+      <button id="soundBtn">🔊 Звук вкл</button>
+      <div class="conn-status" id="connStatus"></div>
+    </div>
+  </div>
+
+  <div class="cheatsheet">
+    <div class="cheatsheet-title">Полезные фразы (для справки):</div>
+    <div class="cheatsheet-hints">
+      <div><code>一直往前走</code> — иди прямо</div>
+      <div><code>往前面拐</code> — поверни впереди</div>
+      <div><code>向左走</code> / <code>向右走</code> — налево / направо</div>
+      <div><code>往上</code> / <code>往下</code> — вверх / вниз</div>
+      <div><code>停</code> — стоп · <code>到了</code> — пришли</div>
+    </div>
+    <div class="cheatsheet-buttons">
+      <button class="phrase" data-phrase="一直往前走">🔊 一直往前走</button>
+      <button class="phrase" data-phrase="往前面拐">🔊 往前面拐</button>
+      <button class="phrase" data-phrase="向左走">🔊 向左走</button>
+      <button class="phrase" data-phrase="向右走">🔊 向右走</button>
+      <button class="phrase" data-phrase="往上走">🔊 往上走</button>
+      <button class="phrase" data-phrase="往下走">🔊 往下走</button>
+      <button class="phrase" data-phrase="停">🔊 停</button>
+      <button class="phrase" data-phrase="到了">🔊 到了</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   SUPABASE
+   ============================================================ */
+const SUPABASE_URL = 'https://mlmnwpuyfqwhkijcvihx.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_QwOp4V8Klk2QIsR8d7aopg_Jb9zAV9V';
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+/* ============================================================
+   СОСТОЯНИЕ
+   ============================================================ */
+let role = null;
+let channel = null;
+let roomCode = null;
+let game = null;         // хост: полное состояние
+let clientState = null;  // клиент: { cols, rows, player, trail, moves, finished, result }
+
+/* ============================================================
+   ЗВУК
+   ============================================================ */
+const STEP_VOLUME = 0.06;
+const NEAR_VOLUME = 0.10;
+
+let audioCtx = null;
+let soundEnabled = true;
+
+function ensureAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function playTone(freq, dur, type = 'sine', startTime = 0, gain = 0.15) {
+  if (!soundEnabled) return;
+  ensureAudio();
+  const t0 = audioCtx.currentTime + startTime;
+  const osc = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, t0);
+  g.gain.setValueAtTime(0, t0);
+  g.gain.linearRampToValueAtTime(gain, t0 + 0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  osc.connect(g); g.connect(audioCtx.destination);
+  osc.start(t0); osc.stop(t0 + dur + 0.05);
+}
+
+function playThud() {
+  if (!soundEnabled) return;
+  ensureAudio();
+  const t0 = audioCtx.currentTime, dur = 0.12;
+  const bs = audioCtx.sampleRate * dur;
+  const buf = audioCtx.createBuffer(1, bs, audioCtx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < bs; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bs, 3);
+  const src = audioCtx.createBufferSource();
+  src.buffer = buf;
+  const f = audioCtx.createBiquadFilter();
+  f.type = 'lowpass';
+  f.frequency.setValueAtTime(400, t0);
+  f.frequency.exponentialRampToValueAtTime(80, t0 + dur);
+  const g = audioCtx.createGain();
+  g.gain.setValueAtTime(0.35, t0);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  src.connect(f); f.connect(g); g.connect(audioCtx.destination);
+  src.start(t0);
+}
+
+function soundStart() {
+  playTone(523.25, 0.12, 'triangle', 0.00, 0.15);
+  playTone(659.25, 0.12, 'triangle', 0.10, 0.15);
+  playTone(783.99, 0.20, 'triangle', 0.20, 0.15);
+}
+function soundWallHit() { playThud(); }
+function soundLose() {
+  playTone(392.00, 0.18, 'square', 0.00, 0.18);
+  playTone(311.13, 0.18, 'square', 0.15, 0.18);
+  playTone(233.08, 0.40, 'square', 0.30, 0.20);
+}
+function soundMonster() {
+  playTone(155.56, 0.35, 'sawtooth', 0.00, 0.18);
+  playTone(220.00, 0.35, 'sawtooth', 0.00, 0.18);
+  playTone(329.63, 0.45, 'sawtooth', 0.20, 0.20);
+  playTone(220.00, 0.45, 'sawtooth', 0.35, 0.20);
+  playTone(110.00, 0.55, 'sawtooth', 0.50, 0.22);
+}
+function soundWin() {
+  playTone(523.25, 0.15, 'triangle', 0.00, 0.16);
+  playTone(659.25, 0.15, 'triangle', 0.13, 0.16);
+  playTone(783.99, 0.15, 'triangle', 0.26, 0.16);
+  playTone(1046.50, 0.35, 'triangle', 0.39, 0.18);
+  playTone(523.25, 0.50, 'sine', 0.60, 0.10);
+  playTone(659.25, 0.50, 'sine', 0.60, 0.10);
+  playTone(783.99, 0.50, 'sine', 0.60, 0.10);
+}
+function soundStep(moves) {
+  const freq = (moves % 2 === 0) ? 660 : 740;
+  playTone(freq, 0.05, 'square', 0, STEP_VOLUME);
+}
+function soundNearMonster() {
+  playTone(880, 0.08, 'triangle', 0, NEAR_VOLUME);
+  playTone(660, 0.12, 'triangle', 0.06, NEAR_VOLUME * 0.8);
+}
+
+/* ============================================================
+   ГЕНЕРАЦИЯ ЛАБИРИНТА
+   ============================================================ */
+const COLS = 13, ROWS = 9;
+const WALL_BREAK_RATIO = 0.18;
+const MIN_PATH_LEN = 10, MAX_PATH_LEN = 20;
+const MAX_STRAIGHT = 5, MAX_MAZE_ATTEMPTS = 200;
+const WALL_MONSTERS_COUNT = 4, PATH_MONSTERS_COUNT = 2;
+
+function generateMazeBase(cols, rows) {
+  const grid = Array.from({ length: rows }, () => Array(cols).fill(1));
+  const stack = [[1, 1]];
+  grid[1][1] = 0;
+  const visited = new Set(['1,1']);
+  const dirs = [[2,0],[-2,0],[0,2],[0,-2]];
+  while (stack.length) {
+    const [cx, cy] = stack[stack.length - 1];
+    const cands = dirs.map(([dx, dy]) => [cx + dx, cy + dy, dx, dy])
+      .filter(([nx, ny]) =>
+        nx > 0 && nx < cols - 1 && ny > 0 && ny < rows - 1 &&
+        !visited.has(`${nx},${ny}`));
+    if (!cands.length) { stack.pop(); continue; }
+    const [nx, ny, dx, dy] = cands[Math.floor(Math.random() * cands.length)];
+    grid[cy + dy/2][cx + dx/2] = 0;
+    grid[ny][nx] = 0;
+    visited.add(`${nx},${ny}`);
+    stack.push([nx, ny]);
+  }
+  const breakable = [];
+  for (let y = 1; y < rows - 1; y++)
+    for (let x = 1; x < cols - 1; x++) {
+      if (grid[y][x] !== 1) continue;
+      const up = grid[y-1][x] === 0, down = grid[y+1][x] === 0;
+      const left = grid[y][x-1] === 0, right = grid[y][x+1] === 0;
+      if ((up && down && !left && !right) || (left && right && !up && !down))
+        breakable.push([x, y]);
+    }
+  shuffle(breakable);
+  const toRemove = Math.floor(breakable.length * WALL_BREAK_RATIO);
+  for (let i = 0; i < toRemove; i++) {
+    const [x, y] = breakable[i];
+    grid[y][x] = 0;
+  }
+  return grid;
+}
+
+function shuffle(a) {
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+}
+
+function bfsPath(grid, start, goal) {
+  const rows = grid.length, cols = grid[0].length;
+  const seen = Array.from({ length: rows }, () => Array(cols).fill(false));
+  const prev = Array.from({ length: rows }, () => Array(cols).fill(null));
+  const queue = [start];
+  seen[start[1]][start[0]] = true;
+  while (queue.length) {
+    const [x, y] = queue.shift();
+    if (x === goal[0] && y === goal[1]) {
+      const path = [];
+      let cur = [x, y];
+      while (cur) { path.push(cur); cur = prev[cur[1]][cur[0]]; }
+      return path.reverse();
+    }
+    for (const [dx, dy] of [[1,0],[-1,0],[0,1],[0,-1]]) {
+      const nx = x + dx, ny = y + dy;
+      if (nx >= 0 && nx < cols && ny >= 0 && ny < rows &&
+          !seen[ny][nx] && grid[ny][nx] === 0) {
+        seen[ny][nx] = true;
+        prev[ny][nx] = [x, y];
+        queue.push([nx, ny]);
+      }
+    }
+  }
+  return null;
+}
+function pathExists(grid, s, g) { return bfsPath(grid, s, g) !== null; }
+
+function allPathsConnected(grid) {
+  const rows = grid.length, cols = grid[0].length;
+  let first = null, total = 0;
+  for (let y = 0; y < rows; y++)
+    for (let x = 0; x < cols; x++)
+      if (grid[y][x] === 0) { total++; if (!first) first = [x, y]; }
+  if (!first) return true;
+  const seen = Array.from({ length: rows }, () => Array(cols).fill(false));
+  const queue = [first];
+  seen[first[1]][first[0]] = true;
+  let reached = 1;
+  while (queue.length) {
+    const [cx, cy] = queue.shift();
+    for (const [dx, dy] of [[1,0],[-1,0],[0,1],[0,-1]]) {
+      const nx = cx + dx, ny = cy + dy;
+      if (nx >= 0 && nx < cols && ny >= 0 && ny < rows &&
+          !seen[ny][nx] && grid[ny][nx] === 0) {
+        seen[ny][nx] = true; reached++; queue.push([nx, ny]);
+      }
+    }
+  }
+  return reached === total;
+}
+
+function hasLongStraight(grid, maxRun) {
+  const rows = grid.length, cols = grid[0].length;
+  for (let y = 1; y < rows - 1; y++) {
+    let run = 0;
+    for (let x = 0; x < cols; x++) {
+      if (grid[y][x] === 0) run++; else run = 0;
+      if (run > maxRun) return true;
+    }
+  }
+  for (let x = 1; x < cols - 1; x++) {
+    let run = 0;
+    for (let y = 0; y < rows; y++) {
+      if (grid[y][x] === 0) run++; else run = 0;
+      if (run > maxRun) return true;
+    }
+  }
+  return false;
+}
+
+function pathMaxStraight(path, maxRun) {
+  if (!path || path.length < 2) return false;
+  let run = 1, dir = null;
+  for (let i = 1; i < path.length; i++) {
+    const dx = path[i][0] - path[i-1][0];
+    const dy = path[i][1] - path[i-1][1];
+    const cur = `${dx},${dy}`;
+    if (cur === dir) run++; else { dir = cur; run = 1; }
+    if (run > maxRun) return true;
+  }
+  return false;
+}
+
+function shortenStraights(grid, start, goal) {
+  const rows = grid.length, cols = grid[0].length;
+  for (let pass = 0; pass < 50; pass++) {
+    let changed = false;
+    for (let y = 1; y < rows - 1; y++) {
+      let x = 1;
+      while (x < cols - 1) {
+        if (grid[y][x] !== 0) { x++; continue; }
+        let end = x;
+        while (end < cols - 1 && grid[y][end] === 0) end++;
+        const run = end - x;
+        if (run > MAX_STRAIGHT) {
+          const need = run - MAX_STRAIGHT;
+          for (let k = 0; k < need; k++) {
+            let cx = x, cend = x;
+            while (cend < cols - 1 && grid[y][cend] === 0) cend++;
+            if (cend - cx <= MAX_STRAIGHT) break;
+            const mid = cx + Math.floor((cend - cx) / 2);
+            let placed = false;
+            for (let d = 0; d <= Math.floor((cend - cx) / 2); d++) {
+              for (const cand of [mid + d, mid - d]) {
+                if (cand <= cx || cand >= cend - 1) continue;
+                if (tryInsertWall(grid, cand, y, start, goal)) {
+                  placed = true; changed = true; break;
+                }
+              }
+              if (placed) break;
+            }
+            if (!placed) break;
+          }
+        }
+        x = end;
+      }
+    }
+    for (let x = 1; x < cols - 1; x++) {
+      let y = 1;
+      while (y < rows - 1) {
+        if (grid[y][x] !== 0) { y++; continue; }
+        let end = y;
+        while (end < rows - 1 && grid[end][x] === 0) end++;
+        const run = end - y;
+        if (run > MAX_STRAIGHT) {
+          const need = run - MAX_STRAIGHT;
+          for (let k = 0; k < need; k++) {
+            let cy = y, cend = y;
+            while (cend < rows - 1 && grid[cend][x] === 0) cend++;
+            if (cend - cy <= MAX_STRAIGHT) break;
+            const mid = cy + Math.floor((cend - cy) / 2);
+            let placed = false;
+            for (let d = 0; d <= Math.floor((cend - cy) / 2); d++) {
+              for (const cand of [mid + d, mid - d]) {
+                if (cand <= cy || cand >= cend - 1) continue;
+                if (tryInsertWall(grid, x, cand, start, goal)) {
+                  placed = true; changed = true; break;
+                }
+              }
+              if (placed) break;
+            }
+            if (!placed) break;
+          }
+        }
+        y = end;
+      }
+    }
+    if (!changed) break;
+  }
+}
+
+function tryInsertWall(grid, x, y, start, goal) {
+  if (grid[y][x] !== 0) return false;
+  if ((x === start[0] && y === start[1]) || (x === goal[0] && y === goal[1])) return false;
+  grid[y][x] = 1;
+  const rows = grid.length, cols = grid[0].length;
+  for (const [dx, dy] of [[1,0],[-1,0],[0,1],[0,-1]]) {
+    const nx = x + dx, ny = y + dy;
+    if (nx <= 0 || ny <= 0 || nx >= cols - 1 || ny >= rows - 1) continue;
+    if (grid[ny][nx] !== 0) continue;
+    if (nx === start[0] && ny === start[1]) continue;
+    if (nx === goal[0] && ny === goal[1]) continue;
+    let openN = 0;
+    for (const [ddx, ddy] of [[1,0],[-1,0],[0,1],[0,-1]])
+      if (grid[ny + ddy][nx + ddx] === 0) openN++;
+    if (openN === 0) { grid[y][x] = 0; return false; }
+  }
+  if (!allPathsConnected(grid) || !pathExists(grid, start, goal)) {
+    grid[y][x] = 0; return false;
+  }
+  return true;
+}
+
+function innerCells(grid) {
+  const rows = grid.length, cols = grid[0].length;
+  const cells = [];
+  for (let y = 1; y < rows - 1; y++)
+    for (let x = 1; x < cols - 1; x++)
+      if (grid[y][x] === 0) cells.push([x, y]);
+  return cells;
+}
+
+function exitCandidates(grid) {
+  const rows = grid.length, cols = grid[0].length;
+  const cands = [];
+  for (let x = 1; x < cols - 1; x++) {
+    if (grid[1][x] === 0) cands.push({ x, y: 0 });
+    if (grid[rows - 2][x] === 0) cands.push({ x, y: rows - 1 });
+  }
+  for (let y = 1; y < rows - 1; y++) {
+    if (grid[y][1] === 0) cands.push({ x: 0, y });
+    if (grid[y][cols - 2] === 0) cands.push({ x: cols - 1, y });
+  }
+  return cands;
+}
+
+function carveExit(grid, exit) { grid[exit.y][exit.x] = 0; }
+
+function pickStartAndExit(grid) {
+  const inners = innerCells(grid);
+  if (!inners.length) return null;
+  for (let attempt = 0; attempt < 300; attempt++) {
+    const start = inners[Math.floor(Math.random() * inners.length)];
+    const exits = exitCandidates(grid);
+    if (!exits.length) continue;
+    shuffle(exits);
+    for (const exit of exits) {
+      const prev = grid[exit.y][exit.x];
+      carveExit(grid, exit);
+      const path = bfsPath(grid, start, [exit.x, exit.y]);
+      grid[exit.y][exit.x] = prev;
+      if (!path) continue;
+      const len = path.length - 1;
+      if (len >= MIN_PATH_LEN && len <= MAX_PATH_LEN)
+        return { start, exit, pathLen: len };
+    }
+  }
+  return null;
+}
+
+function innerWalls(grid, start, goal) {
+  const rows = grid.length, cols = grid[0].length;
+  const walls = [];
+  for (let y = 1; y < rows - 1; y++)
+    for (let x = 1; x < cols - 1; x++) {
+      if (grid[y][x] !== 1) continue;
+      if (x === start[0] && y === start[1]) continue;
+      if (x === goal[0] && y === goal[1]) continue;
+      walls.push([x, y]);
+    }
+  return walls;
+}
+
+function placeMonstersInWalls(grid, start, goal, count) {
+  const walls = innerWalls(grid, start, goal);
+  shuffle(walls);
+  const chosen = walls.slice(0, Math.min(count, walls.length));
+  const set = new Set();
+  for (const [x, y] of chosen) set.add(`${x},${y}`);
+  return set;
+}
+
+function placeMonstersOnPath(grid, start, goal, shortestPath, count) {
+  if (!shortestPath || shortestPath.length < 5) return new Set();
+  const forbidden = new Set();
+  forbidden.add(`${start[0]},${start[1]}`);
+  forbidden.add(`${goal[0]},${goal[1]}`);
+  forbidden.add(`${shortestPath[1][0]},${shortestPath[1][1]}`);
+  forbidden.add(`${shortestPath[shortestPath.length - 2][0]},${shortestPath[shortestPath.length - 2][1]}`);
+  const candidates = shortestPath.filter(([x, y]) => !forbidden.has(`${x},${y}`));
+  shuffle(candidates);
+  const monsters = new Set();
+  for (const [x, y] of candidates) {
+    if (monsters.size >= count) break;
+    grid[y][x] = 1;
+    const ok = pathExists(grid, start, goal);
+    grid[y][x] = 0;
+    if (ok) monsters.add(`${x},${y}`);
+  }
+  return monsters;
+}
+
+function buildMaze() {
+  for (let attempt = 1; attempt <= MAX_MAZE_ATTEMPTS; attempt++) {
+    const grid = generateMazeBase(COLS, ROWS);
+    const pair = pickStartAndExit(grid);
+    if (!pair) continue;
+    const goal = [pair.exit.x, pair.exit.y];
+    carveExit(grid, pair.exit);
+    shortenStraights(grid, pair.start, goal);
+    if (hasLongStraight(grid, MAX_STRAIGHT)) continue;
+    const finalPath = bfsPath(grid, pair.start, goal);
+    if (!finalPath) continue;
+    const len = finalPath.length - 1;
+    if (len < MIN_PATH_LEN || len > MAX_PATH_LEN) continue;
+    if (pathMaxStraight(finalPath, MAX_STRAIGHT)) continue;
+    if (!allPathsConnected(grid)) continue;
+    const wallMonsters = placeMonstersInWalls(grid, pair.start, goal, WALL_MONSTERS_COUNT);
+    const pathMonsters = placeMonstersOnPath(grid, pair.start, goal, finalPath, PATH_MONSTERS_COUNT);
+    return {
+      grid,
+      start: pair.start,
+      goal,
+      pathLen: len,
+      wallMonsters,
+      pathMonsters,
+    };
+  }
+  return null;
+}
+
+/* ============================================================
+   ЭЛЕМЕНТЫ
+   ============================================================ */
+const roleScreen = document.getElementById('roleScreen');
+const joinScreen = document.getElementById('joinScreen');
+const gameScreen = document.getElementById('gameScreen');
+const joinCodeInput = document.getElementById('joinCode');
+const joinBtn = document.getElementById('joinBtn');
+const backBtn = document.getElementById('backBtn');
+const joinStatus = document.getElementById('joinStatus');
+const roomCodeBox = document.getElementById('roomCodeBox');
+const roomCodeValue = document.getElementById('roomCodeValue');
+const mazeEl = document.getElementById('maze');
+const infoEl = document.getElementById('info');
+const statMoves = document.getElementById('statMoves');
+const statStart = document.getElementById('statStart');
+const statGoal = document.getElementById('statGoal');
+const statLen = document.getElementById('statLen');
+const soundBtn = document.getElementById('soundBtn');
+const resetBtn = document.getElementById('resetBtn');
+const connStatus = document.getElementById('connStatus');
+const dpad = document.getElementById('dpad');
+const statsBox = document.getElementById('statsBox');
+
+/* ============================================================
+   КОД КОМНАТЫ
+   ============================================================ */
+function generateRoomCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
+}
+
+/* ============================================================
+   РОЛЬ: ХОСТ
+   ============================================================ */
+function startAsHost() {
+  role = 'host';
+  roomCode = generateRoomCode();
+  roomCodeValue.textContent = roomCode;
+  roomCodeBox.style.display = 'block';
+  resetBtn.style.display = 'block';
+  infoEl.textContent = 'Ожидание игрока...';
+
+  channel = supabaseClient.channel('room-' + roomCode);
+  channel
+    .on('broadcast', { event: 'hello' }, () => {
+      setConnStatus('Игрок подключился', 'online');
+      broadcastInit();
+    })
+    .on('broadcast', { event: 'move' }, (msg) => {
+      tryMove(msg.payload.dir);
+    })
+    .subscribe((status) => {
+      if (status === 'SUBSCRIBED') {
+        setConnStatus('Комната создана, ждём игрока', 'waiting');
+      }
+    });
+
+  newGame();
+
+  roleScreen.style.display = 'none';
+  gameScreen.style.display = 'flex';
+}
+
+function broadcastInit() {
+  if (!game || !channel) return;
+  channel.send({
+    type: 'broadcast',
+    event: 'init',
+    payload: {
+      cols: game.grid[0].length,
+      rows: game.grid.length,
+      start: game.start,
+      goal: game.goal,
+      player: { ...game.player },
+      trail: game.trail,
+      moves: game.moves,
+      pathLen: game.pathLen,
+      finished: game.finished,
+    },
+  });
+}
+
+function broadcastState() {
+  if (!game || !channel) return;
+  channel.send({
+    type: 'broadcast',
+    event: 'state',
+    payload: {
+      player: { ...game.player },
+      trail: game.trail,
+      moves: game.moves,
+      finished: game.finished,
+      result: game.finished ? (game.won ? 'win' : 'lose') : null,
+    },
+  });
+}
+
+function setConnStatus(text, cls) {
+  connStatus.textContent = text;
+  connStatus.className = 'conn-status ' + (cls || '');
+}
+
+/* ============================================================
+   РОЛЬ: КЛИЕНТ
+   ============================================================ */
+function startAsClient() {
+  role = 'client';
+  roomCodeBox.style.display = 'none';
+  resetBtn.style.display = 'none';
+  statsBox.style.display = 'none';
+
+  channel = supabaseClient.channel('room-' + roomCode);
+  channel
+    .on('broadcast', { event: 'init' }, (msg) => {
+      const p = msg.payload;
+      clientState = {
+        cols: p.cols,
+        rows: p.rows,
+        player: p.player,
+        trail: p.trail || [p.start],
+        moves: p.moves,
+        finished: p.finished,
+      };
+      setConnStatus('Подключено к комнате ' + roomCode, 'online');
+      infoEl.textContent = 'Слушайте подсказки и жмите стрелки.';
+      renderClient();
+    })
+    .on('broadcast', { event: 'state' }, (msg) => {
+      if (!clientState) return;
+      const p = msg.payload;
+      const prev = clientState.player;
+      clientState.player = p.player;
+      clientState.trail = p.trail;
+      clientState.moves = p.moves;
+      clientState.finished = p.finished;
+      renderClient();
+
+      if (p.result === 'win') {
+        soundWin();
+        infoEl.innerHTML = '<span class="good">🎉 ПОБЕДА! Ты нашёл выход!</span>';
+      } else if (p.result === 'lose') {
+        infoEl.innerHTML = '<span class="bad">💀 Игра окончена</span>';
+      } else {
+        // звук шага
+        soundStep(p.moves);
+      }
+    })
+    .subscribe((status) => {
+      if (status === 'SUBSCRIBED') {
+        channel.send({ type: 'broadcast', event: 'hello', payload: {} });
+        setConnStatus('Ожидание ответа от ведущего...', 'waiting');
+      }
+    });
+
+  roleScreen.style.display = 'none';
+  joinScreen.style.display = 'none';
+  gameScreen.style.display = 'flex';
+}
+
+/* ============================================================
+   НОВАЯ ИГРА (только хост)
+   ============================================================ */
+function newGame() {
+  if (role !== 'host') return;
+  const result = buildMaze();
+  if (!result) {
+    infoEl.innerHTML = '<span class="bad">Не удалось сгенерировать лабиринт. Попробуйте ещё раз.</span>';
+    return;
+  }
+  game = {
+    ...result,
+    player: { x: result.start[0], y: result.start[1] },
+    trail: [[result.start[0], result.start[1]]],
+    moves: 0,
+    finished: false,
+    won: false,
+  };
+  renderHost();
+  updateStats();
+  infoEl.textContent = 'Ведите пакмана к 🚪. Игрок подключится по коду: ' + roomCode;
+  soundStart();
+  broadcastInit();
+}
+
+/* ============================================================
+   РЕНДЕР: ХОСТ (видит всё)
+   ============================================================ */
+function renderHost() {
+  const { grid, start, goal, wallMonsters, pathMonsters, player, trail } = game;
+  mazeEl.innerHTML = '';
+  mazeEl.style.gridTemplateColumns = `repeat(${grid[0].length}, 26px)`;
+
+  const trailSet = new Set(trail.map(([x, y]) => `${x},${y}`));
+
+  for (let y = 0; y < grid.length; y++) {
+    for (let x = 0; x < grid[y].length; x++) {
+      const cell = document.createElement('div');
+      const key = `${x},${y}`;
+
+      if (grid[y][x] === 1) {
+        cell.className = 'cell wall';
+        if (wallMonsters.has(key)) {
+          cell.classList.add('wall-monster');
+          cell.textContent = '👾';
+        }
+      } else {
+        cell.className = 'cell path';
+        if (trailSet.has(key) && !(player.x === x && player.y === y)) {
+          // легкий след, не обязателен
+        }
+      }
+
+      if (x === start[0] && y === start[1] && !(player.x === x && player.y === y)) {
+        cell.className = 'cell start'; cell.textContent = 'A';
+      } else if (x === goal[0] && y === goal[1] && !(player.x === x && player.y === y)) {
+        cell.className = 'cell goal'; cell.textContent = '🚪';
+      } else if (pathMonsters.has(key) && !(player.x === x && player.y === y)) {
+        cell.classList.add('path-monster'); cell.textContent = '🐲';
+      }
+
+      if (player.x === x && player.y === y) {
+        cell.classList.add('pac'); cell.textContent = '🐱';
+      }
+
+      mazeEl.appendChild(cell);
+    }
+  }
+}
+
+/* ============================================================
+   РЕНДЕР: КЛИЕНТ (слепой)
+   ============================================================ */
+function renderClient() {
+  if (!clientState) return;
+  const { cols, rows, player, trail } = clientState;
+  mazeEl.innerHTML = '';
+  mazeEl.style.gridTemplateColumns = `repeat(${cols}, 26px)`;
+
+  const trailSet = new Set(trail.map(([x, y]) => `${x},${y}`));
+
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell unknown';
+      const key = `${x},${y}`;
+      if (trailSet.has(key)) cell.classList.add('trail');
+      if (player.x === x && player.y === y) {
+        cell.classList.add('pac');
+        cell.textContent = '🐱';
+      }
+      mazeEl.appendChild(cell);
+    }
+  }
+
+  statMoves.textContent = clientState.moves;
+}
+
+/* ============================================================
+   СТАТИСТИКА
+   ============================================================ */
+function updateStats() {
+  if (!game) return;
+  statMoves.textContent = game.moves;
+  statStart.textContent = `(${game.start[0]}, ${game.start[1]})`;
+  statGoal.textContent = `(${game.goal[0]}, ${game.goal[1]})`;
+  statLen.textContent = game.pathLen;
+}
+
+/* ============================================================
+   ДВИЖЕНИЕ (на хосте)
+   ============================================================ */
+const DIRS = {
+  up:    { dx: 0,  dy: -1 },
+  down:  { dx: 0,  dy: 1  },
+  left:  { dx: -1, dy: 0  },
+  right: { dx: 1,  dy: 0  },
+};
+
+function isMonsterNearby(x, y) {
+  for (const [dx, dy] of [[1,0],[-1,0],[0,1],[0,-1]]) {
+    const key = `${x + dx},${y + dy}`;
+    if (game.wallMonsters.has(key)) return true;
+    if (game.pathMonsters.has(key)) return true;
+  }
+  return false;
+}
+
+function tryMove(dir) {
+  if (!game || game.finished) return;
+  const d = DIRS[dir];
+  if (!d) return;
+
+  const nx = game.player.x + d.dx;
+  const ny = game.player.y + d.dy;
+  const key = `${nx},${ny}`;
+
+  if (ny < 0 || ny >= game.grid.length || nx < 0 || nx >= game.grid[0].length) {
+    game.finished = true;
+    soundWallHit();
+    setTimeout(soundLose, 200);
+    infoEl.innerHTML = '<span class="bad">💥 Игрок врезался в стену!</span>';
+    broadcastState();
+    return;
+  }
+
+  if (game.grid[ny][nx] === 1) {
+    game.finished = true;
+    if (game.wallMonsters.has(key)) {
+      soundMonster();
+      setTimeout(soundLose, 500);
+      infoEl.innerHTML = '<span class="bad">💀 Из стены выскочил монстр!</span>';
+    } else {
+      soundWallHit();
+      setTimeout(soundLose, 200);
+      infoEl.innerHTML = '<span class="bad">💥 Игрок врезался в стену!</span>';
+    }
+    broadcastState();
+    return;
+  }
+
+  if (game.pathMonsters.has(key)) {
+    game.finished = true;
+    soundMonster();
+    setTimeout(soundLose, 500);
+    infoEl.innerHTML = '<span class="bad">💀 Игрок наступил на спящего дракона!</span>';
+    broadcastState();
+    return;
+  }
+
+  game.player.x = nx;
+  game.player.y = ny;
+  game.moves++;
+  game.trail.push([nx, ny]);
+  renderHost();
+  updateStats();
+
+  if (nx === game.goal[0] && ny === game.goal[1]) {
+    game.finished = true;
+    game.won = true;
+    soundWin();
+    infoEl.innerHTML = '<span class="good">🎉 ПОБЕДА! Игрок нашёл выход!</span>';
+    broadcastState();
+    return;
+  }
+
+  if (isMonsterNearby(nx, ny)) soundNearMonster();
+  else soundStep(game.moves);
+
+  infoEl.textContent = 'Ход сделан. Слушайте следующую подсказку.';
+  broadcastState();
+}
+
+/* ============================================================
+   УПРАВЛЕНИЕ
+   ============================================================ */
+dpad.addEventListener('click', (e) => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  const dir = btn.dataset.dir;
+  ensureAudio();
+  if (role === 'client') {
+    // шлём хосту
+    if (channel) channel.send({ type: 'broadcast', event: 'move', payload: { dir } });
+  } else {
+    // хост тоже может двигать сам
+    tryMove(dir);
+  }
+});
+
+document.addEventListener('keydown', (e) => {
+  const map = {
+    ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right',
+    w: 'up', s: 'down', a: 'left', d: 'right',
+    W: 'up', S: 'down', A: 'left', D: 'right',
+  };
+  const dir = map[e.key];
+  if (!dir) return;
+  e.preventDefault();
+  ensureAudio();
+  if (role === 'client') {
+    if (channel) channel.send({ type: 'broadcast', event: 'move', payload: { dir } });
+  } else if (role === 'host') {
+    tryMove(dir);
+  }
+});
+
+document.getElementById('roleHost').addEventListener('click', () => {
+  ensureAudio();
+  startAsHost();
+});
+
+document.getElementById('roleClient').addEventListener('click', () => {
+  ensureAudio();
+  roleScreen.style.display = 'none';
+  joinScreen.style.display = 'flex';
+});
+
+backBtn.addEventListener('click', () => {
+  joinScreen.style.display = 'none';
+  roleScreen.style.display = 'flex';
+});
+
+joinBtn.addEventListener('click', () => {
+  const code = joinCodeInput.value.trim().toUpperCase();
+  if (code.length !== 6) {
+    joinStatus.textContent = 'Код должен быть из 6 символов';
+    joinStatus.className = 'conn-status offline';
+    return;
+  }
+  roomCode = code;
+  ensureAudio();
+  startAsClient();
+});
+
+joinCodeInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') joinBtn.click();
+});
+
+resetBtn.addEventListener('click', () => {
+  ensureAudio();
+  newGame();
+});
+
+soundBtn.addEventListener('click', () => {
+  soundEnabled = !soundEnabled;
+  soundBtn.textContent = soundEnabled ? '🔊 Звук вкл' : '🔇 Звук выкл';
+  if (soundEnabled) { ensureAudio(); soundStart(); }
+});
+
+/* ============================================================
+   ОЗВУЧКА КИТАЙСКИХ ФРАЗ
+   ============================================================ */
+let preferredVoice = null;
+function pickChineseVoice() {
+  const voices = speechSynthesis.getVoices();
+  preferredVoice =
+    voices.find(v => v.lang === 'zh-CN') ||
+    voices.find(v => v.lang === 'zh-TW') ||
+    voices.find(v => v.lang.startsWith('zh')) || null;
+}
+if ('speechSynthesis' in window) {
+  speechSynthesis.onvoiceschanged = pickChineseVoice;
+  pickChineseVoice();
+}
+function speakChinese(text) {
+  if (!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'zh-CN'; u.rate = 0.85; u.pitch = 1.0;
+  if (preferredVoice) u.voice = preferredVoice;
+  speechSynthesis.speak(u);
+}
+document.querySelectorAll('.cheatsheet-buttons .phrase').forEach(btn => {
+  btn.addEventListener('click', () => {
+    ensureAudio();
+    speakChinese(btn.dataset.phrase);
+  });
+});
+</script>
+</body>
+</html>
