@@ -277,8 +277,8 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let role = null;
 let channel = null;
 let roomCode = null;
-let game = null;         // хост: полное состояние
-let clientState = null;  // клиент: { cols, rows, player, trail, moves, finished, result }
+let game = null;
+let clientState = null;
 
 /* ============================================================
    ЗВУК
@@ -699,14 +699,7 @@ function buildMaze() {
     if (!allPathsConnected(grid)) continue;
     const wallMonsters = placeMonstersInWalls(grid, pair.start, goal, WALL_MONSTERS_COUNT);
     const pathMonsters = placeMonstersOnPath(grid, pair.start, goal, finalPath, PATH_MONSTERS_COUNT);
-    return {
-      grid,
-      start: pair.start,
-      goal,
-      pathLen: len,
-      wallMonsters,
-      pathMonsters,
-    };
+    return { grid, start: pair.start, goal, pathLen: len, wallMonsters, pathMonsters };
   }
   return null;
 }
@@ -745,8 +738,13 @@ function generateRoomCode() {
   return code;
 }
 
+function setConnStatus(text, cls) {
+  connStatus.textContent = text;
+  connStatus.className = 'conn-status ' + (cls || '');
+}
+
 /* ============================================================
-   РОЛЬ: ХОСТ
+   ХОСТ
    ============================================================ */
 function startAsHost() {
   role = 'host';
@@ -754,7 +752,8 @@ function startAsHost() {
   roomCodeValue.textContent = roomCode;
   roomCodeBox.style.display = 'block';
   resetBtn.style.display = 'block';
-  infoEl.textContent = 'Ожидание игрока...';
+  statsBox.style.display = 'flex';
+  dpad.style.display = 'none';         // у ведущего стрелок нет
 
   channel = supabaseClient.channel('room-' + roomCode);
   channel
@@ -811,19 +810,30 @@ function broadcastState() {
   });
 }
 
-function setConnStatus(text, cls) {
-  connStatus.textContent = text;
-  connStatus.className = 'conn-status ' + (cls || '');
+function broadcastRollback(reason) {
+  if (!game || !channel) return;
+  channel.send({
+    type: 'broadcast',
+    event: 'rollback',
+    payload: {
+      player: { ...game.player },
+      trail: game.trail,
+      moves: game.moves,
+      finished: game.finished,
+      reason,
+    },
+  });
 }
 
 /* ============================================================
-   РОЛЬ: КЛИЕНТ
+   КЛИЕНТ
    ============================================================ */
 function startAsClient() {
   role = 'client';
   roomCodeBox.style.display = 'none';
   resetBtn.style.display = 'none';
   statsBox.style.display = 'none';
+  dpad.style.display = 'grid';         // стрелки только у игрока
 
   channel = supabaseClient.channel('room-' + roomCode);
   channel
@@ -844,21 +854,30 @@ function startAsClient() {
     .on('broadcast', { event: 'state' }, (msg) => {
       if (!clientState) return;
       const p = msg.payload;
-      const prev = clientState.player;
       clientState.player = p.player;
       clientState.trail = p.trail;
       clientState.moves = p.moves;
       clientState.finished = p.finished;
       renderClient();
-
       if (p.result === 'win') {
         soundWin();
         infoEl.innerHTML = '<span class="good">🎉 ПОБЕДА! Ты нашёл выход!</span>';
       } else if (p.result === 'lose') {
         infoEl.innerHTML = '<span class="bad">💀 Игра окончена</span>';
-      } else {
-        // звук шага
-        soundStep(p.moves);
+      }
+    })
+    .on('broadcast', { event: 'rollback' }, (msg) => {
+      if (!clientState) return;
+      const p = msg.payload;
+      clientState.player = p.player;
+      clientState.trail = p.trail;
+      clientState.moves = p.moves;
+      clientState.finished = p.finished;
+      renderClient();
+      if (p.reason === 'wall') { soundWallHit(); setTimeout(soundLose, 200); }
+      else if (p.reason === 'monster') { soundMonster(); setTimeout(soundLose, 500); }
+      if (p.finished) {
+        infoEl.innerHTML = '<span class="bad">💀 Игра окончена</span>';
       }
     })
     .subscribe((status) => {
@@ -902,11 +921,9 @@ function newGame() {
    РЕНДЕР: ХОСТ (видит всё)
    ============================================================ */
 function renderHost() {
-  const { grid, start, goal, wallMonsters, pathMonsters, player, trail } = game;
+  const { grid, start, goal, wallMonsters, pathMonsters, player } = game;
   mazeEl.innerHTML = '';
   mazeEl.style.gridTemplateColumns = `repeat(${grid[0].length}, 26px)`;
-
-  const trailSet = new Set(trail.map(([x, y]) => `${x},${y}`));
 
   for (let y = 0; y < grid.length; y++) {
     for (let x = 0; x < grid[y].length; x++) {
@@ -921,9 +938,6 @@ function renderHost() {
         }
       } else {
         cell.className = 'cell path';
-        if (trailSet.has(key) && !(player.x === x && player.y === y)) {
-          // легкий след, не обязателен
-        }
       }
 
       if (x === start[0] && y === start[1] && !(player.x === x && player.y === y)) {
@@ -967,8 +981,6 @@ function renderClient() {
       mazeEl.appendChild(cell);
     }
   }
-
-  statMoves.textContent = clientState.moves;
 }
 
 /* ============================================================
@@ -983,7 +995,7 @@ function updateStats() {
 }
 
 /* ============================================================
-   ДВИЖЕНИЕ (на хосте)
+   ДВИЖЕНИЕ
    ============================================================ */
 const DIRS = {
   up:    { dx: 0,  dy: -1 },
@@ -1010,39 +1022,47 @@ function tryMove(dir) {
   const ny = game.player.y + d.dy;
   const key = `${nx},${ny}`;
 
+  // выход за границы
   if (ny < 0 || ny >= game.grid.length || nx < 0 || nx >= game.grid[0].length) {
     game.finished = true;
+    game.won = false;
     soundWallHit();
     setTimeout(soundLose, 200);
     infoEl.innerHTML = '<span class="bad">💥 Игрок врезался в стену!</span>';
-    broadcastState();
+    broadcastRollback('wall');
     return;
   }
 
+  // стена
   if (game.grid[ny][nx] === 1) {
     game.finished = true;
+    game.won = false;
     if (game.wallMonsters.has(key)) {
       soundMonster();
       setTimeout(soundLose, 500);
       infoEl.innerHTML = '<span class="bad">💀 Из стены выскочил монстр!</span>';
+      broadcastRollback('monster');
     } else {
       soundWallHit();
       setTimeout(soundLose, 200);
       infoEl.innerHTML = '<span class="bad">💥 Игрок врезался в стену!</span>';
+      broadcastRollback('wall');
     }
-    broadcastState();
     return;
   }
 
+  // монстр на пути
   if (game.pathMonsters.has(key)) {
     game.finished = true;
+    game.won = false;
     soundMonster();
     setTimeout(soundLose, 500);
     infoEl.innerHTML = '<span class="bad">💀 Игрок наступил на спящего дракона!</span>';
-    broadcastState();
+    broadcastRollback('monster');
     return;
   }
 
+  // валидный ход
   game.player.x = nx;
   game.player.y = ny;
   game.moves++;
@@ -1050,6 +1070,7 @@ function tryMove(dir) {
   renderHost();
   updateStats();
 
+  // победа
   if (nx === game.goal[0] && ny === game.goal[1]) {
     game.finished = true;
     game.won = true;
@@ -1059,11 +1080,38 @@ function tryMove(dir) {
     return;
   }
 
+  // обычный валидный ход — не рассылаем state, клиент уже нарисовал сам
   if (isMonsterNearby(nx, ny)) soundNearMonster();
   else soundStep(game.moves);
-
   infoEl.textContent = 'Ход сделан. Слушайте следующую подсказку.';
-  broadcastState();
+}
+
+/* ============================================================
+   ОПТИМИСТИЧНОЕ ДВИЖЕНИЕ У КЛИЕНТА
+   ============================================================ */
+function clientOptimisticMove(dir) {
+  if (!clientState || clientState.finished) return;
+  const d = DIRS[dir];
+  if (!d) return;
+
+  const nx = clientState.player.x + d.dx;
+  const ny = clientState.player.y + d.dy;
+
+  // за границами — не двигаем локально, просто шлём хосту
+  if (nx < 0 || ny < 0 || nx >= clientState.cols || ny >= clientState.rows) {
+    if (channel) channel.send({ type: 'broadcast', event: 'move', payload: { dir } });
+    return;
+  }
+
+  // локально двигаем сразу
+  clientState.player = { x: nx, y: ny };
+  clientState.trail = clientState.trail.concat([[nx, ny]]);
+  clientState.moves++;
+  renderClient();
+  soundStep(clientState.moves);
+
+  // шлём хосту на валидацию
+  if (channel) channel.send({ type: 'broadcast', event: 'move', payload: { dir } });
 }
 
 /* ============================================================
@@ -1072,18 +1120,15 @@ function tryMove(dir) {
 dpad.addEventListener('click', (e) => {
   const btn = e.target.closest('button');
   if (!btn) return;
-  const dir = btn.dataset.dir;
   ensureAudio();
   if (role === 'client') {
-    // шлём хосту
-    if (channel) channel.send({ type: 'broadcast', event: 'move', payload: { dir } });
-  } else {
-    // хост тоже может двигать сам
-    tryMove(dir);
+    clientOptimisticMove(btn.dataset.dir);
   }
+  // у хоста стрелок нет — игнорируем
 });
 
 document.addEventListener('keydown', (e) => {
+  if (role !== 'client') return;      // хост не двигает
   const map = {
     ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right',
     w: 'up', s: 'down', a: 'left', d: 'right',
@@ -1093,11 +1138,7 @@ document.addEventListener('keydown', (e) => {
   if (!dir) return;
   e.preventDefault();
   ensureAudio();
-  if (role === 'client') {
-    if (channel) channel.send({ type: 'broadcast', event: 'move', payload: { dir } });
-  } else if (role === 'host') {
-    tryMove(dir);
-  }
+  clientOptimisticMove(dir);
 });
 
 document.getElementById('roleHost').addEventListener('click', () => {
