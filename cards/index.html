@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Китайские карточки</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: #0f1115; color: #e8e8e8; min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 20px;
+  }
+  h1 { font-size: 20px; font-weight: 600; margin: 0 0 16px; }
+
+  .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+  .tabs button {
+    background: #1c1f26; color: #aaa; border: 1px solid #2a2f3a;
+    padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 14px;
+  }
+  .tabs button.active { background: #2b6cb0; color: #fff; border-color: #2b6cb0; }
+
+  .panel { width: 100%; max-width: 560px; }
+
+  .decks-bar {
+    display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap;
+    align-items: center;
+  }
+  .deck-btn {
+    background: #161a21; color: #aaa; border: 1px solid #2a2f3a;
+    padding: 6px 12px; border-radius: 999px; cursor: pointer; font-size: 13px;
+  }
+  .deck-btn.active { background: #2b6cb0; color: #fff; border-color: #2b6cb0; }
+
+  .input-row { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 6px; margin-bottom: 8px; }
+  .input-row input {
+    background: #1c1f26; border: 1px solid #2a2f3a; color: #fff;
+    padding: 8px 10px; border-radius: 6px; font-size: 14px; width: 100%;
+  }
+  .input-row input:focus { outline: none; border-color: #2b6cb0; }
+  .btn {
+    background: #2b6cb0; color: #fff; border: none; padding: 8px 14px;
+    border-radius: 6px; cursor: pointer; font-size: 14px;
+  }
+  .btn:hover { background: #3182ce; }
+  .btn.danger { background: #7f1d1d; }
+  .btn.danger:hover { background: #991b1b; }
+  .btn.ghost { background: #1c1f26; border: 1px solid #2a2f3a; color: #ccc; }
+  .btn.ghost:hover { background: #252a33; }
+
+  .actions { display: flex; gap: 8px; margin: 12px 0 20px; flex-wrap: wrap; }
+
+  .word-list { margin-top: 12px; max-height: 280px; overflow-y: auto; }
+  .word-row {
+    display: grid; grid-template-columns: auto 1fr 1fr auto;
+    gap: 8px; align-items: center; padding: 8px 10px;
+    background: #161a21; border: 1px solid #222730; border-radius: 6px;
+    margin-bottom: 6px; font-size: 14px;
+  }
+  .word-row .hz { font-size: 22px; }
+  .word-row .py { color: #f6ad55; }
+  .word-row .ru { color: #a0aec0; }
+  .word-row button {
+    background: transparent; border: none; color: #666; cursor: pointer;
+    font-size: 18px; padding: 0 4px;
+  }
+  .word-row button:hover { color: #e53e3e; }
+
+  .card-wrap { perspective: 1000px; height: 300px; margin-bottom: 16px; }
+  .card {
+    position: relative; width: 100%; height: 100%;
+    transition: transform 0.4s; transform-style: preserve-3d; cursor: pointer;
+  }
+  .card.flipped { transform: rotateY(180deg); }
+  .card-face {
+    position: absolute; inset: 0; backface-visibility: hidden;
+    background: #161a21; border: 1px solid #2a2f3a; border-radius: 16px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 20px; text-align: center;
+  }
+  .card-face.back { transform: rotateY(180deg); background: #1a2029; }
+  .card-face .hz { font-size: 84px; line-height: 1.1; margin-bottom: 8px; }
+  .card-face .py { font-size: 28px; margin-bottom: 8px; }
+  .card-face .ru { font-size: 22px; color: #cbd5e0; line-height: 1.4; }
+  .card-face .hint { font-size: 12px; color: #555; margin-top: 16px; }
+
+  .card-controls { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+
+  .stats {
+    display: flex; justify-content: space-between; font-size: 13px;
+    color: #888; margin-bottom: 8px;
+  }
+
+  .empty {
+    text-align: center; color: #666; padding: 40px 20px; font-size: 14px;
+  }
+  .label { font-size: 12px; color: #888; margin-bottom: 6px; }
+</style>
+</head>
+<body>
+  <h1>🀄 Китайские карточки</h1>
+
+  <div class="tabs">
+    <button data-tab="study" class="active">Учить</button>
+    <button data-tab="edit">Слова</button>
+  </div>
+
+  <div class="panel">
+    <div id="tab-edit" style="display:none">
+      <div class="label">Наборы:</div>
+      <div class="decks-bar" id="decks-bar"></div>
+
+      <div class="label">Добавить слово в текущий набор (иероглиф / пиньинь / перевод)</div>
+      <div class="input-row">
+        <input id="in-hz" placeholder="你好" />
+        <input id="in-py" placeholder="nǐ hǎo" />
+        <input id="in-ru" placeholder="привет" />
+        <button class="btn" id="btn-add">+</button>
+      </div>
+
+      <div class="actions">
+        <button class="btn ghost" id="btn-new-deck">Новый набор</button>
+        <button class="btn ghost" id="btn-rename-deck">Переименовать</button>
+        <button class="btn danger" id="btn-reset">Очистить набор</button>
+        <button class="btn danger" id="btn-delete-deck">Удалить набор</button>
+      </div>
+
+      <div class="label" id="count-label">Слов: 0</div>
+      <div class="word-list" id="word-list"></div>
+    </div>
+
+    <div id="tab-study">
+      <div class="label">Набор:</div>
+      <div class="decks-bar" id="decks-bar-study"></div>
+
+      <div id="study-empty" class="empty">
+        В этом наборе нет слов.
+      </div>
+      <div id="study-area" style="display:none">
+        <div class="stats">
+          <span id="s-progress">0 / 0</span>
+          <span id="s-mode-label"></span>
+        </div>
+        <div class="card-wrap">
+          <div class="card" id="card">
+            <div class="card-face front" id="face-front"></div>
+            <div class="card-face back" id="face-back"></div>
+          </div>
+        </div>
+        <div class="card-controls">
+          <button class="btn ghost" id="btn-prev">← Назад</button>
+          <button class="btn ghost" id="btn-flip">Перевернуть</button>
+          <button class="btn" id="btn-next">Далее →</button>
+        </div>
+        <div class="card-controls" style="margin-top:12px">
+          <button class="btn ghost" id="btn-mode">Режим: 汉 → RU</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  const LS_KEY = 'cn-cards-v4';
+
+  // ============ 1. КЛЮЧИ (214 штук) ============
+  const RADICAL_DATA = [
+    // 1-20
+    ['一','один; горизонтальная черта'],['丨','вертикальная черта'],['丶','точка'],['丿','откидная влево'],['乙','второй; изгиб'],
+    ['亅','крюк'],['二','два'],['亠','крышка; верх'],['人','человек'],['儿','ноги; сын'],
+    ['入','входить'],['八','восемь; делить'],['冂','нижняя рамка'],['冖','навес; покрывало'],['冫','лёд (двухточечная вода)'],
+    ['几','маленький столик'],['凵','открытая рамка'],['刀','нож'],['力','сила; мощь'],['勹','обёртывать'],
+    // 21-40
+    ['匕','ложка; ковш'],['匚','правосторонняя рамка'],['匸','скрытая рамка'],['十','десять'],['卜','гадание'],
+    ['卩','печать'],['厂','обрыв; укрытие'],['厶','частный; кокон'],['又','снова; правая рука'],['口','рот; отверстие'],
+    ['囗','ограда'],['土','земля; почва'],['士','учёный; воин'],['夂','идти; следовать'],['夊','идти медленно'],
+    ['夕','вечер; сумерки'],['大','большой; великий'],['女','женщина'],['子','ребёнок; сын'],['宀','крыша дома'],
+    // 41-60
+    ['寸','дюйм; немного'],['小','маленький'],['尢','хромой; слабый'],['尸','труп; тело'],['屮','росток'],
+    ['山','гора'],['川','река'],['工','работа'],['己','сам; себя'],['巾','полотенце'],
+    ['干','сухой'],['幺','нить'],['广','навес; убежище'],['廴','шаг; тянуться'],['廾','сложенные руки'],
+    ['弋','стрелять из лука'],['弓','лук'],['彐','рыло; морда'],['彡','волосы; штрихи'],['彳','шаг; идти'],
+    // 61-80
+    ['心','сердце'],['戈','копьё'],['户','дверь; домохозяйство'],['手','рука'],['支','ветвь; поддерживать'],
+    ['攴','стучать; удар'],['文','письменность; узор'],['斗','ковш; мерка'],['斤','топор'],['方','квадрат; сторона'],
+    ['无','нет; отсутствие'],['日','солнце; день'],['曰','говорить'],['月','луна; месяц'],['木','дерево'],
+    ['欠','недоставать; зевать'],['止','останавливаться'],['歹','смерть; смертный'],['殳','оружие; удар'],['母','мать'],
+    // 81-100
+    ['比','сравнивать'],['毛','шерсть; мех'],['氏','клан; род'],['气','пар; воздух'],['水','вода'],
+    ['火','огонь'],['爪','коготь'],['父','отец'],['爻','черты триграммы'],['爿','половина ствола'],
+    ['片','ломтик; пластина'],['牙','зуб'],['牛','корова; бык'],['犭','собака'],['玄','глубокий; таинственный'],
+    ['玉','нефрит; яшма'],['瓜','дыня'],['瓦','черепица'],['甘','сладкий'],['生','жизнь; рождаться'],
+    // 101-120
+    ['用','использовать'],['田','поле; пашня'],['疋','кусок ткани; нога'],['疒','болезнь'],['癶','расставленные ноги'],
+    ['白','белый; чистый'],['皮','кожа; шкура'],['皿','посуда; сосуд'],['目','глаз; смотреть'],['矛','копьё; пика'],
+    ['矢','стрела'],['石','камень'],['示','дух; показывать'],['禸','след; отпечаток'],['禾','зерно; хлеб'],
+    ['穴','пещера; нора'],['立','стоять'],['竹','бамбук'],['米','рис; крупа'],['糸','шёлк; нить'],
+    // 121-140
+    ['缶','глиняный сосуд'],['网','сеть'],['羊','овца; баран'],['羽','перо; крыло'],['老','старый'],
+    ['而','и; но'],['耒','плуг'],['耳','ухо'],['聿','кисть; писать'],['肉','мясо; плоть'],
+    ['臣','чиновник'],['自','сам; нос'],['至','достигать'],['臼','ступа'],['舌','язык; речь'],
+    ['舛','противоречие'],['舟','лодка'],['艮','твёрдый'],['色','цвет'],['艸','трава'],
+    // 141-160
+    ['虍','тигр; полосатый'],['虫','насекомое; червь'],['血','кровь'],['行','идти; дорога'],['衣','одежда'],
+    ['襾','накрывать; запад'],['見','видеть'],['角','рог; угол'],['言','речь; слово'],['谷','долина'],
+    ['豆','боб; бобы'],['豕','свинья; кабан'],['豸','зверь; хищник'],['貝','раковина; деньги'],['赤','красный; голый'],
+    ['走','идти; бежать'],['足','нога; ступня'],['身','тело; сам'],['車','повозка; машина'],['辛','горький; острый'],
+    // 161-180
+    ['辰','утро; время'],['辵','идти; движение'],['邑','город; поселение'],['酉','вино; кувшин'],['釆','различать'],
+    ['里','ли (мера); деревня'],['金','золото; металл'],['長','длинный; старший'],['門','ворота; дверь'],['阜','холм; насыпь'],
+    ['隶','достигать; слуга'],['隹','короткохвостая птица'],['雨','дождь'],['靑','синий; зелёный'],['非','не; неправильный'],
+    ['面','лицо; поверхность'],['革','кожа; реформа'],['韋','выделанная кожа'],['韭','лук-порей'],['音','звук; музыка'],
+    // 181-200
+    ['頁','голова; страница'],['風','ветер'],['飛','летать'],['食','еда; есть'],['首','голова; начало'],
+    ['香','аромат; благовоние'],['馬','лошадь'],['骨','кость; скелет'],['高','высокий'],['髟','длинные волосы'],
+    ['鬥','драться'],['鬯','жертвенное вино'],['鬲','котёл; треножник'],['鬼','дух; призрак'],['魚','рыба'],
+    ['鳥','птица'],['鹵','соль'],['鹿','олень'],['麥','пшеница; рожь'],['麻','конопля; лён'],
+    // 201-214
+    ['黃','жёлтый'],['黍','просо'],['黑','чёрный'],['黹','вышивка; шитьё'],['黽','жаба; лягушка'],
+    ['鼎','треножник; котёл'],['鼓','барабан; бить'],['鼠','крыса; мышь'],['鼻','нос'],['齊','ровный; одинаковый'],
+    ['齒','зуб; зубы'],['龍','дракон'],['龜','черепаха'],['龠','флейта; свирель']
+  ];
+
+  // ============ 2. УРОКИ (с пиньинем) ============
+  const LESSON_DECKS = [
+    {
+      name: 'Урок 1–3',
+      words: [
+        { hz:'你',   py:'nǐ',       ru:'ты' },
+        { hz:'您',   py:'nín',      ru:'Вы (вежл.)' },
+        { hz:'你们', py:'nǐ men',   ru:'вы (мн.)' },
+        { hz:'你好', py:'nǐ hǎo',   ru:'привет' },
+        { hz:'很',   py:'hěn',      ru:'очень' },
+        { hz:'好',   py:'hǎo',      ru:'хорошо; хороший' },
+        { hz:'吗',   py:'ma',       ru:'(вопрос. частица)' },
+        { hz:'呢',   py:'ne',       ru:'(частица «а как…?»)' },
+      ]
+    },
+    {
+      name: 'Урок 4',
+      words: [
+        { hz:'语',   py:'yǔ',       ru:'язык; речь' },
+        { hz:'汉语', py:'hànyǔ',    ru:'китайский язык' },
+        { hz:'难',   py:'nán',      ru:'трудный' },
+        { hz:'不',   py:'bù',       ru:'не' },
+        { hz:'太',   py:'tài',      ru:'слишком' },
+        { hz:'俄语', py:'éyǔ',      ru:'русский язык' },
+        { hz:'我',   py:'wǒ',       ru:'я' },
+        { hz:'爱',   py:'ài',       ru:'любить' },
+      ]
+    },
+    {
+      name: 'Урок 5',
+      words: [
+        { hz:'我',   py:'wǒ',       ru:'я' },
+        { hz:'他',   py:'tā',       ru:'он' },
+        { hz:'她',   py:'tā',       ru:'она' },
+        { hz:'它',   py:'tā',       ru:'оно' },
+        { hz:'也',   py:'yě',       ru:'тоже; также' },
+        { hz:'是',   py:'shì',      ru:'быть; являться' },
+        { hz:'老师', py:'lǎoshī',   ru:'учитель; преподаватель' },
+      ]
+    },
+  ];
+
+  // ============ 3. СОБИРАЕМ НАБОРЫ КЛЮЧЕЙ ============
+  const RADICAL_DECKS = [];
+  for (let g = 0; g < 11; g++) {
+    const start = g * 20;
+    const slice = RADICAL_DATA.slice(start, start + 20);
+    if (!slice.length) continue;
+    const end = start + slice.length;
+    RADICAL_DECKS.push({
+      name: `部首 ${start + 1}–${end}`,
+      words: slice.map(([hz, ru]) => ({ hz, py: '', ru })),
+      isRadicals: true,   // флаг: только режим 汉 → RU
+    });
+  }
+
+  const ALL_DEFAULT_DECKS = RADICAL_DECKS.concat(
+    LESSON_DECKS.map(d => ({ ...d, isRadicals: false }))
+  );
+
+  // ============ 4. ЦВЕТА ТОНОВ ============
+  const MODES_FULL = [
+    { id: 'hz-ru',  label: '汉 → RU',     front: 'hz', back: ['py','ru'] },
+    { id: 'ru-hz',  label: 'RU → 汉',     front: 'ru', back: ['hz','py'] },
+    { id: 'py-hz',  label: 'Pinyin → 汉', front: 'py', back: ['hz','ru'] },
+  ];
+  const MODES_BASIC = [
+    { id: 'hz-ru',  label: '汉 → RU',     front: 'hz', back: ['ru'] },
+  ];
+
+  const TONE_COLORS = {
+    1: '#ff5555', 2: '#ffa94d', 3: '#51cf66', 4: '#4dabf7', 5: '#adb5bd',
+  };
+  const TONE_MAP = {
+    'ā':'1','ē':'1','ī':'1','ō':'1','ū':'1','ǖ':'1',
+    'á':'2','é':'2','í':'2','ó':'2','ú':'2','ǘ':'2',
+    'ǎ':'3','ě':'3','ǐ':'3','ǒ':'3','ǔ':'3','ǚ':'3',
+    'à':'4','è':'4','ì':'4','ò':'4','ù':'4','ǜ':'4',
+  };
+  function detectTone(syllable) {
+    for (const ch of String(syllable).toLowerCase()) {
+      if (TONE_MAP[ch]) return +TONE_MAP[ch];
+    }
+    return 5;
+  }
+  function splitPinyin(py) {
+    return String(py || '').trim().split(/\s+/).filter(Boolean);
+  }
+  function colorPinyin(py) {
+    return splitPinyin(py).map(s => {
+      const t = detectTone(s);
+      return `<span style="color:${TONE_COLORS[t]}">${esc(s)}</span>`;
+    }).join(' ');
+  }
+  function colorHanzi(hz, py) {
+    const chars = [...String(hz || '')];
+    const sylls = splitPinyin(py);
+    if (!sylls.length || chars.length !== sylls.length) {
+      const t = sylls.length ? detectTone(sylls[0]) : 5;
+      return `<span style="color:${TONE_COLORS[t]}">${esc(hz)}</span>`;
+    }
+    return chars.map((c, i) => {
+      const t = detectTone(sylls[i]);
+      return `<span style="color:${TONE_COLORS[t]}">${esc(c)}</span>`;
+    }).join('');
+  }
+
+  // ============ 5. СОСТОЯНИЕ ============
+  let state = {
+    decks: [],
+    currentDeckIndex: 0,
+    modeIndex: 0,
+    index: 0,
+    flipped: false,
+  };
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(LS_KEY);
+      if (raw) {
+        const data = JSON.parse(raw);
+        state.decks = Array.isArray(data.decks) && data.decks.length ? data.decks : deepCopy(ALL_DEFAULT_DECKS);
+        state.currentDeckIndex = Math.min(data.currentDeckIndex || 0, state.decks.length - 1);
+      } else {
+        state.decks = deepCopy(ALL_DEFAULT_DECKS);
+      }
+    } catch(e) {
+      state.decks = deepCopy(ALL_DEFAULT_DECKS);
+    }
+  }
+  function save() {
+    localStorage.setItem(LS_KEY, JSON.stringify({
+      decks: state.decks,
+      currentDeckIndex: state.currentDeckIndex,
+    }));
+  }
+  function deepCopy(o) { return JSON.parse(JSON.stringify(o)); }
+  function currentDeck() { return state.decks[state.currentDeckIndex]; }
+  function modesFor(deck) {
+    return deck && deck.isRadicals ? MODES_BASIC : MODES_FULL;
+  }
+
+  const $ = id => document.getElementById(id);
+  const tabButtons = document.querySelectorAll('.tabs button');
+  const tabEdit = $('tab-edit'), tabStudy = $('tab-study');
+
+  tabButtons.forEach(b => b.addEventListener('click', () => {
+    tabButtons.forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    const t = b.dataset.tab;
+    tabEdit.style.display  = t === 'edit'  ? 'block' : 'none';
+    tabStudy.style.display = t === 'study' ? 'block' : 'none';
+    renderAll();
+  }));
+
+  function renderDeckBars() {
+    [$('decks-bar'), $('decks-bar-study')].forEach(bar => {
+      bar.innerHTML = '';
+      state.decks.forEach((d, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'deck-btn' + (i === state.currentDeckIndex ? ' active' : '');
+        btn.innerHTML = `${esc(d.name)} <span style="opacity:.6">(${d.words.length})</span>`;
+        btn.addEventListener('click', () => {
+          state.currentDeckIndex = i;
+          state.index = 0;
+          state.flipped = false;
+          state.modeIndex = 0;
+          save(); renderAll();
+        });
+        bar.appendChild(btn);
+      });
+    });
+  }
+
+  function addWord() {
+    const hz = $('in-hz').value.trim();
+    const py = $('in-py').value.trim();
+    const ru = $('in-ru').value.trim();
+    if (!hz || !ru) { alert('Заполни хотя бы иероглиф и перевод'); return; }
+    currentDeck().words.push({ hz, py, ru });
+    $('in-hz').value = $('in-py').value = $('in-ru').value = '';
+    $('in-hz').focus();
+    save(); renderAll();
+  }
+  $('btn-add').addEventListener('click', addWord);
+  ['in-hz','in-py','in-ru'].forEach(id => {
+    $(id).addEventListener('keydown', e => { if (e.key === 'Enter') addWord(); });
+  });
+
+  $('btn-reset').addEventListener('click', () => {
+    const d = currentDeck();
+    if (!confirm(`Очистить набор «${d.name}»? Все слова из него будут удалены.`)) return;
+    d.words = [];
+    state.index = 0; state.flipped = false;
+    save(); renderAll();
+  });
+
+  $('btn-new-deck').addEventListener('click', () => {
+    const name = prompt('Название нового набора:', 'Новый набор');
+    if (!name) return;
+    state.decks.push({ name: name.trim(), words: [], isRadicals: false });
+    state.currentDeckIndex = state.decks.length - 1;
+    state.index = 0; state.flipped = false;
+    save(); renderAll();
+  });
+
+  $('btn-rename-deck').addEventListener('click', () => {
+    const d = currentDeck();
+    const name = prompt('Новое название:', d.name);
+    if (!name) return;
+    d.name = name.trim();
+    save(); renderAll();
+  });
+
+  $('btn-delete-deck').addEventListener('click', () => {
+    if (state.decks.length <= 1) { alert('Нельзя удалить последний набор'); return; }
+    const d = currentDeck();
+    if (!confirm(`Удалить набор «${d.name}» целиком?`)) return;
+    state.decks.splice(state.currentDeckIndex, 1);
+    state.currentDeckIndex = 0;
+    state.index = 0; state.flipped = false;
+    save(); renderAll();
+  });
+
+  function renderList() {
+    const list = $('word-list');
+    const d = currentDeck();
+    $('count-label').textContent = `Набор «${d.name}». Слов: ${d.words.length}`;
+    if (!d.words.length) { list.innerHTML = '<div class="empty">Список пуст</div>'; return; }
+    list.innerHTML = '';
+    d.words.forEach((w, i) => {
+      const row = document.createElement('div');
+      row.className = 'word-row';
+      row.innerHTML = `
+        <span class="hz">${d.isRadicals ? esc(w.hz) : colorHanzi(w.hz, w.py)}</span>
+        <span class="py">${d.isRadicals ? '' : colorPinyin(w.py)}</span>
+        <span class="ru">${esc(w.ru)}</span>
+        <button title="Удалить">×</button>`;
+      row.querySelector('button').addEventListener('click', () => {
+        d.words.splice(i, 1);
+        if (state.index >= d.words.length) state.index = 0;
+        save(); renderAll();
+      });
+      list.appendChild(row);
+    });
+  }
+
+  function renderStudy() {
+    const area = $('study-area');
+    const empty = $('study-empty');
+    const d = currentDeck();
+    if (!d.words.length) {
+      area.style.display = 'none'; empty.style.display = 'block'; return;
+    }
+    area.style.display = 'block'; empty.style.display = 'none';
+    if (state.index >= d.words.length) state.index = 0;
+    if (state.index < 0) state.index = d.words.length - 1;
+
+    const modes = modesFor(d);
+    if (state.modeIndex >= modes.length) state.modeIndex = 0;
+    const mode = modes[state.modeIndex];
+
+    const w = d.words[state.index];
+    const frontVal = w[mode.front] || '';
+    const backVals = mode.back.map(k => ({ k, v: w[k] || '' }));
+
+    let frontHtml;
+    if (mode.front === 'hz') {
+      frontHtml = `<div class="hz">${d.isRadicals ? esc(w.hz) : colorHanzi(w.hz, w.py)}</div>`;
+    } else if (mode.front === 'py') {
+      frontHtml = `<div class="py">${colorPinyin(w.py)}</div>`;
+    } else {
+      frontHtml = `<div class="ru" style="font-size:32px">${esc(frontVal)}</div>`;
+    }
+    $('face-front').innerHTML = frontHtml + `<div class="hint">Клик / Space — перевернуть</div>`;
+
+    $('face-back').innerHTML = backVals.map(({k, v}) => {
+      if (k === 'hz') return `<div class="hz" style="font-size:56px">${d.isRadicals ? esc(w.hz) : colorHanzi(w.hz, w.py)}</div>`;
+      if (k === 'py') return `<div class="py">${colorPinyin(w.py)}</div>`;
+      return `<div class="ru">${esc(v)}</div>`;
+    }).join('');
+
+    $('s-progress').textContent = (state.index + 1) + ' / ' + d.words.length;
+    $('s-mode-label').textContent = mode.label;
+    $('btn-mode').textContent = 'Режим: ' + mode.label;
+    $('btn-mode').style.display = modes.length > 1 ? '' : 'none';
+    $('card').classList.toggle('flipped', state.flipped);
+  }
+
+  function flip() { state.flipped = !state.flipped; $('card').classList.toggle('flipped', state.flipped); }
+  function next() { const n = currentDeck().words.length; if (!n) return; state.index = (state.index + 1) % n; state.flipped = false; renderStudy(); }
+  function prev() { const n = currentDeck().words.length; if (!n) return; state.index = (state.index - 1 + n) % n; state.flipped = false; renderStudy(); }
+
+  $('card').addEventListener('click', flip);
+  $('btn-flip').addEventListener('click', flip);
+  $('btn-next').addEventListener('click', next);
+  $('btn-prev').addEventListener('click', prev);
+  $('btn-mode').addEventListener('click', () => {
+    const modes = modesFor(currentDeck());
+    state.modeIndex = (state.modeIndex + 1) % modes.length;
+    state.flipped = false; renderStudy();
+  });
+
+  document.addEventListener('keydown', e => {
+    if (['INPUT','TEXTAREA'].includes(e.target.tagName)) return;
+    if (tabStudy.style.display === 'none') return;
+    if (e.code === 'Space') { e.preventDefault(); flip(); }
+    if (e.key === 'ArrowRight') next();
+    if (e.key === 'ArrowLeft') prev();
+  });
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, c => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    }[c]));
+  }
+
+  function renderAll() { renderDeckBars(); renderList(); renderStudy(); }
+
+  load();
+  renderAll();
+})();
+</script>
+</body>
+</html>
