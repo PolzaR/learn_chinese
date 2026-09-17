@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Карты, деньги, лабиринт</title>
+<style>
+  :root{
+    --bg1:#0f0c29;
+    --bg2:#302b63;
+    --bg3:#24243e;
+    --card:rgba(255,255,255,.08);
+    --card-hover:rgba(255,255,255,.16);
+    --border:rgba(255,255,255,.18);
+    --text:#f5f5ff;
+    --muted:#b9b6d4;
+    --accent:#7f5af0;
+    --accent2:#2cb67d;
+    --accent3:#ff8906;
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+
+  body{
+    min-height:100vh;
+    font-family:'Segoe UI', system-ui, -apple-system, sans-serif;
+    color:var(--text);
+    background:linear-gradient(135deg,var(--bg1),var(--bg2),var(--bg3));
+    background-size:400% 400%;
+    animation:gradientShift 18s ease infinite;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:60px 20px;
+  }
+
+  @keyframes gradientShift{
+    0%{background-position:0% 50%;}
+    50%{background-position:100% 50%;}
+    100%{background-position:0% 50%;}
+  }
+
+  /* Плавающие световые пятна */
+  body::before, body::after{
+    content:"";
+    position:fixed;
+    border-radius:50%;
+    filter:blur(120px);
+    opacity:.35;
+    pointer-events:none;
+    z-index:0;
+  }
+  body::before{
+    width:400px; height:400px;
+    background:var(--accent);
+    top:-100px; left:-100px;
+    animation:float1 14s ease-in-out infinite;
+  }
+  body::after{
+    width:350px; height:350px;
+    background:var(--accent2);
+    bottom:-80px; right:-80px;
+    animation:float2 16s ease-in-out infinite;
+  }
+  @keyframes float1{
+    0%,100%{transform:translate(0,0);}
+    50%{transform:translate(80px,60px);}
+  }
+  @keyframes float2{
+    0%,100%{transform:translate(0,0);}
+    50%{transform:translate(-70px,-50px);}
+  }
+
+  header{
+    text-align:center;
+    margin-bottom:60px;
+    position:relative;
+    z-index:1;
+    animation:fadeDown .8s ease both;
+  }
+  @keyframes fadeDown{
+    from{opacity:0; transform:translateY(-25px);}
+    to{opacity:1; transform:translateY(0);}
+  }
+
+  h1{
+    font-size:clamp(2rem,5vw,3.2rem);
+    font-weight:800;
+    letter-spacing:-1px;
+    background:linear-gradient(90deg,#a78bfa,#2cb67d,#ff8906);
+    -webkit-background-clip:text;
+    background-clip:text;
+    -webkit-text-fill-color:transparent;
+    margin-bottom:14px;
+  }
+
+  header p{
+    color:var(--muted);
+    font-size:1.05rem;
+    max-width:520px;
+  }
+
+  main{
+    width:100%;
+    max-width:960px;
+    display:flex;
+    flex-direction:column;
+    gap:50px;
+    position:relative;
+    z-index:1;
+  }
+
+  section{
+    animation:fadeUp .7s ease both;
+  }
+  section:nth-child(1){animation-delay:.15s;}
+  section:nth-child(2){animation-delay:.3s;}
+  @keyframes fadeUp{
+    from{opacity:0; transform:translateY(25px);}
+    to{opacity:1; transform:translateY(0);}
+  }
+
+  .section-title{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    font-size:1.35rem;
+    font-weight:700;
+    margin-bottom:22px;
+    padding-left:6px;
+  }
+  .section-title .icon{
+    font-size:1.5rem;
+    filter:drop-shadow(0 0 12px rgba(255,255,255,.4));
+  }
+  .section-title::after{
+    content:"";
+    flex:1;
+    height:1px;
+    background:linear-gradient(90deg,var(--border),transparent);
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+    gap:22px;
+  }
+
+  .card{
+    position:relative;
+    display:block;
+    padding:28px 26px;
+    border-radius:20px;
+    text-decoration:none;
+    color:var(--text);
+    background:var(--card);
+    border:1px solid var(--border);
+    backdrop-filter:blur(14px);
+    -webkit-backdrop-filter:blur(14px);
+    overflow:hidden;
+    transition:transform .3s cubic-bezier(.2,.8,.3,1), background .3s, box-shadow .3s, border-color .3s;
+  }
+
+  .card::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:linear-gradient(135deg,var(--glow),transparent 60%);
+    opacity:0;
+    transition:opacity .35s;
+    pointer-events:none;
+  }
+
+  .card:hover, .card:focus-visible{
+    transform:translateY(-8px) scale(1.02);
+    background:var(--card-hover);
+    border-color:var(--glow);
+    box-shadow:0 20px 45px -15px var(--glow), 0 0 0 1px var(--glow) inset;
+    outline:none;
+  }
+  .card:hover::before, .card:focus-visible::before{opacity:.18;}
+
+  .card .emoji{
+    font-size:2.4rem;
+    display:block;
+    margin-bottom:16px;
+    transition:transform .35s;
+  }
+  .card:hover .emoji{transform:scale(1.15) rotate(-6deg);}
+
+  .card h3{
+    font-size:1.2rem;
+    font-weight:700;
+    margin-bottom:8px;
+    letter-spacing:-.3px;
+  }
+
+  .card p{
+    font-size:.9rem;
+    color:var(--muted);
+    line-height:1.5;
+  }
+
+  .card .arrow{
+    position:absolute;
+    top:24px;
+    right:24px;
+    font-size:1.1rem;
+    color:var(--glow);
+    opacity:0;
+    transform:translateX(-8px);
+    transition:opacity .3s, transform .3s;
+  }
+  .card:hover .arrow{opacity:1; transform:translateX(0);}
+
+  /* цветовые вариации карточек */
+  .card.purple{--glow:#7f5af0;}
+  .card.green {--glow:#2cb67d;}
+  .card.orange{--glow:#ff8906;}
+  .card.blue  {--glow:#3da9fc;}
+
+  footer{
+    margin-top:70px;
+    color:var(--muted);
+    font-size:.85rem;
+    position:relative;
+    z-index:1;
+    opacity:.7;
+    text-align:center;
+    animation:fadeUp 1s .5s ease both;
+  }
+
+  @media(max-width:520px){
+    body{padding:40px 16px;}
+    header{margin-bottom:40px;}
+    .grid{grid-template-columns:1fr;}
+  }
+</style>
+
+<link rel="icon" type="image/svg+xml" href="panda.svg">
+
+</head>
+<body>
+
+  <header>
+    <h1>Инструменты</h1>
+    <p>Все нужные приложения и мини-игры в одном месте</p>
+  </header>
+
+  <main>
+
+    <!-- РАЗДЕЛ: КАРТОЧКИ -->
+    <section>
+      <h2 class="section-title">
+        <span class="icon">🃏</span> Карточки
+      </h2>
+      <div class="grid">
+
+        <a class="card purple" href="/cards/radicals">
+          <span class="arrow">→</span>
+          <span class="emoji">🔑</span>
+          <h3>Ключи (214)</h3>
+          <p>Карточки для запоминания ключей.</p>
+        </a>
+
+        <a class="card green" href="/cards/hsk1">
+          <span class="arrow">→</span>
+          <span class="emoji">🇨🇳</span>
+          <h3>HSK 1</h3>
+          <p>Карточки для изучения китайских слов уровня HSK 1.</p>
+        </a>
+
+      </div>
+    </section>
+
+    <!-- РАЗДЕЛ: ИГРЫ -->
+    <section>
+      <h2 class="section-title">
+        <span class="icon">🎮</span> Игры
+      </h2>
+      <div class="grid">
+
+        <a class="card orange" href="/maze">
+          <span class="arrow">→</span>
+          <span class="emoji">🟡</span>
+          <h3>Лабиринт а-ля Pacman</h3>
+          <p>Пару раз головой об стену — и вы выучите направления в китайском.</p>
+        </a>
+
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    © <span id="year"></span> · NanaVSPopo
+  </footer>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+
+</body>
+</html>
