@@ -1,0 +1,2764 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>HSK 1 · Флеш-карточки</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+      background: #f1f5f9;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      touch-action: pan-y;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 500px;
+      background: white;
+      border-radius: 32px;
+      box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.2);
+      padding: 24px 20px 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      font-weight: 600;
+      color: #0f172a;
+      letter-spacing: -0.01em;
+      margin-bottom: 8px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background: #e2e8f0;
+      border-radius: 999px;
+      margin: 12px 0 8px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: #3b82f6;
+      border-radius: 999px;
+      transition: width 0.25s ease;
+    }
+
+    .stats {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      font-size: 0.85rem;
+      color: #64748b;
+      font-weight: 500;
+      margin-bottom: 16px;
+    }
+
+    .stats span {
+      background: #f8fafc;
+      padding: 4px 12px;
+      border-radius: 40px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .card-container {
+      position: relative;
+      width: 100%;
+      height: 420px;
+      margin: 8px 0 16px;
+      perspective: 1200px;
+    }
+
+    .card {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      cursor: grab;
+      user-select: none;
+      will-change: transform;
+      transition: transform 0.15s ease, opacity 0.2s ease;
+      transform-style: preserve-3d;
+    }
+
+    .card:active { cursor: grabbing; }
+
+    .card-inner {
+      position: relative;
+      width: 100%; height: 100%;
+      transition: transform 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
+      transform-style: preserve-3d;
+    }
+
+    .card.flipped .card-inner { transform: rotateY(180deg); }
+
+    .card-face {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: white;
+      border-radius: 28px;
+      box-shadow: 0 12px 30px -8px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.02);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 20px;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+
+    .card-back {
+      transform: rotateY(180deg);
+      background: #fefce8;
+      border: 1px solid #fde68a;
+      justify-content: flex-start;
+      padding-top: 32px;
+      overflow-y: auto;
+    }
+
+    .card-word {
+      font-size: 5.5rem;
+      font-weight: 700;
+      line-height: 1.2;
+      color: #0f172a;
+      text-align: center;
+      word-break: break-word;
+    }
+
+    .card-pinyin {
+      font-size: 1.9rem;
+      color: #3b82f6;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    .card-translation {
+      font-size: 1.4rem;
+      color: #334155;
+      font-weight: 500;
+      text-align: center;
+      border-top: 2px dashed #cbd5e1;
+      padding-top: 16px;
+      width: 90%;
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+
+    .examples-title {
+      font-size: 0.85rem;
+      color: #a16207;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 10px;
+    }
+
+    .examples {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+      margin-top: 12px;
+    }
+
+    .example {
+      background: #fffbeb;
+      border-radius: 14px;
+      padding: 10px 14px;
+      text-align: left;
+      border: 1px solid #fde68a;
+    }
+
+    .example-zh {
+      font-size: 1.15rem;
+      color: #0f172a;
+      font-weight: 500;
+      line-height: 1.5;
+    }
+
+    .example-zh .highlight {
+      color: #dc2626;
+      font-weight: 700;
+      background: #fee2e2;
+      padding: 0 4px;
+      border-radius: 4px;
+    }
+
+    .example-ru {
+      font-size: 0.95rem;
+      color: #78716c;
+      margin-top: 4px;
+    }
+
+    .card-back-hint {
+      margin-top: 14px;
+      margin-bottom: 4px;
+      font-size: 0.85rem;
+      color: #a16207;
+      font-weight: 500;
+      background: #fef9c3;
+      padding: 6px 14px;
+      border-radius: 999px;
+      border: 1px solid #fde68a;
+      text-align: center;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 20px;
+      width: 100%;
+      margin-top: 24px;
+      justify-content: center;
+    }
+
+    .btn {
+      flex: 1;
+      max-width: 160px;
+      padding: 16px 8px;
+      border: none;
+      border-radius: 60px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      background: #f1f5f9;
+      color: #1e293b;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.02);
+      border: 1px solid #e2e8f0;
+    }
+
+    .btn:active { transform: scale(0.97); }
+
+    .btn-forget {
+      background: #fee2e2;
+      color: #b91c1c;
+      border-color: #fecaca;
+    }
+
+    .btn-remember {
+      background: #dcfce7;
+      color: #166534;
+      border-color: #bbf7d0;
+    }
+
+    .keyboard-hint {
+      margin-top: 18px;
+      font-size: 0.8rem;
+      color: #94a3b8;
+      text-align: center;
+    }
+
+    .keyboard-hint kbd {
+      display: inline-block;
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-bottom-width: 2px;
+      border-radius: 6px;
+      padding: 2px 8px;
+      font-family: inherit;
+      font-size: 0.85rem;
+      color: #475569;
+      margin: 0 2px;
+    }
+
+    .finish-message {
+      text-align: center;
+      padding: 24px 12px;
+    }
+
+    .finish-message h2 {
+      font-size: 2rem;
+      color: #0f172a;
+      margin-bottom: 12px;
+    }
+
+    .finish-message p {
+      color: #475569;
+      font-size: 1.1rem;
+      margin-bottom: 28px;
+    }
+
+    .stats-total {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .stats-total .stat-pill {
+      background: #f0f9ff;
+      border: 1px solid #bae6fd;
+      color: #0369a1;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+<div class="app" id="app">
+  <h1>🀄 HSK 1</h1>
+  <div class="progress-bar">
+    <div class="progress-fill" id="progressFill"></div>
+  </div>
+  <div class="stats">
+    <span id="roundLabel">Раунд 1</span>
+    <span id="counterLabel">0 / 0</span>
+  </div>
+
+  <div class="card-container" id="cardContainer">
+    <div class="card" id="card">
+      <div class="card-inner" id="cardInner">
+        <div class="card-face card-front">
+          <div class="card-word" id="cardWord">你好</div>
+        </div>
+        <div class="card-face card-back">
+          <div class="card-pinyin" id="cardPinyin">nǐ hǎo</div>
+          <div class="card-translation" id="cardTranslation">привет</div>
+          <div id="examplesBlock">
+            <div class="examples-title">Примеры</div>
+            <div class="examples" id="examplesContainer"></div>
+          </div>
+          <div class="card-back-hint">Нажмите ← чтобы отправить на повторение</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="buttons" id="buttons">
+    <button class="btn btn-forget" id="btnForget" aria-label="Не помню">← Не помню</button>
+    <button class="btn btn-remember" id="btnRemember" aria-label="Помню">Помню →</button>
+  </div>
+
+  <div class="keyboard-hint" id="keyboardHint">
+    <kbd>←</kbd> не помню · <kbd>→</kbd> помню
+  </div>
+
+  <div id="finishScreen" class="finish-message hidden">
+    <h2 id="finishTitle">🎉 Отлично!</h2>
+    <div class="stats-total" id="statsTotal"></div>
+    <p id="finishText">Все слова пройдены!</p>
+    <button class="btn" id="restartBtn" style="max-width: 260px; margin: 0 auto; background: #3b82f6; color: white; border: none;">Продолжить →</button>
+  </div>
+</div>
+
+<script>
+  // ========== СЛОВАРЬ HSK 1 (полный список) ==========
+  // examples — опционально, для некоторых слов
+    const HSK1_WORDS = [
+    { word: "爱", pinyin: "ài", translation: "любить; любовь", examples: [
+      { zh: "我爱我的家。", ru: "Я люблю свою семью." },
+      { zh: "妈妈爱我。", ru: "Мама любит меня." }
+    ]},
+    { word: "爱好", pinyin: "àihào", translation: "хобби", examples: [
+      { zh: "我的爱好是看书。", ru: "Моё хобби — читать книги." },
+      { zh: "你有什么爱好？", ru: "Какое у тебя хобби?" }
+    ]},
+    { word: "八", pinyin: "bā", translation: "8, восемь", examples: [
+      { zh: "我有八本书。", ru: "У меня восемь книг." },
+      { zh: "现在八点。", ru: "Сейчас восемь часов." }
+    ]},
+    { word: "爸爸", pinyin: "bàba", translation: "папа, отец", examples: [
+      { zh: "我爸爸是医生。", ru: "Мой папа врач." },
+      { zh: "爸爸去工作了。", ru: "Папа ушёл на работу." }
+    ]},
+    { word: "吧", pinyin: "ba", translation: "частица: -ка, давай, ну; наверное", examples: [
+      { zh: "我们走吧。", ru: "Пойдём." },
+      { zh: "你是学生吧？", ru: "Ты, наверное, студент?" }
+    ]},
+    { word: "白", pinyin: "bái", translation: "белый", examples: [
+      { zh: "这是白纸。", ru: "Это белая бумага." },
+      { zh: "她穿白衣服。", ru: "Она носит белую одежду." }
+    ]},
+    { word: "白天", pinyin: "báitiān", translation: "днём, дневное время", examples: [
+      { zh: "白天我很忙。", ru: "Днём я занят." },
+      { zh: "白天天气很好。", ru: "Днём хорошая погода." }
+    ]},
+    { word: "百", pinyin: "bǎi", translation: "100, сто", examples: [
+      { zh: "这个一百块。", ru: "Это стоит сто юаней." },
+      { zh: "我们学校有一百个老师。", ru: "В нашей школе сто учителей." }
+    ]},
+    { word: "班", pinyin: "bān", translation: "класс, команда", examples: [
+      { zh: "我在一班。", ru: "Я в первом классе." },
+      { zh: "我们班有二十个学生。", ru: "В нашем классе двадцать учеников." }
+    ]},
+    { word: "半", pinyin: "bàn", translation: "половина", examples: [
+      { zh: "现在两点半。", ru: "Сейчас половина третьего." },
+      { zh: "我吃了一半。", ru: "Я съел половину." }
+    ]},
+    { word: "半年", pinyin: "bànnián", translation: "полгода, полугодие", examples: [
+      { zh: "我学习汉语半年了。", ru: "Я учу китайский полгода." },
+      { zh: "他半年没回家了。", ru: "Он полгода не был дома." }
+    ]},
+    { word: "半天", pinyin: "bàntiān", translation: "половина дня, полдня", examples: [
+      { zh: "我等了你半天。", ru: "Я ждал тебя полдня." },
+      { zh: "我休息了半天。", ru: "Я отдыхал полдня." }
+    ]},
+    { word: "帮", pinyin: "bāng", translation: "помогать", examples: [
+      { zh: "请帮我一下。", ru: "Помоги мне, пожалуйста." },
+      { zh: "他常常帮我。", ru: "Он часто мне помогает." }
+    ]},
+    { word: "帮忙", pinyin: "bāngmáng", translation: "помогать", examples: [
+      { zh: "你能帮忙吗？", ru: "Ты можешь помочь?" },
+      { zh: "谢谢你的帮忙。", ru: "Спасибо за твою помощь." }
+    ]},
+    { word: "包", pinyin: "bāo", translation: "обертывать, заворачивать; сумка", examples: [
+      { zh: "这是我的包。", ru: "Это моя сумка." },
+      { zh: "请帮我包一下。", ru: "Заверните мне, пожалуйста." }
+    ]},
+    { word: "包子", pinyin: "bāozi", translation: "баоцзы, паровые пирожки", examples: [
+      { zh: "我想吃包子。", ru: "Я хочу баоцзы." },
+      { zh: "这个包子很好吃。", ru: "Эти баоцзы очень вкусные." }
+    ]},
+    { word: "杯", pinyin: "bēi", translation: "кружка, стакан; рюмка", examples: [
+      { zh: "我要一杯茶。", ru: "Я хочу чашку чая." },
+      { zh: "请给我一杯水。", ru: "Дайте мне стакан воды." }
+    ]},
+    { word: "杯子", pinyin: "bēizi", translation: "стакан, чашка", examples: [
+      { zh: "这是我的杯子。", ru: "Это моя чашка." },
+      { zh: "杯子在桌子上。", ru: "Чашка на столе." }
+    ]},
+    { word: "北", pinyin: "běi", translation: "север", examples: [
+      { zh: "北京在中国的北边。", ru: "Пекин на севере Китая." },
+      { zh: "北边是山。", ru: "На севере — горы." }
+    ]},
+    { word: "北边", pinyin: "běibiān", translation: "северная сторона", examples: [
+      { zh: "学校在北边。", ru: "Школа на северной стороне." },
+      { zh: "北边很冷。", ru: "На севере холодно." }
+    ]},
+    { word: "北京", pinyin: "Běijīng", translation: "Пекин", examples: [
+      { zh: "我去北京。", ru: "Я еду в Пекин." },
+      { zh: "北京很大。", ru: "Пекин очень большой." }
+    ]},
+    { word: "本", pinyin: "běn", translation: "сч. слово для книг и тетрадей", examples: [
+      { zh: "我有三本书。", ru: "У меня три книги." },
+      { zh: "这本书很好。", ru: "Эта книга очень хорошая." }
+    ]},
+    { word: "本子", pinyin: "běnzi", translation: "тетрадь, блокнот", examples: [
+      { zh: "这是我的本子。", ru: "Это моя тетрадь." },
+      { zh: "本子上有字。", ru: "В тетради есть записи." }
+    ]},
+    { word: "比", pinyin: "bǐ", translation: "сравнивать, по сравнению с...", examples: [
+      { zh: "他比我高。", ru: "Он выше меня." },
+      { zh: "今天比昨天热。", ru: "Сегодня жарче, чем вчера." }
+    ]},
+    { word: "别", pinyin: "bié", translation: "не надо; другой", examples: [
+      { zh: "别忘了。", ru: "Не забудь." },
+      { zh: "别说话。", ru: "Не разговаривай." }
+    ]},
+    { word: "别的", pinyin: "biéde", translation: "другой, иной, чужой", examples: [
+      { zh: "我要别的。", ru: "Я хочу другое." },
+      { zh: "还有别的吗？", ru: "Есть ещё что-нибудь?" }
+    ]},
+    { word: "别人", pinyin: "biérén", translation: "другой, посторонний; другие", examples: [
+      { zh: "别问别人。", ru: "Не спрашивай других." },
+      { zh: "别人都去了。", ru: "Все остальные уже пошли." }
+    ]},
+    { word: "病", pinyin: "bìng", translation: "болеть, быть больным; болезнь", examples: [
+      { zh: "他病了。", ru: "Он заболел." },
+      { zh: "这个病很重。", ru: "Эта болезнь серьёзная." }
+    ]},
+    { word: "病人", pinyin: "bìngrén", translation: "пациент, больной", examples: [
+      { zh: "病人在医院。", ru: "Пациент в больнице." },
+      { zh: "医生在看病人。", ru: "Врач осматривает пациента." }
+    ]},
+    { word: "不大", pinyin: "búdà", translation: "небольшой; не очень; редко", examples: [
+      { zh: "这个房子不大。", ru: "Этот дом небольшой." },
+      { zh: "我不大喜欢喝茶。", ru: "Я не очень люблю чай." }
+    ]},
+    { word: "不对", pinyin: "búduì", translation: "неверно, ошибочный", examples: [
+      { zh: "这个不对。", ru: "Это неверно." },
+      { zh: "你说得不对。", ru: "Ты говоришь неправильно." }
+    ]},
+    { word: "不客气", pinyin: "bú kèqi", translation: "пожалуйста, не стоит благодарности", examples: [
+      { zh: "谢谢你！— 不客气。", ru: "Спасибо! — Не за что." },
+      { zh: "不客气，这是我应该做的。", ru: "Не за что, это мой долг." }
+    ]},
+    { word: "不用", pinyin: "búyòng", translation: "не нужно, нет необходимости", examples: [
+      { zh: "你不用来。", ru: "Тебе не нужно приходить." },
+      { zh: "不用谢。", ru: "Не стоит благодарности." }
+    ]},
+    { word: "不", pinyin: "bù", translation: "нет, не", examples: [
+      { zh: "我不是老师。", ru: "Я не учитель." },
+      { zh: "他不喝茶。", ru: "Он не пьёт чай." }
+    ]},
+    { word: "菜", pinyin: "cài", translation: "блюдо, овощи, кухня", examples: [
+      { zh: "这个菜很好吃。", ru: "Это блюдо очень вкусное." },
+      { zh: "妈妈做菜。", ru: "Мама готовит." }
+    ]},
+    { word: "茶", pinyin: "chá", translation: "чай", examples: [
+      { zh: "我喜欢喝茶。", ru: "Я люблю пить чай." },
+      { zh: "请喝茶。", ru: "Пожалуйста, выпейте чаю." }
+    ]},
+    { word: "差", pinyin: "chà", translation: "без (напр. без десяти семь); отличаться; недоставать", examples: [
+      { zh: "现在差五分八点。", ru: "Сейчас без пяти восемь." },
+      { zh: "还差一个人。", ru: "Не хватает ещё одного человека." }
+    ]},
+    { word: "常", pinyin: "cháng", translation: "часто", examples: [
+      { zh: "他常来我家。", ru: "Он часто приходит ко мне домой." },
+      { zh: "我常喝茶。", ru: "Я часто пью чай." }
+    ]},
+    { word: "常常", pinyin: "chángcháng", translation: "часто, обычно", examples: [
+      { zh: "我常常去图书馆。", ru: "Я часто хожу в библиотеку." },
+      { zh: "他常常迟到。", ru: "Он часто опаздывает." }
+    ]},
+    { word: "唱", pinyin: "chàng", translation: "петь", examples: [
+      { zh: "她唱得很好。", ru: "Она хорошо поёт." },
+      { zh: "我喜欢唱歌。", ru: "Я люблю петь." }
+    ]},
+    { word: "唱歌", pinyin: "chànggē", translation: "петь (песню)", examples: [
+      { zh: "我们一起唱歌吧。", ru: "Давай споём вместе." },
+      { zh: "他唱歌很好听。", ru: "Он красиво поёт." }
+    ]},
+    { word: "车", pinyin: "chē", translation: "транспортное средство (машина, велосипед и т.д.)", examples: [
+      { zh: "这是我的车。", ru: "Это моя машина." },
+      { zh: "我坐车去学校。", ru: "Я еду в школу на машине." }
+    ]},
+    { word: "车票", pinyin: "chēpiào", translation: "(проездной) билет", examples: [
+      { zh: "我买了两张车票。", ru: "Я купил два билета." },
+      { zh: "车票在哪儿？", ru: "Где билет?" }
+    ]},
+    { word: "车上", pinyin: "chē shang", translation: "в автобусе, в машине", examples: [
+      { zh: "车上人很多。", ru: "В автобусе много людей." },
+      { zh: "我的包在车上。", ru: "Моя сумка в машине." }
+    ]},
+    { word: "车站", pinyin: "chēzhàn", translation: "автобусная остановка, вокзал", examples: [
+      { zh: "车站在哪儿？", ru: "Где остановка?" },
+      { zh: "我去车站接朋友。", ru: "Я иду на вокзал встречать друга." }
+    ]},
+    { word: "吃", pinyin: "chī", translation: "кушать, есть", examples: [
+      { zh: "我想吃米饭。", ru: "Я хочу поесть риса." },
+      { zh: "你吃饭了吗？", ru: "Ты поел?" }
+    ]},
+    { word: "吃饭", pinyin: "chīfàn", translation: "есть, кушать", examples: [
+      { zh: "我们去吃饭吧。", ru: "Пойдём поедим." },
+      { zh: "他正在吃饭。", ru: "Он сейчас ест." }
+    ]},
+    { word: "出", pinyin: "chū", translation: "выходить наружу; указывает направление наружу", examples: [
+      { zh: "他出去了。", ru: "Он вышел." },
+      { zh: "请出示你的票。", ru: "Покажите ваш билет." }
+    ]},
+    { word: "出来", pinyin: "chūlái", translation: "выходить; появиться", examples: [
+      { zh: "请你出来一下。", ru: "Выйди, пожалуйста." },
+      { zh: "太阳出来了。", ru: "Солнце вышло." }
+    ]},
+    { word: "出去", pinyin: "chūqù", translation: "выходить (наружу от говорящего)", examples: [
+      { zh: "我要出去一下。", ru: "Я выйду на минутку." },
+      { zh: "他出去了。", ru: "Он вышел." }
+    ]},
+    { word: "穿", pinyin: "chuān", translation: "носить, надевать (одежду)", examples: [
+      { zh: "今天冷，多穿点。", ru: "Сегодня холодно, оденься теплее." },
+      { zh: "她穿了一件红衣服。", ru: "Она надела красную одежду." }
+    ]},
+    { word: "床", pinyin: "chuáng", translation: "кровать", examples: [
+      { zh: "我的床很大。", ru: "Моя кровать большая." },
+      { zh: "猫在床上。", ru: "Кошка на кровати." }
+    ]},
+    { word: "次", pinyin: "cì", translation: "сч. слово: раз", examples: [
+      { zh: "我去过两次中国。", ru: "Я был в Китае два раза." },
+      { zh: "下次见。", ru: "До следующего раза." }
+    ]},
+    { word: "从", pinyin: "cóng", translation: "из, с..., через", examples: [
+      { zh: "我从北京来。", ru: "Я из Пекина." },
+      { zh: "从这儿走。", ru: "Идите отсюда." }
+    ]},
+    { word: "错", pinyin: "cuò", translation: "ошибка, ошибаться", examples: [
+      { zh: "这个字写错了。", ru: "Этот иероглиф написан с ошибкой." },
+      { zh: "对不起，我错了。", ru: "Извините, я ошибся." }
+    ]},
+    { word: "打", pinyin: "dǎ", translation: "бить, ударять; играть; звонить", examples: [
+      { zh: "我们打球吧。", ru: "Давай поиграем в мяч." },
+      { zh: "我给你打电话。", ru: "Я тебе позвоню." }
+    ]},
+    { word: "打车", pinyin: "dǎchē", translation: "брать такси", examples: [
+      { zh: "我们打车去吧。", ru: "Давай поедем на такси." },
+      { zh: "打车很贵。", ru: "Такси дорого." }
+    ]},
+    { word: "打电话", pinyin: "dǎ diànhuà", translation: "звонить по телефону", examples: [
+      { zh: "我在打电话。", ru: "Я звоню по телефону." },
+      { zh: "请给我打电话。", ru: "Позвони мне, пожалуйста." }
+    ]},
+    { word: "打开", pinyin: "dǎkāi", translation: "открывать, разворачивать", examples: [
+      { zh: "请打开书。", ru: "Откройте книгу, пожалуйста." },
+      { zh: "打开门。", ru: "Открой дверь." }
+    ]},
+    { word: "打球", pinyin: "dǎqiú", translation: "играть в мяч", examples: [
+      { zh: "我喜欢打球。", ru: "Я люблю играть в мяч." },
+      { zh: "我们下午打球。", ru: "Мы играем в мяч после обеда." }
+    ]},
+    { word: "大", pinyin: "dà", translation: "большой, старший", examples: [
+      { zh: "中国很大。", ru: "Китай очень большой." },
+      { zh: "这是一个大苹果。", ru: "Это большое яблоко." }
+    ]},
+    { word: "大学", pinyin: "dàxué", translation: "университет", examples: [
+      { zh: "我在大学学习。", ru: "Я учусь в университете." },
+      { zh: "这个大学很好。", ru: "Этот университет хороший." }
+    ]},
+    { word: "大学生", pinyin: "dàxuéshēng", translation: "студент", examples: [
+      { zh: "他是大学生。", ru: "Он студент." },
+      { zh: "大学生活很有意思。", ru: "Студенческая жизнь очень интересная." }
+    ]},
+    { word: "到", pinyin: "dào", translation: "достигать, добираться", examples: [
+      { zh: "我到了。", ru: "Я arrived." },
+      { zh: "你什么时候到？", ru: "Когда ты приедешь?" }
+    ]},
+    { word: "得到", pinyin: "dédào", translation: "получать, приобретать", examples: [
+      { zh: "我得到了一个礼物。", ru: "Я получил подарок." },
+      { zh: "他得到了好成绩。", ru: "Он получил хорошую оценку." }
+    ]},
+    { word: "地", pinyin: "de", translation: "суффикс наречий", examples: [
+      { zh: "他高兴地笑了。", ru: "Он радостно засмеялся." },
+      { zh: "她慢慢地走。", ru: "Она медленно идёт." }
+    ]},
+    { word: "的", pinyin: "de", translation: "притяжательная частица", examples: [
+      { zh: "这是我的书。", ru: "Это моя книга." },
+      { zh: "他是我的朋友。", ru: "Он мой друг." }
+    ]},
+    { word: "等", pinyin: "děng", translation: "ждать", examples: [
+      { zh: "请等一下。", ru: "Подождите немного." },
+      { zh: "我在等你。", ru: "Я тебя жду." }
+    ]},
+    { word: "地", pinyin: "dì", translation: "страна, местность; земля", examples: [
+      { zh: "这个地方很美。", ru: "Это место очень красивое." },
+      { zh: "他在草地上坐。", ru: "Он сидит на траве." }
+    ]},
+    { word: "地点", pinyin: "dìdiǎn", translation: "пункт, место", examples: [
+      { zh: "我们在哪个地点见面？", ru: "В каком месте мы встретимся?" },
+      { zh: "这里是个好地点。", ru: "Это хорошее место." }
+    ]},
+    { word: "地方", pinyin: "dìfang", translation: "место, местоположение", examples: [
+      { zh: "这个地方很好。", ru: "Это место очень хорошее." },
+      { zh: "你去过哪些地方？", ru: "В каких местах ты был?" }
+    ]},
+    { word: "地上", pinyin: "dìshang", translation: "на земле; на полу", examples: [
+      { zh: "书在地上。", ru: "Книга на полу." },
+      { zh: "别坐在地上。", ru: "Не садись на пол." }
+    ]},
+    { word: "地图", pinyin: "dìtú", translation: "карта", examples: [
+      { zh: "请给我一张地图。", ru: "Дайте мне карту, пожалуйста." },
+      { zh: "我在地图上看北京。", ru: "Я смотрю на Пекин на карте." }
+    ]},
+    { word: "弟弟", pinyin: "dìdi", translation: "младший брат", examples: [
+      { zh: "我弟弟是学生。", ru: "Мой младший брат ученик." },
+      { zh: "弟弟在家。", ru: "Младший брат дома." }
+    ]},
+    { word: "第", pinyin: "dì", translation: "приставка порядковых числительных", examples: [
+      { zh: "这是我第一次来中国。", ru: "Это мой первый раз в Китае." },
+      { zh: "他考了第一名。", ru: "Он занял первое место." }
+    ]},
+    { word: "点", pinyin: "diǎn", translation: "час; точка; немного", examples: [
+      { zh: "现在三点。", ru: "Сейчас три часа." },
+      { zh: "请给我一点儿。", ru: "Дайте мне немного." }
+    ]},
+    { word: "电", pinyin: "diàn", translation: "электричество", examples: [
+      { zh: "这里没有电。", ru: "Здесь нет электричества." },
+      { zh: "手机要充电。", ru: "Телефон надо зарядить." }
+    ]},
+    { word: "电话", pinyin: "diànhuà", translation: "телефон; звонок", examples: [
+      { zh: "你的电话是多少？", ru: "Какой у тебя номер телефона?" },
+      { zh: "我接个电话。", ru: "Я отвечу на звонок." }
+    ]},
+    { word: "电脑", pinyin: "diànnǎo", translation: "компьютер", examples: [
+      { zh: "我用电脑工作。", ru: "Я работаю за компьютером." },
+      { zh: "这是我的电脑。", ru: "Это мой компьютер." }
+    ]},
+    { word: "电视", pinyin: "diànshì", translation: "телевидение, телевизор", examples: [
+      { zh: "我在看电视。", ru: "Я смотрю телевизор." },
+      { zh: "电视在桌子上。", ru: "Телевизор на столе." }
+    ]},
+    { word: "电视机", pinyin: "diànshìjī", translation: "телевизор", examples: [
+      { zh: "我家有新电视机。", ru: "У меня дома новый телевизор." },
+      { zh: "电视机坏了。", ru: "Телевизор сломался." }
+    ]},
+    { word: "电影", pinyin: "diànyǐng", translation: "фильм, кино", examples: [
+      { zh: "我们去看电影吧。", ru: "Пойдём в кино." },
+      { zh: "这个电影很好看。", ru: "Этот фильм очень хороший." }
+    ]},
+    { word: "电影院", pinyin: "diànyǐngyuàn", translation: "кинотеатр", examples: [
+      { zh: "电影院在哪儿？", ru: "Где кинотеатр?" },
+      { zh: "我们在电影院见面。", ru: "Мы встретимся в кинотеатре." }
+    ]},
+    { word: "东", pinyin: "dōng", translation: "восток, восточный", examples: [
+      { zh: "太阳从东边出来。", ru: "Солнце встаёт на востоке." },
+      { zh: "东边是海。", ru: "На востоке море." }
+    ]},
+    { word: "东边", pinyin: "dōngbiān", translation: "восточная сторона", examples: [
+      { zh: "银行在东边。", ru: "Банк на восточной стороне." },
+      { zh: "东边有个公园。", ru: "На востоке есть парк." }
+    ]},
+    { word: "东西", pinyin: "dōngxi", translation: "вещь, вещи, предмет", examples: [
+      { zh: "我要买东西。", ru: "Я хочу купить вещи." },
+      { zh: "这是什么东西？", ru: "Что это за вещь?" }
+    ]},
+    { word: "动", pinyin: "dòng", translation: "двигаться, действовать", examples: [
+      { zh: "别动！", ru: "Не двигайся!" },
+      { zh: "这个门不动了。", ru: "Эта дверь не двигается." }
+    ]},
+    { word: "动作", pinyin: "dòngzuò", translation: "движение, действие", examples: [
+      { zh: "他的动作很快。", ru: "У него быстрые движения." },
+      { zh: "请跟我做这个动作。", ru: "Повторяйте за мной это движение." }
+    ]},
+    { word: "都", pinyin: "dōu", translation: "все; всё", examples: [
+      { zh: "我们都去了。", ru: "Мы все пошли." },
+      { zh: "他们都很高兴。", ru: "Они все очень рады." }
+    ]},
+    { word: "读", pinyin: "dú", translation: "читать, учиться", examples: [
+      { zh: "我读中文书。", ru: "Я читаю книгу на китайском." },
+      { zh: "请读这个字。", ru: "Прочитайте этот иероглиф." }
+    ]},
+    { word: "读书", pinyin: "dúshū", translation: "читать (книгу); учиться", examples: [
+      { zh: "他在读书。", ru: "Он читает книгу." },
+      { zh: "我在大学读书。", ru: "Я учусь в университете." }
+    ]},
+    { word: "对", pinyin: "duì", translation: "правильный, верный", examples: [
+      { zh: "你说得对。", ru: "Ты правильно говоришь." },
+      { zh: "这个答案对。", ru: "Этот ответ правильный." }
+    ]},
+    { word: "对不起", pinyin: "duìbuqǐ", translation: "извините", examples: [
+      { zh: "对不起，我来晚了。", ru: "Извините, я опоздал." },
+      { zh: "对不起，我不知道。", ru: "Извините, я не знаю." }
+    ]},
+    { word: "多", pinyin: "duō", translation: "многий, многочисленный", examples: [
+      { zh: "这里人很多。", ru: "Здесь много людей." },
+      { zh: "你认识多少字？", ru: "Сколько иероглифов ты знаешь?" }
+    ]},
+    { word: "多少", pinyin: "duōshǎo", translation: "сколько?", examples: [
+      { zh: "这个多少钱？", ru: "Сколько это стоит?" },
+      { zh: "你们学校有多少学生？", ru: "Сколько учеников в вашей школе?" }
+    ]},
+    { word: "饿", pinyin: "è", translation: "голодный", examples: [
+      { zh: "我饿了。", ru: "Я проголодался." },
+      { zh: "你饿不饿？", ru: "Ты голоден?" }
+    ]},
+    { word: "儿子", pinyin: "érzi", translation: "сын", examples: [
+      { zh: "他有一个儿子。", ru: "У него есть сын." },
+      { zh: "儿子在学校。", ru: "Сын в школе." }
+    ]},
+    { word: "二", pinyin: "èr", translation: "2, два", examples: [
+      { zh: "我有二个哥哥。", ru: "У меня два старших брата." },
+      { zh: "现在二点。", ru: "Сейчас два часа." }
+    ]},
+    { word: "饭", pinyin: "fàn", translation: "еда, пища; варёный рис", examples: [
+      { zh: "吃饭了！", ru: "Еда готова!" },
+      { zh: "我想吃米饭。", ru: "Я хочу поесть риса." }
+    ]},
+    { word: "饭店", pinyin: "fàndiàn", translation: "кафе, ресторан", examples: [
+      { zh: "我们去饭店吃饭。", ru: "Пойдём поедим в ресторан." },
+      { zh: "这个饭店很有名。", ru: "Этот ресторан очень известный." }
+    ]},
+    { word: "房间", pinyin: "fángjiān", translation: "комната", examples: [
+      { zh: "我的房间很大。", ru: "Моя комната большая." },
+      { zh: "房间里有人。", ru: "В комнате кто-то есть." }
+    ]},
+    { word: "房子", pinyin: "fángzi", translation: "дом, здание", examples: [
+      { zh: "我家有大房子。", ru: "У меня большой дом." },
+      { zh: "这个房子很贵。", ru: "Этот дом очень дорогой." }
+    ]},
+        { word: "放", pinyin: "fàng", translation: "класть, положить", examples: [
+      { zh: "请把书放在桌子上。", ru: "Положи книгу на стол, пожалуйста." },
+      { zh: "东西放在哪儿？", ru: "Куда положить вещи?" }
+    ]},
+    { word: "放假", pinyin: "fàngjià", translation: "отпуск, каникулы", examples: [
+      { zh: "我们明天放假。", ru: "Завтра у нас выходной." },
+      { zh: "放假你去哪儿？", ru: "Куда поедешь на каникулах?" }
+    ]},
+    { word: "放学", pinyin: "fàngxué", translation: "заканчивать занятия", examples: [
+      { zh: "我们四点放学。", ru: "Мы заканчиваем занятия в четыре." },
+      { zh: "放学以后我回家。", ru: "После школы я иду домой." }
+    ]},
+    { word: "飞", pinyin: "fēi", translation: "летать", examples: [
+      { zh: "鸟在天上飞。", ru: "Птица летит в небе." },
+      { zh: "飞机飞得很高。", ru: "Самолёт летит очень высоко." }
+    ]},
+    { word: "飞机", pinyin: "fēijī", translation: "самолет", examples: [
+      { zh: "我坐飞机去北京。", ru: "Я лечу в Пекин на самолёте." },
+      { zh: "飞机几点起飞？", ru: "Во сколько вылетает самолёт?" }
+    ]},
+    { word: "非常", pinyin: "fēicháng", translation: "очень, крайне", examples: [
+      { zh: "这个菜非常好吃。", ru: "Это блюдо очень вкусное." },
+      { zh: "我非常高兴。", ru: "Я очень рад." }
+    ]},
+    { word: "分", pinyin: "fēn", translation: "минута; процент; делить", examples: [
+      { zh: "请等五分钟。", ru: "Подождите пять минут." },
+      { zh: "现在八点十分。", ru: "Сейчас десять минут девятого." }
+    ]},
+    { word: "风", pinyin: "fēng", translation: "ветер", examples: [
+      { zh: "今天风很大。", ru: "Сегодня сильный ветер." },
+      { zh: "风从北边来。", ru: "Ветер дует с севера." }
+    ]},
+    { word: "干", pinyin: "gān", translation: "сухой, сушёный", examples: [
+      { zh: "衣服干了。", ru: "Одежда высохла." },
+      { zh: "这个很干。", ru: "Это очень сухое." }
+    ]},
+    { word: "干净", pinyin: "gānjìng", translation: "чистый", examples: [
+      { zh: "房间很干净。", ru: "Комната очень чистая." },
+      { zh: "请把手洗干净。", ru: "Помой руки, пожалуйста." }
+    ]},
+    { word: "干", pinyin: "gàn", translation: "ствол; работать, трудиться", examples: [
+      { zh: "你在干什么？", ru: "Что ты делаешь?" },
+      { zh: "我们一起干吧。", ru: "Давай работать вместе." }
+    ]},
+    { word: "干什么", pinyin: "gàn shénme", translation: "зачем, для чего", examples: [
+      { zh: "你在干什么？", ru: "Что ты делаешь?" },
+      { zh: "你干什么去？", ru: "Куда ты идёшь?" }
+    ]},
+    { word: "高", pinyin: "gāo", translation: "высокий", examples: [
+      { zh: "他很高。", ru: "Он очень высокий." },
+      { zh: "这座山很高。", ru: "Эта гора очень высокая." }
+    ]},
+    { word: "高兴", pinyin: "gāoxìng", translation: "радостный", examples: [
+      { zh: "我很高兴。", ru: "Я очень рад." },
+      { zh: "认识你很高兴。", ru: "Приятно познакомиться." }
+    ]},
+    { word: "告诉", pinyin: "gàosu", translation: "сказать, оповестить, проинформировать", examples: [
+      { zh: "请告诉我你的名字。", ru: "Скажи мне твоё имя." },
+      { zh: "他告诉了我这件事。", ru: "Он рассказал мне об этом." }
+    ]},
+    { word: "哥哥", pinyin: "gēge", translation: "старший брат", examples: [
+      { zh: "我哥哥是大学生。", ru: "Мой старший брат студент." },
+      { zh: "哥哥在家吗？", ru: "Старший брат дома?" }
+    ]},
+    { word: "歌", pinyin: "gē", translation: "песня, мелодия", examples: [
+      { zh: "这首歌很好听。", ru: "Эта песня очень красивая." },
+      { zh: "我喜欢听歌。", ru: "Я люблю слушать песни." }
+    ]},
+    { word: "个", pinyin: "gè", translation: "универсальное счетное слово", examples: [
+      { zh: "我有三个苹果。", ru: "У меня три яблока." },
+      { zh: "几个人？", ru: "Сколько человек?" }
+    ]},
+    { word: "给", pinyin: "gěi", translation: "давать; для", examples: [
+      { zh: "请给我一杯水。", ru: "Дайте мне стакан воды." },
+      { zh: "我给你打电话。", ru: "Я тебе позвоню." }
+    ]},
+    { word: "跟", pinyin: "gēn", translation: "с, следовать за…", examples: [
+      { zh: "我跟你一起去。", ru: "Я пойду с тобой." },
+      { zh: "请跟我来。", ru: "Идите за мной." }
+    ]},
+    { word: "工人", pinyin: "gōngrén", translation: "рабочий", examples: [
+      { zh: "他是工人。", ru: "Он рабочий." },
+      { zh: "工人在工作。", ru: "Рабочие работают." }
+    ]},
+    { word: "工作", pinyin: "gōngzuò", translation: "работать; работа", examples: [
+      { zh: "我在医院工作。", ru: "Я работаю в больнице." },
+      { zh: "他的工作很好。", ru: "У него хорошая работа." }
+    ]},
+    { word: "关", pinyin: "guān", translation: "закрывать; выключать", examples: [
+      { zh: "请关门。", ru: "Закройте дверь." },
+      { zh: "关电视吧。", ru: "Выключи телевизор." }
+    ]},
+    { word: "关上", pinyin: "guānshàng", translation: "закрыть", examples: [
+      { zh: "请关上窗户。", ru: "Закройте окно." },
+      { zh: "他关上门了。", ru: "Он закрыл дверь." }
+    ]},
+    { word: "贵", pinyin: "guì", translation: "дорогой; уважаемый", examples: [
+      { zh: "这个太贵了。", ru: "Это слишком дорого." },
+      { zh: "贵姓？", ru: "Как ваша уважаемая фамилия?" }
+    ]},
+    { word: "国", pinyin: "guó", translation: "государство, страна, нация", examples: [
+      { zh: "你是哪国人？", ru: "Из какой ты страны?" },
+      { zh: "我爱我的国。", ru: "Я люблю свою страну." }
+    ]},
+    { word: "国家", pinyin: "guójiā", translation: "страна", examples: [
+      { zh: "中国是一个大国。", ru: "Китай — большая страна." },
+      { zh: "你去过哪些国家？", ru: "В каких странах ты был?" }
+    ]},
+    { word: "国外", pinyin: "guówài", translation: "заграница, за рубежом", examples: [
+      { zh: "他在国外工作。", ru: "Он работает за границей." },
+      { zh: "我想去国外学习。", ru: "Я хочу учиться за границей." }
+    ]},
+    { word: "过", pinyin: "guò", translation: "проходить; переходить через", examples: [
+      { zh: "请过马路。", ru: "Перейдите дорогу." },
+      { zh: "我去过中国。", ru: "Я был в Китае." }
+    ]},
+    { word: "还", pinyin: "hái", translation: "ещё, всё ещё; к тому же", examples: [
+      { zh: "他还在睡觉。", ru: "Он ещё спит." },
+      { zh: "我还要一杯茶。", ru: "Я хочу ещё чашку чая." }
+    ]},
+    { word: "还是", pinyin: "háishì", translation: "всё ещё; или", examples: [
+      { zh: "你还是那么忙。", ru: "Ты всё ещё так занят." },
+      { zh: "你喝茶还是咖啡？", ru: "Ты пьёшь чай или кофе?" }
+    ]},
+    { word: "还有", pinyin: "hái yǒu", translation: "ещё есть; а также", examples: [
+      { zh: "还有问题吗？", ru: "Ещё есть вопросы?" },
+      { zh: "还有五分钟。", ru: "Осталось ещё пять минут." }
+    ]},
+    { word: "孩子", pinyin: "háizi", translation: "ребенок", examples: [
+      { zh: "他有三个孩子。", ru: "У него трое детей." },
+      { zh: "孩子在睡觉。", ru: "Ребёнок спит." }
+    ]},
+    { word: "汉语", pinyin: "hànyǔ", translation: "китайский язык", examples: [
+      { zh: "我学习汉语。", ru: "Я учу китайский язык." },
+      { zh: "汉语很有意思。", ru: "Китайский очень интересный." }
+    ]},
+    { word: "汉字", pinyin: "hànzì", translation: "китайский иероглиф", examples: [
+      { zh: "我会写汉字。", ru: "Я умею писать иероглифы." },
+      { zh: "这个汉字很难。", ru: "Этот иероглиф трудный." }
+    ]},
+    { word: "好", pinyin: "hǎo", translation: "хороший; добрый; здоровый", examples: [
+      { zh: "今天天气很好。", ru: "Сегодня хорошая погода." },
+      { zh: "好的，没问题。", ru: "Хорошо, без проблем." }
+    ]},
+    { word: "好吃", pinyin: "hǎochī", translation: "вкусный", examples: [
+      { zh: "中国菜很好吃。", ru: "Китайская еда очень вкусная." },
+      { zh: "这个苹果很好吃。", ru: "Это яблоко очень вкусное." }
+    ]},
+    { word: "好看", pinyin: "hǎokàn", translation: "приятный, красивый", examples: [
+      { zh: "这件衣服很好看。", ru: "Эта одежда очень красивая." },
+      { zh: "这个电影很好看。", ru: "Этот фильм очень хороший." }
+    ]},
+    { word: "好听", pinyin: "hǎotīng", translation: "приятный для слуха", examples: [
+      { zh: "这首歌很好听。", ru: "Эта песня очень красивая." },
+      { zh: "她说话很好听。", ru: "У неё приятный голос." }
+    ]},
+    { word: "好玩儿", pinyin: "hǎowánr", translation: "забавный, интересный", examples: [
+      { zh: "这个地方很好玩儿。", ru: "Это место очень интересное." },
+      { zh: "打游戏很好玩儿。", ru: "Играть в игры очень весело." }
+    ]},
+    { word: "号", pinyin: "hào", translation: "число, день (в датах)", examples: [
+      { zh: "今天几号？", ru: "Какое сегодня число?" },
+      { zh: "五月一号放假。", ru: "Первого мая выходной." }
+    ]},
+    { word: "喝", pinyin: "hē", translation: "пить", examples: [
+      { zh: "我喝茶。", ru: "Я пью чай." },
+      { zh: "你想喝水吗？", ru: "Ты хочешь воды?" }
+    ]},
+    { word: "和", pinyin: "hé", translation: "и (союз), с (кем-либо)", examples: [
+      { zh: "我跟你一起去。", ru: "Я пойду с тобой." },
+      { zh: "我喝茶和咖啡。", ru: "Я пью чай и кофе." }
+    ]},
+    { word: "很", pinyin: "hěn", translation: "очень", examples: [
+      { zh: "我很好。", ru: "У меня всё хорошо." },
+      { zh: "他很高。", ru: "Он очень высокий." }
+    ]},
+    { word: "后", pinyin: "hòu", translation: "после; задняя часть", examples: [
+      { zh: "我三天后回来。", ru: "Я вернусь через три дня." },
+      { zh: "房子后面有树。", ru: "За домом есть деревья." }
+    ]},
+    { word: "后边", pinyin: "hòubiān", translation: "за, позади", examples: [
+      { zh: "学校在后边。", ru: "Школа позади." },
+      { zh: "后边有一个人。", ru: "Сзади кто-то есть." }
+    ]},
+    { word: "后天", pinyin: "hòutiān", translation: "послезавтра", examples: [
+      { zh: "后天我去北京。", ru: "Послезавтра я еду в Пекин." },
+      { zh: "后天见。", ru: "До послезавтра." }
+    ]},
+    { word: "花", pinyin: "huā", translation: "цветок", examples: [
+      { zh: "这朵花很漂亮。", ru: "Этот цветок очень красивый." },
+      { zh: "我喜欢花。", ru: "Я люблю цветы." }
+    ]},
+    { word: "话", pinyin: "huà", translation: "слова, речь, язык", examples: [
+      { zh: "我听不懂你的话。", ru: "Я не понимаю твоих слов." },
+      { zh: "我有话跟你说。", ru: "У меня есть к тебе разговор." }
+    ]},
+    { word: "坏", pinyin: "huài", translation: "плохой, ломаться", examples: [
+      { zh: "我的手机坏了。", ru: "Мой телефон сломался." },
+      { zh: "他不是坏人。", ru: "Он не плохой человек." }
+    ]},
+    { word: "还", pinyin: "huán", translation: "возвращаться, отходить назад", examples: [
+      { zh: "请还我的书。", ru: "Верни мне мою книгу." },
+      { zh: "我明天还你钱。", ru: "Завтра я верну тебе деньги." }
+    ]},
+    { word: "回", pinyin: "huí", translation: "возвращаться", examples: [
+      { zh: "我回家。", ru: "Я иду домой." },
+      { zh: "他回中国了。", ru: "Он вернулся в Китай." }
+    ]},
+    { word: "回答", pinyin: "huídá", translation: "отвечать, ответ", examples: [
+      { zh: "请回答我的问题。", ru: "Ответьте на мой вопрос." },
+      { zh: "他的回答很好。", ru: "Его ответ хороший." }
+    ]},
+    { word: "回到", pinyin: "huídào", translation: "возвратиться, вернуться", examples: [
+      { zh: "我回到北京了。", ru: "Я вернулся в Пекин." },
+      { zh: "他回到了家。", ru: "Он вернулся домой." }
+    ]},
+    { word: "回家", pinyin: "huíjiā", translation: "возвращаться домой", examples: [
+      { zh: "我要回家。", ru: "Я хочу домой." },
+      { zh: "他几点回家？", ru: "Во сколько он вернётся домой?" }
+    ]},
+    { word: "回来", pinyin: "huílái", translation: "возвращаться обратно", examples: [
+      { zh: "他回来了。", ru: "Он вернулся." },
+      { zh: "你什么时候回来？", ru: "Когда ты вернёшься?" }
+    ]},
+    { word: "回去", pinyin: "huíqù", translation: "возвращаться (от говорящего)", examples: [
+      { zh: "我要回去了。", ru: "Мне пора возвращаться." },
+      { zh: "他回去了。", ru: "Он вернулся (туда)." }
+    ]},
+    { word: "会", pinyin: "huì", translation: "мочь, уметь; собрание", examples: [
+      { zh: "我会说汉语。", ru: "Я умею говорить по-китайски." },
+      { zh: "你会写汉字吗？", ru: "Ты умеешь писать иероглифы?" }
+    ]},
+    { word: "火车", pinyin: "huǒchē", translation: "поезд", examples: [
+      { zh: "我坐火车去。", ru: "Я поеду на поезде." },
+      { zh: "火车站在哪儿？", ru: "Где вокзал?" }
+    ]},
+    { word: "机场", pinyin: "jīchǎng", translation: "аэропорт", examples: [
+      { zh: "机场很远。", ru: "Аэропорт далеко." },
+      { zh: "我去机场接朋友。", ru: "Я еду в аэропорт встречать друга." }
+    ]},
+    { word: "机票", pinyin: "jīpiào", translation: "авиабилет", examples: [
+      { zh: "我买了机票。", ru: "Я купил авиабилет." },
+      { zh: "机票多少钱？", ru: "Сколько стоит авиабилет?" }
+    ]},
+    { word: "鸡蛋", pinyin: "jīdàn", translation: "куриное яйцо", examples: [
+      { zh: "我吃鸡蛋。", ru: "Я ем яйца." },
+      { zh: "请买十个鸡蛋。", ru: "Купи десять яиц." }
+    ]},
+    { word: "几", pinyin: "jǐ", translation: "несколько; сколько?", examples: [
+      { zh: "你家有几口人？", ru: "Сколько человек в твоей семье?" },
+      { zh: "现在几点？", ru: "Который час?" }
+    ]},
+    { word: "记", pinyin: "jì", translation: "помнить; записывать", examples: [
+      { zh: "请记下我的电话。", ru: "Запиши мой телефон." },
+      { zh: "我记不住这个名字。", ru: "Я не могу запомнить это имя." }
+    ]},
+    { word: "记得", pinyin: "jìde", translation: "помнить", examples: [
+      { zh: "我记得你。", ru: "Я помню тебя." },
+      { zh: "你记得我的名字吗？", ru: "Ты помнишь моё имя?" }
+    ]},
+    { word: "记住", pinyin: "jìzhù", translation: "запоминать, учить наизусть", examples: [
+      { zh: "请记住这个词。", ru: "Запомни это слово." },
+      { zh: "我记住了。", ru: "Я запомнил." }
+    ]},
+    { word: "家", pinyin: "jiā", translation: "семья; дом", examples: [
+      { zh: "我家有四口人。", ru: "В моей семье четыре человека." },
+      { zh: "我回家。", ru: "Я иду домой." }
+    ]},
+    { word: "家里", pinyin: "jiālǐ", translation: "дома, в доме", examples: [
+      { zh: "他在家里。", ru: "Он дома." },
+      { zh: "家里没有人。", ru: "Дома никого нет." }
+    ]},
+    { word: "家人", pinyin: "jiārén", translation: "член семьи, семья", examples: [
+      { zh: "我家人都很好。", ru: "У моей семьи всё хорошо." },
+      { zh: "我和家人一起吃饭。", ru: "Я ем вместе с семьёй." }
+    ]},
+    { word: "间", pinyin: "jiān", translation: "сч. слово для комнат", examples: [
+      { zh: "我家有三间房间。", ru: "У меня в доме три комнаты." },
+      { zh: "这间房间很大。", ru: "Эта комната большая." }
+    ]},
+    { word: "见", pinyin: "jiàn", translation: "видеть; встречаться", examples: [
+      { zh: "明天见！", ru: "До завтра!" },
+      { zh: "很高兴见到你。", ru: "Рад тебя видеть." }
+    ]},
+    { word: "见面", pinyin: "jiànmiàn", translation: "увидеться, встретиться", examples: [
+      { zh: "我们明天见面吧。", ru: "Давай встретимся завтра." },
+      { zh: "我们很久没见面了。", ru: "Мы давно не виделись." }
+    ]},
+    { word: "教", pinyin: "jiāo", translation: "обучать, учить", examples: [
+      { zh: "他教我汉语。", ru: "Он учит меня китайскому." },
+      { zh: "请再教我一次。", ru: "Научи меня ещё раз." }
+    ]},
+    { word: "叫", pinyin: "jiào", translation: "кричать; называть(ся); звать", examples: [
+      { zh: "你叫什么名字？", ru: "Как тебя зовут?" },
+      { zh: "别叫我。", ru: "Не зови меня." }
+    ]},
+    { word: "教学楼", pinyin: "jiàoxuélóu", translation: "учебное здание, учебный корпус", examples: [
+      { zh: "教学楼在哪儿？", ru: "Где учебный корпус?" },
+      { zh: "我在教学楼上课。", ru: "Я занимаюсь в учебном корпусе." }
+    ]},
+    { word: "姐姐", pinyin: "jiějie", translation: "старшая сестра", examples: [
+      { zh: "我姐姐是医生。", ru: "Моя старшая сестра врач." },
+      { zh: "姐姐在家吗？", ru: "Старшая сестра дома?" }
+    ]},
+    { word: "介绍", pinyin: "jièshào", translation: "знакомить; представлять", examples: [
+      { zh: "请介绍一下自己。", ru: "Представьтесь, пожалуйста." },
+      { zh: "我给你介绍一个朋友。", ru: "Я познакомлю тебя с другом." }
+    ]},
+    { word: "今年", pinyin: "jīnnián", translation: "этот год", examples: [
+      { zh: "今年我二十岁。", ru: "В этом году мне двадцать лет." },
+      { zh: "今年我去中国。", ru: "В этом году я поеду в Китай." }
+    ]},
+    { word: "今天", pinyin: "jīntiān", translation: "сегодня", examples: [
+      { zh: "今天天气很好。", ru: "Сегодня хорошая погода." },
+      { zh: "今天我有课。", ru: "Сегодня у меня занятия." }
+    ]},
+    { word: "进", pinyin: "jìn", translation: "входить", examples: [
+      { zh: "请进！", ru: "Войдите, пожалуйста!" },
+      { zh: "他进了房间。", ru: "Он вошёл в комнату." }
+    ]},
+    { word: "进来", pinyin: "jìnlái", translation: "входить (к говорящему)", examples: [
+      { zh: "请进来。", ru: "Заходите." },
+      { zh: "他进来了。", ru: "Он вошёл." }
+    ]},
+    { word: "进去", pinyin: "jìnqù", translation: "входить (от говорящего)", examples: [
+      { zh: "我们进去吧。", ru: "Давай войдём." },
+      { zh: "他进去了。", ru: "Он вошёл туда." }
+    ]},
+    { word: "九", pinyin: "jiǔ", translation: "9, девять", examples: [
+      { zh: "现在九点。", ru: "Сейчас девять часов." },
+      { zh: "我有九本书。", ru: "У меня девять книг." }
+    ]},
+    { word: "就", pinyin: "jiù", translation: "именно, тогда, как раз, сразу же", examples: [
+      { zh: "我就来。", ru: "Я сейчас приду." },
+      { zh: "他就是我的老师。", ru: "Он и есть мой учитель." }
+    ]},
+    { word: "觉得", pinyin: "juéde", translation: "думать, считать, чувствовать", examples: [
+      { zh: "我觉得这个很好。", ru: "Я думаю, это очень хорошо." },
+      { zh: "你觉得怎么样？", ru: "Как ты думаешь?" }
+    ]},
+    { word: "开", pinyin: "kāi", translation: "открывать, начинать; водить", examples: [
+      { zh: "请开门。", ru: "Откройте дверь." },
+      { zh: "他会开车。", ru: "Он умеет водить машину." }
+    ]},
+        { word: "开车", pinyin: "kāichē", translation: "водить машину", examples: [
+      { zh: "他会开车。", ru: "Он умеет водить машину." },
+      { zh: "我开车去学校。", ru: "Я еду в школу на машине." }
+    ]},
+    { word: "开会", pinyin: "kāihuì", translation: "проводить собрание", examples: [
+      { zh: "我们下午开会。", ru: "У нас собрание после обеда." },
+      { zh: "他正在开会。", ru: "Он сейчас на собрании." }
+    ]},
+    { word: "开玩笑", pinyin: "kāiwánxiào", translation: "шутить, подшучивать", examples: [
+      { zh: "我跟你开玩笑。", ru: "Я с тобой шучу." },
+      { zh: "别开玩笑！", ru: "Не шути!" }
+    ]},
+    { word: "看", pinyin: "kàn", translation: "смотреть; читать", examples: [
+      { zh: "我看电视。", ru: "Я смотрю телевизор." },
+      { zh: "你看，那是谁？", ru: "Смотри, кто это?" }
+    ]},
+    { word: "看病", pinyin: "kànbìng", translation: "обращаться к врачу", examples: [
+      { zh: "我要去医院看病。", ru: "Мне надо к врачу." },
+      { zh: "他在看病。", ru: "Он на приёме у врача." }
+    ]},
+    { word: "看到", pinyin: "kàndào", translation: "увидеть", examples: [
+      { zh: "我看到他了。", ru: "Я его увидел." },
+      { zh: "我看到一本书。", ru: "Я увидел книгу." }
+    ]},
+    { word: "看见", pinyin: "kànjiàn", translation: "видеть, увидеть", examples: [
+      { zh: "你看见我的手机了吗？", ru: "Ты видел мой телефон?" },
+      { zh: "我没有看见他。", ru: "Я его не видел." }
+    ]},
+    { word: "考", pinyin: "kǎo", translation: "экзаменовать; сдавать экзамен", examples: [
+      { zh: "明天我要考试。", ru: "Завтра у меня экзамен." },
+      { zh: "他考得很好。", ru: "Он хорошо сдал экзамен." }
+    ]},
+    { word: "考试", pinyin: "kǎoshì", translation: "экзамен", examples: [
+      { zh: "这次考试很难。", ru: "Этот экзамен трудный." },
+      { zh: "考试考完了。", ru: "Экзамен закончился." }
+    ]},
+    { word: "渴", pinyin: "kě", translation: "испытывать жажду", examples: [
+      { zh: "我渴了。", ru: "Я хочу пить." },
+      { zh: "你渴不渴？", ru: "Ты хочешь пить?" }
+    ]},
+    { word: "课", pinyin: "kè", translation: "урок, дисциплина", examples: [
+      { zh: "今天我有三节课。", ru: "Сегодня у меня три урока." },
+      { zh: "上课了。", ru: "Урок начался." }
+    ]},
+    { word: "课本", pinyin: "kèběn", translation: "учебник", examples: [
+      { zh: "请打开课本。", ru: "Откройте учебник." },
+      { zh: "我的课本在书包里。", ru: "Мой учебник в рюкзаке." }
+    ]},
+    { word: "课文", pinyin: "kèwén", translation: "(учебный) текст", examples: [
+      { zh: "请读课文。", ru: "Прочитайте текст." },
+      { zh: "这篇课文很长。", ru: "Этот текст длинный." }
+    ]},
+    { word: "口", pinyin: "kǒu", translation: "рот; сч. слово", examples: [
+      { zh: "我家有四口人。", ru: "В моей семье четыре человека." },
+      { zh: "请张开嘴。", ru: "Откройте рот." }
+    ]},
+    { word: "块", pinyin: "kuài", translation: "кусок; юань", examples: [
+      { zh: "这个五块钱。", ru: "Это стоит пять юаней." },
+      { zh: "我有十块钱。", ru: "У меня десять юаней." }
+    ]},
+    { word: "快", pinyin: "kuài", translation: "быстрый", examples: [
+      { zh: "他走得很快。", ru: "Он идёт быстро." },
+      { zh: "快来！", ru: "Иди скорее!" }
+    ]},
+    { word: "来", pinyin: "lái", translation: "приходить, прибывать", examples: [
+      { zh: "请你来我家。", ru: "Приходи ко мне домой." },
+      { zh: "他明天来。", ru: "Он придёт завтра." }
+    ]},
+    { word: "来到", pinyin: "láidào", translation: "приходить; прибывать", examples: [
+      { zh: "他来到了北京。", ru: "Он приехал в Пекин." },
+      { zh: "春天来到了。", ru: "Пришла весна." }
+    ]},
+    { word: "老", pinyin: "lǎo", translation: "старый; прежний; опытный", examples: [
+      { zh: "他是我老朋友。", ru: "Он мой старый друг." },
+      { zh: "这个老人很健康。", ru: "Этот старик очень здоровый." }
+    ]},
+    { word: "老人", pinyin: "lǎorén", translation: "пожилой человек, старик", examples: [
+      { zh: "老人在公园里走。", ru: "Старик гуляет в парке." },
+      { zh: "请帮帮老人。", ru: "Помогите пожилым людям." }
+    ]},
+    { word: "老师", pinyin: "lǎoshī", translation: "учитель", examples: [
+      { zh: "他是我的老师。", ru: "Он мой учитель." },
+      { zh: "老师好！", ru: "Здравствуйте, учитель!" }
+    ]},
+    { word: "了", pinyin: "le", translation: "частица завершения действия или изменения состояния", examples: [
+      { zh: "我吃饭了。", ru: "Я поел." },
+      { zh: "下雨了。", ru: "Пошёл дождь." }
+    ]},
+    { word: "累", pinyin: "lèi", translation: "уставший, уставать", examples: [
+      { zh: "我很累。", ru: "Я очень устал." },
+      { zh: "今天工作太累了。", ru: "Сегодня работа была очень утомительной." }
+    ]},
+    { word: "冷", pinyin: "lěng", translation: "холодный, холодно", examples: [
+      { zh: "今天很冷。", ru: "Сегодня холодно." },
+      { zh: "冬天很冷。", ru: "Зимой холодно." }
+    ]},
+    { word: "里", pinyin: "lǐ", translation: "внутри, в", examples: [
+      { zh: "书在书包里。", ru: "Книга в рюкзаке." },
+      { zh: "家里没有人。", ru: "Дома никого нет." }
+    ]},
+    { word: "里边", pinyin: "lǐbiān", translation: "внутри, внутренняя сторона", examples: [
+      { zh: "里边有什么？", ru: "Что внутри?" },
+      { zh: "请到里边坐。", ru: "Проходите внутрь." }
+    ]},
+    { word: "两", pinyin: "liǎng", translation: "два, оба", examples: [
+      { zh: "我有两个哥哥。", ru: "У меня два старших брата." },
+      { zh: "我们两个人去。", ru: "Мы пойдём вдвоём." }
+    ]},
+    { word: "零", pinyin: "líng", translation: "ноль, нуль", examples: [
+      { zh: "现在零度。", ru: "Сейчас ноль градусов." },
+      { zh: "一百零一。", ru: "Сто один." }
+    ]},
+    { word: "六", pinyin: "liù", translation: "6, шесть", examples: [
+      { zh: "现在六点。", ru: "Сейчас шесть часов." },
+      { zh: "我有六本书。", ru: "У меня шесть книг." }
+    ]},
+    { word: "楼", pinyin: "lóu", translation: "многоэтажный дом; этаж", examples: [
+      { zh: "我住在三楼。", ru: "Я живу на третьем этаже." },
+      { zh: "这个楼很高。", ru: "Этот дом очень высокий." }
+    ]},
+    { word: "楼上", pinyin: "lóushàng", translation: "наверху, верхний этаж", examples: [
+      { zh: "他在楼上。", ru: "Он наверху." },
+      { zh: "楼上很安静。", ru: "Наверху очень тихо." }
+    ]},
+    { word: "楼下", pinyin: "lóuxià", translation: "внизу, нижний этаж", examples: [
+      { zh: "我在楼下等你。", ru: "Я жду тебя внизу." },
+      { zh: "楼下有个商店。", ru: "Внизу есть магазин." }
+    ]},
+    { word: "路", pinyin: "lù", translation: "дорога, путь", examples: [
+      { zh: "这条路很长。", ru: "Эта дорога длинная." },
+      { zh: "我们在路上。", ru: "Мы в пути." }
+    ]},
+    { word: "路口", pinyin: "lùkǒu", translation: "перекрёсток", examples: [
+      { zh: "在前面的路口左转。", ru: "На следующем перекрёстке поверните налево." },
+      { zh: "我们在路口见面。", ru: "Мы встретимся на перекрёстке." }
+    ]},
+    { word: "路上", pinyin: "lùshang", translation: "в пути, в дороге", examples: [
+      { zh: "路上小心。", ru: "Будь осторожен в пути." },
+      { zh: "我在路上给你打电话。", ru: "Я позвоню тебе в дороге." }
+    ]},
+    { word: "妈妈", pinyin: "māma", translation: "мама, мать", examples: [
+      { zh: "我妈妈是老师。", ru: "Моя мама учитель." },
+      { zh: "妈妈爱我。", ru: "Мама любит меня." }
+    ]},
+    { word: "马路", pinyin: "mǎlù", translation: "дорога, улица", examples: [
+      { zh: "过马路要小心。", ru: "Переходи дорогу осторожно." },
+      { zh: "马路上车很多。", ru: "На дороге много машин." }
+    ]},
+    { word: "马上", pinyin: "mǎshàng", translation: "сразу, сейчас же", examples: [
+      { zh: "我马上来。", ru: "Я сейчас приду." },
+      { zh: "火车马上就到了。", ru: "Поезд скоро прибудет." }
+    ]},
+    { word: "吗", pinyin: "ma", translation: "конечная частица вопросительных предложений", examples: [
+      { zh: "你好吗？", ru: "Как ты?" },
+      { zh: "你是学生吗？", ru: "Ты студент?" }
+    ]},
+    { word: "买", pinyin: "mǎi", translation: "купить, покупать", examples: [
+      { zh: "我要买书。", ru: "Я хочу купить книгу." },
+      { zh: "你买什么？", ru: "Что ты покупаешь?" }
+    ]},
+    { word: "慢", pinyin: "màn", translation: "медленный; не спеша", examples: [
+      { zh: "请慢一点说。", ru: "Говорите медленнее, пожалуйста." },
+      { zh: "他走得慢。", ru: "Он идёт медленно." }
+    ]},
+    { word: "忙", pinyin: "máng", translation: "занятой", examples: [
+      { zh: "我很忙。", ru: "Я очень занят." },
+      { zh: "你忙不忙？", ru: "Ты занят?" }
+    ]},
+    { word: "毛", pinyin: "máo", translation: "мао (денежная единица)", examples: [
+      { zh: "这个五毛钱。", ru: "Это стоит пять мао." },
+      { zh: "一块等于十毛。", ru: "Один юань равен десяти мао." }
+    ]},
+    { word: "没", pinyin: "méi", translation: "не; не иметь", examples: [
+      { zh: "我没有钱。", ru: "У меня нет денег." },
+      { zh: "他没来。", ru: "Он не пришёл." }
+    ]},
+    { word: "没关系", pinyin: "méi guānxi", translation: "ничего страшного", examples: [
+      { zh: "对不起！— 没关系。", ru: "Извините! — Ничего страшного." },
+      { zh: "没关系，别担心。", ru: "Ничего страшного, не волнуйся." }
+    ]},
+    { word: "没什么", pinyin: "méi shénme", translation: "не имеет значения, пустяки", examples: [
+      { zh: "没什么，别客气。", ru: "Пустяки, не стоит." },
+      { zh: "今天没什么事。", ru: "Сегодня ничего особенного." }
+    ]},
+    { word: "没事儿", pinyin: "méi shìr", translation: "ничего страшного, всё нормально", examples: [
+      { zh: "没事儿，我帮你。", ru: "Ничего, я помогу." },
+      { zh: "你怎么了？— 没事儿。", ru: "Что с тобой? — Всё нормально." }
+    ]},
+    { word: "没有", pinyin: "méi yǒu", translation: "нет, отсутствует", examples: [
+      { zh: "我没有钱。", ru: "У меня нет денег." },
+      { zh: "今天没有课。", ru: "Сегодня нет занятий." }
+    ]},
+    { word: "妹妹", pinyin: "mèimei", translation: "младшая сестра", examples: [
+      { zh: "我妹妹很漂亮。", ru: "Моя младшая сестра очень красивая." },
+      { zh: "妹妹在学校。", ru: "Младшая сестра в школе." }
+    ]},
+    { word: "门", pinyin: "mén", translation: "дверь, ворота", examples: [
+      { zh: "请关门。", ru: "Закройте дверь." },
+      { zh: "门开着。", ru: "Дверь открыта." }
+    ]},
+    { word: "门口", pinyin: "ménkǒu", translation: "дверь, ворота (вход)", examples: [
+      { zh: "我在门口等你。", ru: "Я жду тебя у входа." },
+      { zh: "门口有人。", ru: "У входа кто-то есть." }
+    ]},
+    { word: "门票", pinyin: "ménpiào", translation: "входной билет", examples: [
+      { zh: "门票多少钱？", ru: "Сколько стоит входной билет?" },
+      { zh: "我买了两张门票。", ru: "Я купил два входных билета." }
+    ]},
+    { word: "们", pinyin: "men", translation: "суффикс множественного числа", examples: [
+      { zh: "我们是朋友。", ru: "Мы друзья." },
+      { zh: "老师们好！", ru: "Здравствуйте, учителя!" }
+    ]},
+    { word: "米饭", pinyin: "mǐfàn", translation: "рис (варёный)", examples: [
+      { zh: "我想吃米饭。", ru: "Я хочу поесть риса." },
+      { zh: "中国米饭很好吃。", ru: "Китайский рис очень вкусный." }
+    ]},
+    { word: "面包", pinyin: "miànbāo", translation: "хлеб", examples: [
+      { zh: "我早上吃面包。", ru: "Утром я ем хлеб." },
+      { zh: "这个面包很新鲜。", ru: "Этот хлеб очень свежий." }
+    ]},
+    { word: "面条儿", pinyin: "miàntiáor", translation: "лапша", examples: [
+      { zh: "我喜欢吃面条儿。", ru: "Я люблю лапшу." },
+      { zh: "来一碗面条儿。", ru: "Одну порцию лапши." }
+    ]},
+    { word: "名字", pinyin: "míngzi", translation: "имя", examples: [
+      { zh: "你叫什么名字？", ru: "Как тебя зовут?" },
+      { zh: "我的名字是李明。", ru: "Меня зовут Ли Мин." }
+    ]},
+    { word: "明白", pinyin: "míngbai", translation: "ясно, понятно, понимать", examples: [
+      { zh: "我明白了。", ru: "Я понял." },
+      { zh: "你明白我的意思吗？", ru: "Ты понимаешь, что я имею в виду?" }
+    ]},
+    { word: "明年", pinyin: "míngnián", translation: "будущий год", examples: [
+      { zh: "明年我去中国。", ru: "В следующем году я поеду в Китай." },
+      { zh: "明年我大学毕业。", ru: "В следующем году я окончу университет." }
+    ]},
+    { word: "明天", pinyin: "míngtiān", translation: "завтра", examples: [
+      { zh: "明天见！", ru: "До завтра!" },
+      { zh: "明天我去中国。", ru: "Завтра я еду в Китай." }
+    ]},
+    { word: "拿", pinyin: "ná", translation: "держать, брать, хватать, нести", examples: [
+      { zh: "请拿一下我的书。", ru: "Возьми мою книгу, пожалуйста." },
+      { zh: "他手里拿着一杯水。", ru: "Он держит в руке стакан воды." }
+    ]},
+    { word: "哪", pinyin: "nǎ", translation: "какой?, который?", examples: [
+      { zh: "你是哪国人？", ru: "Из какой ты страны?" },
+      { zh: "哪本书是你的？", ru: "Какая книга твоя?" }
+    ]},
+    { word: "哪里", pinyin: "nǎlǐ", translation: "ну что Вы", examples: [
+      { zh: "谢谢你！— 哪里哪里。", ru: "Спасибо! — Ну что вы." },
+      { zh: "哪里的话。", ru: "Что вы, не стоит." }
+    ]},
+    { word: "哪儿", pinyin: "nǎr", translation: "где? куда?", examples: [
+      { zh: "你去哪儿？", ru: "Куда ты идёшь?" },
+      { zh: "学校在哪儿？", ru: "Где школа?" }
+    ]},
+    { word: "哪些", pinyin: "nǎxiē", translation: "какой, который, кто, что", examples: [
+      { zh: "哪些是你的？", ru: "Какие из них твои?" },
+      { zh: "你喜欢哪些书？", ru: "Какие книги тебе нравятся?" }
+    ]},
+    { word: "那", pinyin: "nà", translation: "тот, этот; то, это", examples: [
+      { zh: "那是我的书。", ru: "То — моя книга." },
+      { zh: "那个人是谁？", ru: "Кто тот человек?" }
+    ]},
+    { word: "那边", pinyin: "nàbiān", translation: "там, туда", examples: [
+      { zh: "他在那边。", ru: "Он там." },
+      { zh: "请去那边。", ru: "Идите туда, пожалуйста." }
+    ]},
+    { word: "那里", pinyin: "nàlǐ", translation: "там, туда, оттуда", examples: [
+      { zh: "我去过那里。", ru: "Я был там." },
+      { zh: "那里有很多人。", ru: "Там много людей." }
+    ]},
+    { word: "那儿", pinyin: "nàr", translation: "там, туда; тогда", examples: [
+      { zh: "那儿是我的家。", ru: "Там мой дом." },
+      { zh: "你别去那儿。", ru: "Не ходи туда." }
+    ]},
+    { word: "那些", pinyin: "nàxiē", translation: "те", examples: [
+      { zh: "那些书是我的。", ru: "Те книги мои." },
+      { zh: "那些人在说什么？", ru: "О чём говорят те люди?" }
+    ]},
+    { word: "奶", pinyin: "nǎi", translation: "молоко", examples: [
+      { zh: "我喝牛奶。", ru: "Я пью молоко." },
+      { zh: "请买一盒奶。", ru: "Купи коробку молока." }
+    ]},
+    { word: "奶奶", pinyin: "nǎinai", translation: "бабушка (по папе)", examples: [
+      { zh: "我奶奶今年八十岁。", ru: "Моей бабушке в этом году восемьдесят." },
+      { zh: "奶奶做的菜很好吃。", ru: "Блюда, которые готовит бабушка, очень вкусные." }
+    ]},
+    { word: "男", pinyin: "nán", translation: "мужской", examples: [
+      { zh: "他是男的。", ru: "Он мужского пола." },
+      { zh: "这个班有十个男学生。", ru: "В этом классе десять мальчиков." }
+    ]},
+    { word: "男孩儿", pinyin: "nánháir", translation: "мальчик", examples: [
+      { zh: "那个男孩儿是我弟弟。", ru: "Тот мальчик — мой младший брат." },
+      { zh: "男孩儿在打球。", ru: "Мальчик играет в мяч." }
+    ]},
+    { word: "男朋友", pinyin: "nánpéngyou", translation: "друг, бойфренд", examples: [
+      { zh: "她有男朋友了。", ru: "У неё есть парень." },
+      { zh: "我男朋友是医生。", ru: "Мой парень врач." }
+    ]},
+    { word: "男人", pinyin: "nánrén", translation: "мужчина", examples: [
+      { zh: "那个男人是谁？", ru: "Кто тот мужчина?" },
+      { zh: "男人和女人都来了。", ru: "И мужчины, и женщины пришли." }
+    ]},
+    { word: "男生", pinyin: "nánshēng", translation: "ученик (мужского пола)", examples: [
+      { zh: "我们班有二十个男生。", ru: "В нашем классе двадцать мальчиков." },
+      { zh: "他是男生。", ru: "Он мальчик." }
+    ]},
+    { word: "南", pinyin: "nán", translation: "юг, южный", examples: [
+      { zh: "南边是海。", ru: "На юге море." },
+      { zh: "我家在南边。", ru: "Мой дом на юге." }
+    ]},
+    { word: "南边", pinyin: "nánbiān", translation: "южная сторона", examples: [
+      { zh: "学校在南边。", ru: "Школа на южной стороне." },
+      { zh: "南边天气很热。", ru: "На юге очень жарко." }
+    ]},
+    { word: "难", pinyin: "nán", translation: "трудный", examples: [
+      { zh: "汉语不难。", ru: "Китайский нетрудный." },
+      { zh: "这个问题很难。", ru: "Этот вопрос очень трудный." }
+    ]},
+    { word: "呢", pinyin: "ne", translation: "конечная модальная частица", examples: [
+      { zh: "我很好，你呢？", ru: "У меня всё хорошо, а у тебя?" },
+      { zh: "他在哪儿呢？", ru: "Где же он?" }
+    ]},
+    { word: "能", pinyin: "néng", translation: "мочь, быть в состоянии", examples: [
+      { zh: "你能来吗？", ru: "Ты можешь прийти?" },
+      { zh: "我不能去。", ru: "Я не могу пойти." }
+    ]},
+    { word: "你", pinyin: "nǐ", translation: "ты", examples: [
+      { zh: "你是老师吗？", ru: "Ты учитель?" },
+      { zh: "你喜欢喝茶吗？", ru: "Ты любишь чай?" }
+    ]},
+    { word: "你们", pinyin: "nǐmen", translation: "вы, вам (мн. число)", examples: [
+      { zh: "你们好！", ru: "Здравствуйте!" },
+      { zh: "你们去哪儿？", ru: "Куда вы идёте?" }
+    ]},
+    { word: "年", pinyin: "nián", translation: "год", examples: [
+      { zh: "我学习汉语一年了。", ru: "Я учу китайский год." },
+      { zh: "明年我去中国。", ru: "В следующем году я поеду в Китай." }
+    ]},
+    { word: "您", pinyin: "nín", translation: "Вы (уважит.)", examples: [
+      { zh: "您好！", ru: "Здравствуйте!" },
+      { zh: "您贵姓？", ru: "Как ваша фамилия?" }
+    ]},
+    { word: "牛奶", pinyin: "niúnǎi", translation: "коровье молоко", examples: [
+      { zh: "我每天早上喝牛奶。", ru: "Я каждое утро пью молоко." },
+      { zh: "牛奶对身体好。", ru: "Молоко полезно для здоровья." }
+    ]},
+    { word: "女", pinyin: "nǚ", translation: "женский, женщина", examples: [
+      { zh: "她是女的。", ru: "Она женщина." },
+      { zh: "我们班有十五个女学生。", ru: "В нашем классе пятнадцать девочек." }
+    ]},
+    { word: "女儿", pinyin: "nǚ'ér", translation: "дочь", examples: [
+      { zh: "她有一个女儿。", ru: "У неё есть дочь." },
+      { zh: "我的女儿很漂亮。", ru: "Моя дочь очень красивая." }
+    ]},
+    { word: "女孩儿", pinyin: "nǚháir", translation: "девочка", examples: [
+      { zh: "那个女孩儿是我妹妹。", ru: "Та девочка — моя младшая сестра." },
+      { zh: "女孩儿在唱歌。", ru: "Девочка поёт." }
+    ]},
+    { word: "女朋友", pinyin: "nǚpéngyou", translation: "подруга, герлфренд", examples: [
+      { zh: "他有女朋友了。", ru: "У него есть девушка." },
+      { zh: "我女朋友是老师。", ru: "Моя девушка учитель." }
+    ]},
+    { word: "女人", pinyin: "nǚrén", translation: "женщина", examples: [
+      { zh: "那个女人是谁？", ru: "Кто та женщина?" },
+      { zh: "她是个好女人。", ru: "Она хорошая женщина." }
+    ]},
+    { word: "女生", pinyin: "nǚshēng", translation: "ученица, студентка", examples: [
+      { zh: "我们班有十个女生。", ru: "В нашем классе десять девочек." },
+      { zh: "她是女生。", ru: "Она девочка." }
+    ]},
+    { word: "旁边", pinyin: "pángbiān", translation: "рядом, сбоку", examples: [
+      { zh: "学校旁边有个商店。", ru: "Рядом со школой есть магазин." },
+      { zh: "请坐在我旁边。", ru: "Садись рядом со мной." }
+    ]},
+    { word: "跑", pinyin: "pǎo", translation: "бегать", examples: [
+      { zh: "他跑得很快。", ru: "Он быстро бегает." },
+      { zh: "我每天早上跑步。", ru: "Я каждое утро бегаю." }
+    ]},
+    { word: "朋友", pinyin: "péngyou", translation: "друг", examples: [
+      { zh: "他是我的朋友。", ru: "Он мой друг." },
+      { zh: "我和朋友去吃饭。", ru: "Я иду есть с другом." }
+    ]},
+    { word: "票", pinyin: "piào", translation: "билет", examples: [
+      { zh: "我买了两张票。", ru: "Я купил два билета." },
+      { zh: "票在桌子上。", ru: "Билет на столе." }
+    ]},
+    { word: "七", pinyin: "qī", translation: "7, семь", examples: [
+      { zh: "现在七点。", ru: "Сейчас семь часов." },
+      { zh: "我有七本书。", ru: "У меня семь книг." }
+    ]},
+    { word: "起", pinyin: "qǐ", translation: "вставать", examples: [
+      { zh: "我每天六点起。", ru: "Я встаю каждый день в шесть." },
+      { zh: "他起得很早。", ru: "Он встаёт очень рано." }
+    ]},
+    { word: "起床", pinyin: "qǐchuáng", translation: "вставать с кровати", examples: [
+      { zh: "我七点起床。", ru: "Я встаю в семь." },
+      { zh: "快起床！", ru: "Вставай скорее!" }
+    ]},
+    { word: "起来", pinyin: "qǐlái", translation: "вставать, подниматься", examples: [
+      { zh: "请起来。", ru: "Встаньте, пожалуйста." },
+      { zh: "他站起来了。", ru: "Он встал." }
+    ]},
+    { word: "汽车", pinyin: "qìchē", translation: "автомобиль", examples: [
+      { zh: "我买了一辆汽车。", ru: "Я купил машину." },
+      { zh: "汽车很贵。", ru: "Машина очень дорогая." }
+    ]},
+    { word: "前", pinyin: "qián", translation: "впереди, вперёд, до", examples: [
+      { zh: "三天前我去了北京。", ru: "Три дня назад я ездил в Пекин." },
+      { zh: "请往前走。", ru: "Идите вперёд." }
+    ]},
+    { word: "前边", pinyin: "qiánbiān", translation: "передняя часть, впереди", examples: [
+      { zh: "前边有个商店。", ru: "Впереди есть магазин." },
+      { zh: "学校在前边。", ru: "Школа впереди." }
+    ]},
+    { word: "前天", pinyin: "qiántiān", translation: "позавчера", examples: [
+      { zh: "前天我去了医院。", ru: "Позавчера я ходил в больницу." },
+      { zh: "前天他来了。", ru: "Позавчера он приходил." }
+    ]},
+    { word: "钱", pinyin: "qián", translation: "деньги", examples: [
+      { zh: "我没有钱。", ru: "У меня нет денег." },
+      { zh: "这要多少钱？", ru: "Сколько это стоит?" }
+    ]},
+    { word: "钱包", pinyin: "qiánbāo", translation: "кошелек", examples: [
+      { zh: "我的钱包在哪儿？", ru: "Где мой кошелёк?" },
+      { zh: "钱包里有多少钱？", ru: "Сколько денег в кошельке?" }
+    ]},
+    { word: "请", pinyin: "qǐng", translation: "приглашать, просить, пожалуйста", examples: [
+      { zh: "请喝茶。", ru: "Пожалуйста, выпейте чаю." },
+      { zh: "请坐！", ru: "Садитесь, пожалуйста!" }
+    ]},
+    { word: "请假", pinyin: "qǐngjià", translation: "просить об отпуске", examples: [
+      { zh: "我今天请假。", ru: "Сегодня я беру отгул." },
+      { zh: "他向老师请假了。", ru: "Он отпросился у учителя." }
+    ]},
+    { word: "请进", pinyin: "qǐng jìn", translation: "пожалуйста, войдите", examples: [
+      { zh: "请进！", ru: "Войдите, пожалуйста!" },
+      { zh: "老师说：“请进”。", ru: "Учитель сказал: «Войдите»." }
+    ]},
+    { word: "请问", pinyin: "qǐngwèn", translation: "извините; позвольте спросить", examples: [
+      { zh: "请问，银行在哪儿？", ru: "Извините, где банк?" },
+      { zh: "请问您贵姓？", ru: "Позвольте узнать вашу фамилию?" }
+    ]},
+    { word: "请坐", pinyin: "qǐng zuò", translation: "пожалуйста, садитесь", examples: [
+      { zh: "请坐！", ru: "Садитесь, пожалуйста!" },
+      { zh: "老师请我们坐下。", ru: "Учитель попросил нас сесть." }
+    ]},
+    { word: "球", pinyin: "qiú", translation: "мяч, шар", examples: [
+      { zh: "我喜欢打球。", ru: "Я люблю играть в мяч." },
+      { zh: "球在哪儿？", ru: "Где мяч?" }
+    ]},
+    { word: "去", pinyin: "qù", translation: "идти, уходить", examples: [
+      { zh: "我去学校。", ru: "Я иду в школу." },
+      { zh: "我们一起去吧。", ru: "Пойдём вместе." }
+    ]},
+    { word: "去年", pinyin: "qùnián", translation: "прошлый год", examples: [
+      { zh: "去年我去了中国。", ru: "В прошлом году я ездил в Китай." },
+      { zh: "去年他大学毕业。", ru: "В прошлом году он окончил университет." }
+    ]},
+    { word: "热", pinyin: "rè", translation: "горячий, разогревать", examples: [
+      { zh: "今天很热。", ru: "Сегодня жарко." },
+      { zh: "夏天很热。", ru: "Летом жарко." }
+    ]},
+    { word: "人", pinyin: "rén", translation: "человек", examples: [
+      { zh: "他是中国人。", ru: "Он китаец." },
+      { zh: "学校有很多人。", ru: "В школе много людей." }
+    ]},
+    { word: "认识", pinyin: "rènshi", translation: "быть знакомым, знать", examples: [
+      { zh: "我认识他。", ru: "Я знаю его." },
+      { zh: "很高兴认识你！", ru: "Приятно познакомиться!" }
+    ]},
+    { word: "认真", pinyin: "rènzhēn", translation: "серьёзный", examples: [
+      { zh: "他学习很认真。", ru: "Он учится очень серьёзно." },
+      { zh: "请认真听。", ru: "Слушайте внимательно." }
+    ]},
+    { word: "日", pinyin: "rì", translation: "день, дата", examples: [
+      { zh: "今天是五月一日。", ru: "Сегодня первое мая." },
+      { zh: "我生日是三月十日。", ru: "Мой день рождения — 10 марта." }
+    ]},
+    { word: "日期", pinyin: "rìqī", translation: "срок; дата", examples: [
+      { zh: "请写上日期。", ru: "Напишите дату, пожалуйста." },
+      { zh: "考试的日期定了吗？", ru: "Дата экзамена уже назначена?" }
+    ]},
+    { word: "肉", pinyin: "ròu", translation: "мясо, плоть", examples: [
+      { zh: "我不吃肉。", ru: "Я не ем мясо." },
+      { zh: "这个肉很好吃。", ru: "Это мясо очень вкусное." }
+    ]},
+    { word: "三", pinyin: "sān", translation: "3, три", examples: [
+      { zh: "现在三点。", ru: "Сейчас три часа." },
+      { zh: "我有三本书。", ru: "У меня три книги." }
+    ]},
+    { word: "山", pinyin: "shān", translation: "гора, холм", examples: [
+      { zh: "这座山很高。", ru: "Эта гора очень высокая." },
+      { zh: "我们去爬山吧。", ru: "Пойдём в горы." }
+    ]},
+    { word: "商场", pinyin: "shāngchǎng", translation: "рынок, торговый центр", examples: [
+      { zh: "我去商场买东西。", ru: "Я иду в торговый центр за покупками." },
+      { zh: "商场里人很多。", ru: "В торговом центре много людей." }
+    ]},
+    { word: "商店", pinyin: "shāngdiàn", translation: "магазин", examples: [
+      { zh: "商店在哪儿？", ru: "Где магазин?" },
+      { zh: "这个商店很大。", ru: "Этот магазин большой." }
+    ]},
+    { word: "上", pinyin: "shàng", translation: "на, над", examples: [
+      { zh: "书在桌子上。", ru: "Книга на столе." },
+      { zh: "请上楼。", ru: "Поднимитесь наверх." }
+    ]},
+    { word: "上班", pinyin: "shàngbān", translation: "ходить на работу", examples: [
+      { zh: "我八点上班。", ru: "Я начинаю работу в восемь." },
+      { zh: "他每天上班。", ru: "Он ходит на работу каждый день." }
+    ]},
+    { word: "上边", pinyin: "shàngbiān", translation: "выше, над, на", examples: [
+      { zh: "上边是什么？", ru: "Что наверху?" },
+      { zh: "猫在桌子上边。", ru: "Кошка на столе." }
+    ]},
+    { word: "上车", pinyin: "shàngchē", translation: "садиться в транспорт", examples: [
+      { zh: "请上车。", ru: "Садитесь в машину." },
+      { zh: "我们上车吧。", ru: "Давай сядем в транспорт." }
+    ]},
+    { word: "上次", pinyin: "shàngcì", translation: "прошлый раз", examples: [
+      { zh: "上次我没来。", ru: "В прошлый раз я не пришёл." },
+      { zh: "上次你说什么？", ru: "Что ты сказал в прошлый раз?" }
+    ]},
+    { word: "上课", pinyin: "shàngkè", translation: "приходить на урок", examples: [
+      { zh: "我们八点上课。", ru: "У нас урок в восемь." },
+      { zh: "老师在上课。", ru: "Учитель ведёт урок." }
+    ]},
+    { word: "上网", pinyin: "shàngwǎng", translation: "заходить в интернет", examples: [
+      { zh: "我每天上网。", ru: "Я каждый день сижу в интернете." },
+      { zh: "他在上网看书。", ru: "Он читает в интернете." }
+    ]},
+    { word: "上午", pinyin: "shàngwǔ", translation: "утро, до обеда", examples: [
+      { zh: "上午我有课。", ru: "Утром у меня занятия." },
+      { zh: "上午九点见。", ru: "Увидимся в девять утра." }
+    ]},
+    { word: "上学", pinyin: "shàngxué", translation: "ходить в школу", examples: [
+      { zh: "我每天上学。", ru: "Я каждый день хожу в школу." },
+      { zh: "他七点去上学。", ru: "Он идёт в школу в семь." }
+    ]},
+    { word: "少", pinyin: "shǎo", translation: "мало", examples: [
+      { zh: "这里人很少。", ru: "Здесь мало людей." },
+      { zh: "我有很少的钱。", ru: "У меня мало денег." }
+    ]},
+        { word: "谁", pinyin: "shéi", translation: "кто?", examples: [
+      { zh: "他是谁？", ru: "Кто он?" },
+      { zh: "谁去中国？", ru: "Кто едет в Китай?" }
+    ]},
+    { word: "身上", pinyin: "shēnshang", translation: "на теле; при себе", examples: [
+      { zh: "我身上没钱。", ru: "У меня с собой нет денег." },
+      { zh: "他身上穿了一件白衣服。", ru: "На нём белая одежда." }
+    ]},
+    { word: "身体", pinyin: "shēntǐ", translation: "тело; здоровье", examples: [
+      { zh: "你身体好吗？", ru: "Как твоё здоровье?" },
+      { zh: "运动对身体好。", ru: "Спорт полезен для здоровья." }
+    ]},
+    { word: "什么", pinyin: "shénme", translation: "что? какой?", examples: [
+      { zh: "这是什么？", ru: "Что это?" },
+      { zh: "你喜欢什么？", ru: "Что тебе нравится?" }
+    ]},
+    { word: "生病", pinyin: "shēngbìng", translation: "заболеть", examples: [
+      { zh: "他生病了。", ru: "Он заболел." },
+      { zh: "我昨天生病了。", ru: "Вчера я заболел." }
+    ]},
+    { word: "生气", pinyin: "shēngqì", translation: "злиться, сердитый", examples: [
+      { zh: "别生气。", ru: "Не сердись." },
+      { zh: "他生气了。", ru: "Он рассердился." }
+    ]},
+    { word: "生日", pinyin: "shēngrì", translation: "день рождения", examples: [
+      { zh: "今天是我的生日。", ru: "Сегодня мой день рождения." },
+      { zh: "生日快乐！", ru: "С днём рождения!" }
+    ]},
+    { word: "十", pinyin: "shí", translation: "10, десять", examples: [
+      { zh: "现在十点。", ru: "Сейчас десять часов." },
+      { zh: "我有十块钱。", ru: "У меня десять юаней." }
+    ]},
+    { word: "时候", pinyin: "shíhou", translation: "время", examples: [
+      { zh: "你什么时候来？", ru: "Когда ты придёшь?" },
+      { zh: "我小的时候喜欢看书。", ru: "В детстве я любил читать." }
+    ]},
+    { word: "时间", pinyin: "shíjiān", translation: "время (как отрезок)", examples: [
+      { zh: "我没有时间。", ru: "У меня нет времени." },
+      { zh: "时间过得很快。", ru: "Время летит быстро." }
+    ]},
+    { word: "事", pinyin: "shì", translation: "дело, событие; работа", examples: [
+      { zh: "我有很多事要做。", ru: "У меня много дел." },
+      { zh: "这是什么事？", ru: "Что это за дело?" }
+    ]},
+    { word: "试", pinyin: "shì", translation: "пробовать, примерять", examples: [
+      { zh: "请试试这件衣服。", ru: "Примерьте эту одежду." },
+      { zh: "让我试一试。", ru: "Дай мне попробовать." }
+    ]},
+    { word: "是", pinyin: "shì", translation: "быть, являться, да", examples: [
+      { zh: "我是中国人。", ru: "Я китаец." },
+      { zh: "这是书。", ru: "Это книга." }
+    ]},
+    { word: "是不是", pinyin: "shì bu shì", translation: "да или нет?; не так ли?", examples: [
+      { zh: "你是不是老师？", ru: "Ты учитель или нет?" },
+      { zh: "是不是你做的？", ru: "Это ты сделал, не так ли?" }
+    ]},
+    { word: "手", pinyin: "shǒu", translation: "рука", examples: [
+      { zh: "请洗手。", ru: "Помойте руки." },
+      { zh: "他手里拿着书。", ru: "Он держит в руке книгу." }
+    ]},
+    { word: "手机", pinyin: "shǒujī", translation: "мобильный телефон", examples: [
+      { zh: "我的手机在哪儿？", ru: "Где мой телефон?" },
+      { zh: "我用手机看书。", ru: "Я читаю книги на телефоне." }
+    ]},
+    { word: "书", pinyin: "shū", translation: "книга", examples: [
+      { zh: "这是中文书。", ru: "Это книга на китайском." },
+      { zh: "我喜欢看书。", ru: "Я люблю читать книги." }
+    ]},
+    { word: "书包", pinyin: "shūbāo", translation: "школьный портфель", examples: [
+      { zh: "我的书包很重。", ru: "Мой рюкзак очень тяжёлый." },
+      { zh: "书包里有书。", ru: "В рюкзаке есть книги." }
+    ]},
+    { word: "书店", pinyin: "shūdiàn", translation: "книжный магазин", examples: [
+      { zh: "我去书店买书。", ru: "Я иду в книжный магазин за книгой." },
+      { zh: "书店在学校旁边。", ru: "Книжный магазин рядом со школой." }
+    ]},
+    { word: "树", pinyin: "shù", translation: "дерево", examples: [
+      { zh: "我家门口有棵树。", ru: "У входа в мой дом есть дерево." },
+      { zh: "树很高。", ru: "Дерево очень высокое." }
+    ]},
+    { word: "水", pinyin: "shuǐ", translation: "вода", examples: [
+      { zh: "我想喝水。", ru: "Я хочу пить воду." },
+      { zh: "请给我一杯水。", ru: "Дайте мне стакан воды." }
+    ]},
+    { word: "水果", pinyin: "shuǐguǒ", translation: "фрукт", examples: [
+      { zh: "我喜欢吃水果。", ru: "Я люблю есть фрукты." },
+      { zh: "水果对身体好。", ru: "Фрукты полезны для здоровья." }
+    ]},
+    { word: "睡", pinyin: "shuì", translation: "спать", examples: [
+      { zh: "我要睡了。", ru: "Я хочу спать." },
+      { zh: "他睡了很久。", ru: "Он спал долго." }
+    ]},
+    { word: "睡觉", pinyin: "shuìjiào", translation: "спать, идти спать", examples: [
+      { zh: "我十点睡觉。", ru: "Я ложусь спать в десять." },
+      { zh: "孩子在睡觉。", ru: "Ребёнок спит." }
+    ]},
+    { word: "说", pinyin: "shuō", translation: "говорить, разговаривать", examples: [
+      { zh: "他说汉语。", ru: "Он говорит по-китайски." },
+      { zh: "请再说一次。", ru: "Повторите, пожалуйста." }
+    ]},
+    { word: "说话", pinyin: "shuōhuà", translation: "говорить, разговаривать", examples: [
+      { zh: "别说话！", ru: "Не разговаривай!" },
+      { zh: "他说话很好听。", ru: "У него приятный голос." }
+    ]},
+    { word: "四", pinyin: "sì", translation: "4, четыре", examples: [
+      { zh: "现在四点。", ru: "Сейчас четыре часа." },
+      { zh: "我家有四口人。", ru: "В моей семье четыре человека." }
+    ]},
+    { word: "送", pinyin: "sòng", translation: "доставлять, дарить; провожать", examples: [
+      { zh: "我送你回家。", ru: "Я провожу тебя домой." },
+      { zh: "他送了我一本书。", ru: "Он подарил мне книгу." }
+    ]},
+    { word: "岁", pinyin: "suì", translation: "год, лет", examples: [
+      { zh: "我二十岁。", ru: "Мне двадцать лет." },
+      { zh: "他今年多大岁数？", ru: "Сколько ему лет?" }
+    ]},
+    { word: "他", pinyin: "tā", translation: "он", examples: [
+      { zh: "他是医生。", ru: "Он врач." },
+      { zh: "他去中国了。", ru: "Он уехал в Китай." }
+    ]},
+    { word: "他们", pinyin: "tāmen", translation: "они, им", examples: [
+      { zh: "他们都是老师。", ru: "Они все учителя." },
+      { zh: "他们去图书馆了。", ru: "Они пошли в библиотеку." }
+    ]},
+    { word: "她", pinyin: "tā", translation: "она", examples: [
+      { zh: "她是我妈妈。", ru: "Она моя мама." },
+      { zh: "她很漂亮。", ru: "Она очень красивая." }
+    ]},
+    { word: "她们", pinyin: "tāmen", translation: "они, им (о женщинах)", examples: [
+      { zh: "她们是学生。", ru: "Они студентки." },
+      { zh: "她们一起去了。", ru: "Они пошли вместе." }
+    ]},
+    { word: "太", pinyin: "tài", translation: "слишком, чересчур", examples: [
+      { zh: "这个太贵了。", ru: "Это слишком дорого." },
+      { zh: "太好了！", ru: "Отлично!" }
+    ]},
+    { word: "天", pinyin: "tiān", translation: "день; небо", examples: [
+      { zh: "今天天气很好。", ru: "Сегодня хорошая погода." },
+      { zh: "我休息三天。", ru: "Я отдыхаю три дня." }
+    ]},
+    { word: "天气", pinyin: "tiānqì", translation: "погода", examples: [
+      { zh: "今天天气很好。", ru: "Сегодня хорошая погода." },
+      { zh: "明天天气怎么样？", ru: "Какая погода будет завтра?" }
+    ]},
+    { word: "听", pinyin: "tīng", translation: "слушать, слышать", examples: [
+      { zh: "我听音乐。", ru: "Я слушаю музыку." },
+      { zh: "请听我说。", ru: "Пожалуйста, послушай меня." }
+    ]},
+    { word: "听到", pinyin: "tīngdào", translation: "услышать", examples: [
+      { zh: "我听到了你的话。", ru: "Я услышал твои слова." },
+      { zh: "你听到了吗？", ru: "Ты услышал?" }
+    ]},
+    { word: "听见", pinyin: "tīngjiàn", translation: "слышать, услышать", examples: [
+      { zh: "我没听见。", ru: "Я не услышал." },
+      { zh: "你能听见吗？", ru: "Ты слышишь?" }
+    ]},
+    { word: "听写", pinyin: "tīngxiě", translation: "диктовать; диктант", examples: [
+      { zh: "我们今天听写。", ru: "У нас сегодня диктант." },
+      { zh: "请准备听写。", ru: "Приготовьтесь к диктанту." }
+    ]},
+    { word: "同学", pinyin: "tóngxué", translation: "одноклассник, одногруппник", examples: [
+      { zh: "他是我的同学。", ru: "Он мой одноклассник." },
+      { zh: "同学们好！", ru: "Здравствуйте, одноклассники!" }
+    ]},
+    { word: "图书馆", pinyin: "túshūguǎn", translation: "библиотека", examples: [
+      { zh: "我去图书馆看书。", ru: "Я иду в библиотеку читать." },
+      { zh: "图书馆在哪儿？", ru: "Где библиотека?" }
+    ]},
+    { word: "外", pinyin: "wài", translation: "снаружи, внешний", examples: [
+      { zh: "外面在下雨。", ru: "На улице идёт дождь." },
+      { zh: "请到外边去。", ru: "Выйдите наружу, пожалуйста." }
+    ]},
+    { word: "外边", pinyin: "wàibiān", translation: "внешняя, снаружи", examples: [
+      { zh: "外边很冷。", ru: "На улице холодно." },
+      { zh: "他在外边等你。", ru: "Он ждёт тебя снаружи." }
+    ]},
+    { word: "外国", pinyin: "wàiguó", translation: "иностранное государство", examples: [
+      { zh: "他是外国人。", ru: "Он иностранец." },
+      { zh: "我想去外国学习。", ru: "Я хочу учиться за границей." }
+    ]},
+    { word: "外语", pinyin: "wàiyǔ", translation: "иностранный язык", examples: [
+      { zh: "我会说两门外语。", ru: "Я говорю на двух иностранных языках." },
+      { zh: "学外语很有意思。", ru: "Учить иностранный язык интересно." }
+    ]},
+    { word: "玩儿", pinyin: "wánr", translation: "играть, развлекаться", examples: [
+      { zh: "孩子们在玩儿。", ru: "Дети играют." },
+      { zh: "我们去玩儿吧。", ru: "Пойдём развлечёмся." }
+    ]},
+    { word: "晚", pinyin: "wǎn", translation: "поздний", examples: [
+      { zh: "现在很晚了。", ru: "Сейчас очень поздно." },
+      { zh: "对不起，我来晚了。", ru: "Извините, я опоздал." }
+    ]},
+    { word: "晚饭", pinyin: "wǎnfàn", translation: "ужин", examples: [
+      { zh: "我们一起吃晚饭吧。", ru: "Давай поужинаем вместе." },
+      { zh: "晚饭吃什么？", ru: "Что на ужин?" }
+    ]},
+    { word: "晚上", pinyin: "wǎnshang", translation: "вечер", examples: [
+      { zh: "晚上我有空。", ru: "Вечером я свободен." },
+      { zh: "今天晚上你去哪儿？", ru: "Куда ты идёшь сегодня вечером?" }
+    ]},
+    { word: "网上", pinyin: "wǎngshang", translation: "в интернете", examples: [
+      { zh: "网上有很多信息。", ru: "В интернете много информации." },
+      { zh: "我在网上买东西。", ru: "Я покупаю вещи в интернете." }
+    ]},
+    { word: "网友", pinyin: "wǎngyǒu", translation: "пользователь интернета", examples: [
+      { zh: "他是我的网友。", ru: "Он мой друг из интернета." },
+      { zh: "我有很多网友。", ru: "У меня много друзей в интернете." }
+    ]},
+    { word: "忘", pinyin: "wàng", translation: "забывать", examples: [
+      { zh: "别忘了带书。", ru: "Не забудь взять книгу." },
+      { zh: "我忘了他的名字。", ru: "Я забыл его имя." }
+    ]},
+    { word: "忘记", pinyin: "wàngjì", translation: "забыть, запамятовать", examples: [
+      { zh: "我忘记了。", ru: "Я забыл." },
+      { zh: "别忘记给我打电话。", ru: "Не забудь мне позвонить." }
+    ]},
+    { word: "问", pinyin: "wèn", translation: "спрашивать", examples: [
+      { zh: "我可以问一个问题吗？", ru: "Можно задать вопрос?" },
+      { zh: "请别问我。", ru: "Не спрашивай меня, пожалуйста." }
+    ]},
+    { word: "我", pinyin: "wǒ", translation: "я", examples: [
+      { zh: "我是学生。", ru: "Я студент." },
+      { zh: "我很高兴。", ru: "Я очень рад." }
+    ]},
+    { word: "我们", pinyin: "wǒmen", translation: "мы", examples: [
+      { zh: "我们是朋友。", ru: "Мы друзья." },
+      { zh: "我们去学校。", ru: "Мы идём в школу." }
+    ]},
+    { word: "五", pinyin: "wǔ", translation: "5, пять", examples: [
+      { zh: "现在五点。", ru: "Сейчас пять часов." },
+      { zh: "我有五本书。", ru: "У меня пять книг." }
+    ]},
+    { word: "午饭", pinyin: "wǔfàn", translation: "обед", examples: [
+      { zh: "午饭吃什么？", ru: "Что на обед?" },
+      { zh: "我们一起吃午饭吧。", ru: "Давай пообедаем вместе." }
+    ]},
+    { word: "西", pinyin: "xī", translation: "запад, западный", examples: [
+      { zh: "太阳从西边落下。", ru: "Солнце садится на западе." },
+      { zh: "西边是山。", ru: "На западе горы." }
+    ]},
+    { word: "西边", pinyin: "xībiān", translation: "западная сторона", examples: [
+      { zh: "银行在西边。", ru: "Банк на западной стороне." },
+      { zh: "西边有个公园。", ru: "На западе есть парк." }
+    ]},
+    { word: "洗", pinyin: "xǐ", translation: "мыть, купать, стирать", examples: [
+      { zh: "请洗手。", ru: "Помойте руки." },
+      { zh: "我在洗衣服。", ru: "Я стираю одежду." }
+    ]},
+    { word: "洗手间", pinyin: "xǐshǒujiān", translation: "туалет, уборная", examples: [
+      { zh: "洗手间在哪儿？", ru: "Где туалет?" },
+      { zh: "我去一下洗手间。", ru: "Я отойду в туалет." }
+    ]},
+    { word: "喜欢", pinyin: "xǐhuan", translation: "нравиться", examples: [
+      { zh: "我喜欢猫。", ru: "Мне нравятся кошки." },
+      { zh: "你喜欢吃什么？", ru: "Что ты любишь есть?" }
+    ]},
+    { word: "下", pinyin: "xià", translation: "низ, под; идти (о дожде); спускать", examples: [
+      { zh: "猫在桌子下。", ru: "Кошка под столом." },
+      { zh: "下雨了。", ru: "Пошёл дождь." }
+    ]},
+    { word: "下班", pinyin: "xiàbān", translation: "уходить с работы", examples: [
+      { zh: "我六点下班。", ru: "Я заканчиваю работу в шесть." },
+      { zh: "他下班了吗？", ru: "Он уже ушёл с работы?" }
+    ]},
+    { word: "下边", pinyin: "xiàbiān", translation: "под, внизу", examples: [
+      { zh: "下边有什么？", ru: "Что внизу?" },
+      { zh: "猫在椅子下边。", ru: "Кошка под стулом." }
+    ]},
+    { word: "下车", pinyin: "xiàchē", translation: "сойти, выйти (из транспорта)", examples: [
+      { zh: "请在下个站下车。", ru: "Выйдите на следующей остановке." },
+      { zh: "我们下车吧。", ru: "Давай выйдем." }
+    ]},
+    { word: "下次", pinyin: "xiàcì", translation: "следующий раз", examples: [
+      { zh: "下次见。", ru: "До следующего раза." },
+      { zh: "下次我们一起去。", ru: "В следующий раз пойдём вместе." }
+    ]},
+    { word: "下课", pinyin: "xiàkè", translation: "заканчивать урок", examples: [
+      { zh: "我们四点下课。", ru: "У нас занятия заканчиваются в четыре." },
+      { zh: "下课了。", ru: "Урок закончился." }
+    ]},
+    { word: "下午", pinyin: "xiàwǔ", translation: "после обеда, днём", examples: [
+      { zh: "下午我有空。", ru: "Днём я свободен." },
+      { zh: "下午我们去看电影。", ru: "Днём мы пойдём в кино." }
+    ]},
+    { word: "下雨", pinyin: "xiàyǔ", translation: "идёт дождь", examples: [
+      { zh: "今天下雨了。", ru: "Сегодня идёт дождь." },
+      { zh: "下雨了，带伞吧。", ru: "Идёт дождь, возьми зонт." }
+    ]},
+    { word: "先", pinyin: "xiān", translation: "сначала; раньше", examples: [
+      { zh: "你先走吧。", ru: "Иди первым." },
+      { zh: "我先吃饭，然后工作。", ru: "Сначала я поем, потом буду работать." }
+    ]},
+    { word: "先生", pinyin: "xiānsheng", translation: "господин, мистер", examples: [
+      { zh: "王先生在吗？", ru: "Господин Ван здесь?" },
+      { zh: "先生，您好！", ru: "Здравствуйте, господин!" }
+    ]},
+    { word: "现在", pinyin: "xiànzài", translation: "сейчас", examples: [
+      { zh: "现在几点了？", ru: "Который сейчас час?" },
+      { zh: "我现在很忙。", ru: "Сейчас я занят." }
+    ]},
+    { word: "想", pinyin: "xiǎng", translation: "хотеть; думать", examples: [
+      { zh: "我想喝茶。", ru: "Я хочу чаю." },
+      { zh: "我想去中国。", ru: "Я хочу поехать в Китай." }
+    ]},
+    { word: "小", pinyin: "xiǎo", translation: "маленький", examples: [
+      { zh: "这个猫很小。", ru: "Этот котёнок маленький." },
+      { zh: "我有小桌子。", ru: "У меня есть маленький стол." }
+    ]},
+    { word: "小孩儿", pinyin: "xiǎoháir", translation: "ребенок", examples: [
+      { zh: "那个小孩儿很可爱。", ru: "Тот ребёнок очень милый." },
+      { zh: "小孩儿在玩儿。", ru: "Ребёнок играет." }
+    ]},
+    { word: "小姐", pinyin: "xiǎojiě", translation: "мисс, девушка", examples: [
+      { zh: "小姐，请问银行在哪儿？", ru: "Девушка, извините, где банк?" },
+      { zh: "这位小姐是谁？", ru: "Кто эта девушка?" }
+    ]},
+    { word: "小朋友", pinyin: "xiǎopéngyǒu", translation: "ребенок, дети", examples: [
+      { zh: "小朋友们在玩儿。", ru: "Дети играют." },
+      { zh: "小朋友们好！", ru: "Здравствуйте, дети!" }
+    ]},
+    { word: "小时", pinyin: "xiǎoshí", translation: "час", examples: [
+      { zh: "我等了一个小时。", ru: "Я ждал час." },
+      { zh: "还有两个小时。", ru: "Осталось ещё два часа." }
+    ]},
+    { word: "小学", pinyin: "xiǎoxué", translation: "начальная школа", examples: [
+      { zh: "我弟弟上小学。", ru: "Мой младший брат учится в начальной школе." },
+      { zh: "小学离家很近。", ru: "Начальная школа близко от дома." }
+    ]},
+    { word: "小学生", pinyin: "xiǎoxuéshēng", translation: "ученик начальной школы", examples: [
+      { zh: "他是小学生。", ru: "Он ученик начальной школы." },
+      { zh: "小学生们在读书。", ru: "Ученики начальной школы читают." }
+    ]},
+    { word: "笑", pinyin: "xiào", translation: "смеяться, улыбаться; улыбка", examples: [
+      { zh: "他在笑。", ru: "Он смеётся." },
+      { zh: "她笑得很漂亮。", ru: "Она красиво улыбается." }
+    ]},
+    { word: "写", pinyin: "xiě", translation: "писать", examples: [
+      { zh: "我写汉字。", ru: "Я пишу иероглифы." },
+      { zh: "请写你的名字。", ru: "Напишите ваше имя." }
+    ]},
+    { word: "谢谢", pinyin: "xièxie", translation: "спасибо", examples: [
+      { zh: "谢谢你！", ru: "Спасибо тебе!" },
+      { zh: "谢谢你的帮助。", ru: "Спасибо за твою помощь." }
+    ]},
+    { word: "新", pinyin: "xīn", translation: "новый", examples: [
+      { zh: "这是我的新书。", ru: "Это моя новая книга." },
+      { zh: "我家有新房子。", ru: "У меня новый дом." }
+    ]},
+    { word: "新年", pinyin: "xīnnián", translation: "Новый год", examples: [
+      { zh: "新年快乐！", ru: "С Новым годом!" },
+      { zh: "新年我去中国。", ru: "На Новый год я поеду в Китай." }
+    ]},
+    { word: "星期", pinyin: "xīngqī", translation: "неделя", examples: [
+      { zh: "今天星期几？", ru: "Какой сегодня день недели?" },
+      { zh: "下星期我去学校。", ru: "На следующей неделе я пойду в школу." }
+    ]},
+    { word: "星期日", pinyin: "xīngqīrì", translation: "воскресенье", examples: [
+      { zh: "星期日我休息。", ru: "В воскресенье я отдыхаю." },
+      { zh: "星期日我们去看电影。", ru: "В воскресенье мы пойдём в кино." }
+    ]},
+    { word: "星期天", pinyin: "xīngqītiān", translation: "воскресенье", examples: [
+      { zh: "星期天你做什么？", ru: "Что ты делаешь в воскресенье?" },
+      { zh: "星期天我不上班。", ru: "В воскресенье я не работаю." }
+    ]},
+    { word: "行", pinyin: "xíng", translation: "идти, ходить; Ок", examples: [
+      { zh: "行，没问题。", ru: "Хорошо, без проблем." },
+      { zh: "你行不行？", ru: "Ты справишься?" }
+    ]},
+    { word: "休息", pinyin: "xiūxi", translation: "отдыхать, отдых", examples: [
+      { zh: "我要休息一下。", ru: "Я хочу немного отдохнуть." },
+      { zh: "请休息一会儿。", ru: "Отдохните немного." }
+    ]},
+    { word: "学", pinyin: "xué", translation: "учить, изучать", examples: [
+      { zh: "我学汉语。", ru: "Я учу китайский." },
+      { zh: "他学得很快。", ru: "Он учится быстро." }
+    ]},
+    { word: "学生", pinyin: "xuésheng", translation: "ученик, студент", examples: [
+      { zh: "我是学生。", ru: "Я ученик." },
+      { zh: "学校有很多学生。", ru: "В школе много учеников." }
+    ]},
+    { word: "学习", pinyin: "xuéxí", translation: "учиться, изучать", examples: [
+      { zh: "我学习汉语。", ru: "Я учу китайский." },
+      { zh: "他在中国学习。", ru: "Он учится в Китае." }
+    ]},
+    { word: "学校", pinyin: "xuéxiào", translation: "школа", examples: [
+      { zh: "我去学校。", ru: "Я иду в школу." },
+      { zh: "我们学校很大。", ru: "Наша школа большая." }
+    ]},
+    { word: "学院", pinyin: "xuéyuàn", translation: "институт, академия, колледж", examples: [
+      { zh: "我在外语学院学习。", ru: "Я учусь в институте иностранных языков." },
+      { zh: "这个学院很有名。", ru: "Этот институт очень известный." }
+    ]},
+    { word: "要", pinyin: "yào", translation: "хотеть, желать; следует", examples: [
+      { zh: "我要一杯茶。", ru: "Я хочу чашку чая." },
+      { zh: "你要去哪儿？", ru: "Куда ты хочешь пойти?" }
+    ]},
+    { word: "爷爷", pinyin: "yéye", translation: "дедушка (по папе)", examples: [
+      { zh: "我爷爷今年八十岁。", ru: "Моему дедушке в этом году восемьдесят." },
+      { zh: "爷爷在家。", ru: "Дедушка дома." }
+    ]},
+    { word: "也", pinyin: "yě", translation: "тоже", examples: [
+      { zh: "我也去。", ru: "Я тоже пойду." },
+      { zh: "他也是学生。", ru: "Он тоже студент." }
+    ]},
+    { word: "页", pinyin: "yè", translation: "страница, листок", examples: [
+      { zh: "请打开第五页。", ru: "Откройте пятую страницу." },
+      { zh: "这本书有三百页。", ru: "В этой книге триста страниц." }
+    ]},
+    { word: "一", pinyin: "yī", translation: "1, один", examples: [
+      { zh: "我有一个哥哥。", ru: "У меня один старший брат." },
+      { zh: "现在一点。", ru: "Сейчас час." }
+    ]},
+    { word: "衣服", pinyin: "yīfu", translation: "одежда", examples: [
+      { zh: "这件衣服很漂亮。", ru: "Эта одежда очень красивая." },
+      { zh: "我在买衣服。", ru: "Я покупаю одежду." }
+    ]},
+    { word: "医生", pinyin: "yīshēng", translation: "врач", examples: [
+      { zh: "他是医生。", ru: "Он врач." },
+      { zh: "我想看医生。", ru: "Я хочу к врачу." }
+    ]},
+    { word: "医院", pinyin: "yīyuàn", translation: "больница", examples: [
+      { zh: "医院在哪儿？", ru: "Где больница?" },
+      { zh: "他在医院工作。", ru: "Он работает в больнице." }
+    ]},
+    { word: "一半", pinyin: "yíbàn", translation: "половина", examples: [
+      { zh: "我吃了一半。", ru: "Я съел половину." },
+      { zh: "一半的学生来了。", ru: "Пришла половина учеников." }
+    ]},
+    { word: "一会儿", pinyin: "yīhuìr", translation: "чуть-чуть, немного", examples: [
+      { zh: "请等一会儿。", ru: "Подождите немного." },
+      { zh: "我一会儿就来。", ru: "Я скоро приду." }
+    ]},
+    { word: "一块儿", pinyin: "yīkuàir", translation: "вместе; совместно", examples: [
+      { zh: "我们一块儿去吧。", ru: "Пойдём вместе." },
+      { zh: "他们一块儿学习。", ru: "Они учатся вместе." }
+    ]},
+    { word: "一下儿", pinyin: "yīxiàr", translation: "немного, недолго; один раз", examples: [
+      { zh: "请等一下儿。", ru: "Подождите минутку." },
+      { zh: "我看一下儿。", ru: "Я взгляну." }
+    ]},
+    { word: "一样", pinyin: "yíyàng", translation: "одинаковый", examples: [
+      { zh: "我们穿一样的衣服。", ru: "Мы носим одинаковую одежду." },
+      { zh: "这两个一样。", ru: "Эти две вещи одинаковые." }
+    ]},
+    { word: "一边", pinyin: "yībiān", translation: "с одной стороны", examples: [
+      { zh: "他一边吃饭一边看电视。", ru: "Он ест и одновременно смотрит телевизор." },
+      { zh: "请到一边去。", ru: "Отойдите в сторону." }
+    ]},
+    { word: "一点儿", pinyin: "yīdiǎnr", translation: "немного", examples: [
+      { zh: "请给我一点儿水。", ru: "Дайте мне немного воды." },
+      { zh: "我只会说一点儿汉语。", ru: "Я говорю только немного по-китайски." }
+    ]},
+    { word: "一起", pinyin: "yìqǐ", translation: "вместе", examples: [
+      { zh: "我们一起去吧。", ru: "Пойдём вместе." },
+      { zh: "我们一起学习。", ru: "Мы учимся вместе." }
+    ]},
+    { word: "一些", pinyin: "yìxiē", translation: "некоторые, немногие", examples: [
+      { zh: "我有一些书。", ru: "У меня есть несколько книг." },
+      { zh: "一些人喜欢喝茶。", ru: "Некоторые любят чай." }
+    ]},
+    { word: "用", pinyin: "yòng", translation: "использовать, применять", examples: [
+      { zh: "我可以用你的手机吗？", ru: "Можно воспользоваться твоим телефоном?" },
+      { zh: "他用电脑工作。", ru: "Он работает за компьютером." }
+    ]},
+        { word: "有", pinyin: "yǒu", translation: "иметь; есть", examples: [
+      { zh: "我有书。", ru: "У меня есть книга." },
+      { zh: "你家有几口人？", ru: "Сколько человек в твоей семье?" }
+    ]},
+    { word: "有的", pinyin: "yǒude", translation: "некоторые", examples: [
+      { zh: "有的人喜欢喝茶。", ru: "Некоторые любят чай." },
+      { zh: "有的学生已经走了。", ru: "Некоторые ученики уже ушли." }
+    ]},
+    { word: "有点儿", pinyin: "yǒudiǎnr", translation: "немного, чуть-чуть", examples: [
+      { zh: "我有点儿累。", ru: "Я немного устал." },
+      { zh: "这个有点儿贵。", ru: "Это немного дорого." }
+    ]},
+    { word: "有名", pinyin: "yǒumíng", translation: "известный", examples: [
+      { zh: "这个饭店很有名。", ru: "Этот ресторан очень известный." },
+      { zh: "他是很有名的医生。", ru: "Он очень известный врач." }
+    ]},
+    { word: "有时候", pinyin: "yǒushíhou", translation: "иногда", examples: [
+      { zh: "我有时候喝茶。", ru: "Иногда я пью чай." },
+      { zh: "他有时候来我家。", ru: "Иногда он приходит ко мне домой." }
+    ]},
+    { word: "有用", pinyin: "yǒuyòng", translation: "полезный", examples: [
+      { zh: "这本书很有用。", ru: "Эта книга очень полезная." },
+      { zh: "学汉语很有用。", ru: "Учить китайский полезно." }
+    ]},
+    { word: "右", pinyin: "yòu", translation: "правый", examples: [
+      { zh: "请往右走。", ru: "Идите направо." },
+      { zh: "右手拿筷子。", ru: "Держи палочки правой рукой." }
+    ]},
+    { word: "右边", pinyin: "yòubiān", translation: "справа, правая сторона", examples: [
+      { zh: "商店在右边。", ru: "Магазин справа." },
+      { zh: "请坐在我右边。", ru: "Сядь справа от меня." }
+    ]},
+    { word: "雨", pinyin: "yǔ", translation: "дождь", examples: [
+      { zh: "今天下雨了。", ru: "Сегодня идёт дождь." },
+      { zh: "雨很大。", ru: "Дождь сильный." }
+    ]},
+    { word: "语法", pinyin: "yǔfǎ", translation: "грамматика", examples: [
+      { zh: "汉语语法不太难。", ru: "Китайская грамматика не очень трудная." },
+      { zh: "我们在学语法。", ru: "Мы учим грамматику." }
+    ]},
+    { word: "语言", pinyin: "yǔyán", translation: "язык", examples: [
+      { zh: "汉语是一种语言。", ru: "Китайский — это язык." },
+      { zh: "他会说三种语言。", ru: "Он говорит на трёх языках." }
+    ]},
+    { word: "元", pinyin: "yuán", translation: "юань", examples: [
+      { zh: "这个十元。", ru: "Это стоит десять юаней." },
+      { zh: "我有一百元。", ru: "У меня сто юаней." }
+    ]},
+    { word: "远", pinyin: "yuǎn", translation: "далекий", examples: [
+      { zh: "学校离我家很远。", ru: "Школа далеко от моего дома." },
+      { zh: "机场远不远？", ru: "Аэропорт далеко?" }
+    ]},
+    { word: "月", pinyin: "yuè", translation: "месяц; луна", examples: [
+      { zh: "现在三月。", ru: "Сейчас март." },
+      { zh: "我下个月去北京。", ru: "В следующем месяце я еду в Пекин." }
+    ]},
+    { word: "再", pinyin: "zài", translation: "снова, ещё", examples: [
+      { zh: "请再说一次。", ru: "Повторите ещё раз." },
+      { zh: "我明天再来。", ru: "Завтра я приду снова." }
+    ]},
+    { word: "再见", pinyin: "zàijiàn", translation: "до свидания", examples: [
+      { zh: "再见，明天见！", ru: "До свидания, до завтра!" },
+      { zh: "老师再见！", ru: "До свидания, учитель!" }
+    ]},
+    { word: "在", pinyin: "zài", translation: "быть, находиться; в", examples: [
+      { zh: "我在家。", ru: "Я дома." },
+      { zh: "书在桌子上。", ru: "Книга на столе." }
+    ]},
+    { word: "在家", pinyin: "zàijiā", translation: "дома", examples: [
+      { zh: "他在家。", ru: "Он дома." },
+      { zh: "我今天在家休息。", ru: "Сегодня я отдыхаю дома." }
+    ]},
+    { word: "早", pinyin: "zǎo", translation: "рано, утро", examples: [
+      { zh: "早上好！", ru: "Доброе утро!" },
+      { zh: "他起得很早。", ru: "Он встаёт очень рано." }
+    ]},
+    { word: "早饭", pinyin: "zǎofàn", translation: "завтрак", examples: [
+      { zh: "我吃早饭了。", ru: "Я позавтракал." },
+      { zh: "早饭吃什么？", ru: "Что на завтрак?" }
+    ]},
+    { word: "早上", pinyin: "zǎoshang", translation: "утро", examples: [
+      { zh: "早上我有课。", ru: "Утром у меня занятия." },
+      { zh: "早上好！", ru: "Доброе утро!" }
+    ]},
+    { word: "怎么", pinyin: "zěnme", translation: "как", examples: [
+      { zh: "这个字怎么读？", ru: "Как читается этот иероглиф?" },
+      { zh: "你怎么去学校？", ru: "Как ты добираешься до школы?" }
+    ]},
+    { word: "怎么样", pinyin: "zěnmeyàng", translation: "как дела", examples: [
+      { zh: "你今天怎么样？", ru: "Как ты сегодня?" },
+      { zh: "这个菜怎么样？", ru: "Как это блюдо?" }
+    ]},
+    { word: "找", pinyin: "zhǎo", translation: "искать", examples: [
+      { zh: "我在找我的手机。", ru: "Я ищу свой телефон." },
+      { zh: "你找谁？", ru: "Кого ты ищешь?" }
+    ]},
+    { word: "找到", pinyin: "zhǎodào", translation: "найти", examples: [
+      { zh: "我找到了。", ru: "Я нашёл." },
+      { zh: "他找到了工作。", ru: "Он нашёл работу." }
+    ]},
+    { word: "这", pinyin: "zhè", translation: "это", examples: [
+      { zh: "这是我的书。", ru: "Это моя книга." },
+      { zh: "这是什么？", ru: "Что это?" }
+    ]},
+    { word: "这边", pinyin: "zhèbiān", translation: "здесь, сюда", examples: [
+      { zh: "请到这边来。", ru: "Идите сюда." },
+      { zh: "这边有人吗？", ru: "Здесь есть кто-нибудь?" }
+    ]},
+    { word: "这里", pinyin: "zhèlǐ", translation: "здесь", examples: [
+      { zh: "这里很好。", ru: "Здесь очень хорошо." },
+      { zh: "请坐这里。", ru: "Садитесь здесь." }
+    ]},
+    { word: "这儿", pinyin: "zhèr", translation: "здесь", examples: [
+      { zh: "请来这儿。", ru: "Подойдите сюда, пожалуйста." },
+      { zh: "这儿有很多人。", ru: "Здесь много людей." }
+    ]},
+    { word: "这些", pinyin: "zhèxiē", translation: "эти", examples: [
+      { zh: "这些书都是我的。", ru: "Все эти книги мои." },
+      { zh: "这些是什么？", ru: "Что это (эти вещи)?" }
+    ]},
+    { word: "着", pinyin: "zhe", translation: "аспектная частица (длительное действие)", examples: [
+      { zh: "他坐着。", ru: "Он сидит." },
+      { zh: "门开着。", ru: "Дверь открыта." }
+    ]},
+    { word: "真", pinyin: "zhēn", translation: "настоящий, истинный; действительно", examples: [
+      { zh: "这个真好！", ru: "Это действительно хорошо!" },
+      { zh: "他真是个好人。", ru: "Он действительно хороший человек." }
+    ]},
+    { word: "正在", pinyin: "zhèngzài", translation: "как раз (в момент речи)", examples: [
+      { zh: "我正在吃饭。", ru: "Я как раз ем." },
+      { zh: "他正在看书。", ru: "Он как раз читает." }
+    ]},
+    { word: "知道", pinyin: "zhīdào", translation: "знать (факт)", examples: [
+      { zh: "我知道这个字。", ru: "Я знаю этот иероглиф." },
+      { zh: "我不知道他在哪儿。", ru: "Я не знаю, где он." }
+    ]},
+    { word: "只", pinyin: "zhǐ", translation: "только, лишь", examples: [
+      { zh: "我只有十块钱。", ru: "У меня только десять юаней." },
+      { zh: "他只喝茶。", ru: "Он пьёт только чай." }
+    ]},
+    { word: "中", pinyin: "zhōng", translation: "середина, среди", examples: [
+      { zh: "他在人群中。", ru: "Он в толпе." },
+      { zh: "一年中有十二个月。", ru: "В году двенадцать месяцев." }
+    ]},
+    { word: "中国", pinyin: "Zhōngguó", translation: "Китай", examples: [
+      { zh: "我去中国。", ru: "Я еду в Китай." },
+      { zh: "中国菜很好吃。", ru: "Китайская еда очень вкусная." }
+    ]},
+    { word: "中文", pinyin: "Zhōngwén", translation: "китайский язык", examples: [
+      { zh: "我在学中文。", ru: "Я учу китайский." },
+      { zh: "这本书是中文的。", ru: "Эта книга на китайском." }
+    ]},
+    { word: "中午", pinyin: "zhōngwǔ", translation: "полдень", examples: [
+      { zh: "中午我们吃什么？", ru: "Что мы едим в полдень?" },
+      { zh: "中午很热。", ru: "В полдень жарко." }
+    ]},
+    { word: "中学", pinyin: "zhōngxué", translation: "средняя школа", examples: [
+      { zh: "我妹妹上中学。", ru: "Моя младшая сестра учится в средней школе." },
+      { zh: "中学离我家不远。", ru: "Средняя школа недалеко от моего дома." }
+    ]},
+    { word: "中学生", pinyin: "zhōngxuéshēng", translation: "учащийся средней школы", examples: [
+      { zh: "他是中学生。", ru: "Он ученик средней школы." },
+      { zh: "中学生们在看书。", ru: "Школьники читают." }
+    ]},
+    { word: "重", pinyin: "zhòng", translation: "тяжёлый; важный", examples: [
+      { zh: "这个包很重。", ru: "Эта сумка очень тяжёлая." },
+      { zh: "这个任务很重。", ru: "Эта задача очень важная." }
+    ]},
+    { word: "重要", pinyin: "zhòngyào", translation: "важный", examples: [
+      { zh: "这件事很重要。", ru: "Это дело очень важное." },
+      { zh: "学习很重要。", ru: "Учиться очень важно." }
+    ]},
+    { word: "住", pinyin: "zhù", translation: "жить, проживать", examples: [
+      { zh: "我住在北京。", ru: "Я живу в Пекине." },
+      { zh: "你住在哪儿？", ru: "Где ты живёшь?" }
+    ]},
+    { word: "准备", pinyin: "zhǔnbèi", translation: "готовиться; подготовка", examples: [
+      { zh: "我在准备考试。", ru: "Я готовлюсь к экзамену." },
+      { zh: "请准备好。", ru: "Приготовьтесь, пожалуйста." }
+    ]},
+    { word: "桌子", pinyin: "zhuōzi", translation: "стол", examples: [
+      { zh: "书在桌子上。", ru: "Книга на столе." },
+      { zh: "桌子上有电脑。", ru: "На столе есть компьютер." }
+    ]},
+    { word: "字", pinyin: "zì", translation: "иероглиф, слово", examples: [
+      { zh: "这个字怎么写？", ru: "Как пишется этот иероглиф?" },
+      { zh: "我认识很多字。", ru: "Я знаю много иероглифов." }
+    ]},
+    { word: "子", pinyin: "zi", translation: "суффикс существительных", examples: [
+      { zh: "桌子在这儿。", ru: "Стол здесь." },
+      { zh: "杯子里有水。", ru: "В чашке есть вода." }
+    ]},
+    { word: "走", pinyin: "zǒu", translation: "ходить (пешком)", examples: [
+      { zh: "我走路去学校。", ru: "Я иду в школу пешком." },
+      { zh: "他走了。", ru: "Он ушёл." }
+    ]},
+    { word: "走路", pinyin: "zǒulù", translation: "идти по дороге; путешествовать", examples: [
+      { zh: "我喜欢走路。", ru: "Я люблю ходить пешком." },
+      { zh: "我们走路去吧。", ru: "Давай пойдём пешком." }
+    ]},
+    { word: "最", pinyin: "zuì", translation: "самый", examples: [
+      { zh: "他最高。", ru: "Он самый высокий." },
+      { zh: "我最喜欢喝茶。", ru: "Больше всего я люблю чай." }
+    ]},
+    { word: "最好", pinyin: "zuìhǎo", translation: "лучше всего", examples: [
+      { zh: "你最好休息一下。", ru: "Тебе лучше отдохнуть." },
+      { zh: "最好明天去。", ru: "Лучше всего пойти завтра." }
+    ]},
+    { word: "最后", pinyin: "zuìhòu", translation: "последний; наконец", examples: [
+      { zh: "最后他来了。", ru: "В конце концов он пришёл." },
+      { zh: "最后一个问题。", ru: "Последний вопрос." }
+    ]},
+    { word: "昨天", pinyin: "zuótiān", translation: "вчера", examples: [
+      { zh: "昨天我很忙。", ru: "Вчера я был занят." },
+      { zh: "昨天下雨了。", ru: "Вчера шёл дождь." }
+    ]},
+    { word: "左", pinyin: "zuǒ", translation: "левый", examples: [
+      { zh: "请往左走。", ru: "Идите налево." },
+      { zh: "左手拿书。", ru: "Держи книгу в левой руке." }
+    ]},
+    { word: "左边", pinyin: "zuǒbiān", translation: "слева, левая сторона", examples: [
+      { zh: "银行在左边。", ru: "Банк слева." },
+      { zh: "请坐在我左边。", ru: "Сядь слева от меня." }
+    ]},
+    { word: "坐", pinyin: "zuò", translation: "сидеть; ехать на транспорте", examples: [
+      { zh: "请坐。", ru: "Садитесь, пожалуйста." },
+      { zh: "我坐车去学校。", ru: "Я еду в школу на транспорте." }
+    ]},
+    { word: "坐下", pinyin: "zuòxià", translation: "садиться", examples: [
+      { zh: "请坐下。", ru: "Садитесь, пожалуйста." },
+      { zh: "他坐下了。", ru: "Он сел." }
+    ]},
+    { word: "做", pinyin: "zuò", translation: "делать, готовить", examples: [
+      { zh: "你在做什么？", ru: "Что ты делаешь?" },
+      { zh: "妈妈在做菜。", ru: "Мама готовит." }
+    ]}
+  ];
+
+  const MAX_CARDS_PER_ROUND = 20;
+
+  // ========== СОСТОЯНИЕ ==========
+  let currentRoundCards = [];
+  let forgottenCards = [];
+  let round = 1;
+  let totalCardsInRound = 0;
+  let processedCount = 0;
+  let isFlipped = false;
+  let awaitingForgetConfirm = false;
+
+  let masteredWords = new Set();
+  let notYetSeenWords = [];
+
+  // ========== DOM ==========
+  const card = document.getElementById('card');
+  const cardInner = document.getElementById('cardInner');
+  const cardWord = document.getElementById('cardWord');
+  const cardPinyin = document.getElementById('cardPinyin');
+  const cardTranslation = document.getElementById('cardTranslation');
+  const examplesContainer = document.getElementById('examplesContainer');
+  const examplesBlock = document.getElementById('examplesBlock');
+  const progressFill = document.getElementById('progressFill');
+  const roundLabel = document.getElementById('roundLabel');
+  const counterLabel = document.getElementById('counterLabel');
+  const btnForget = document.getElementById('btnForget');
+  const btnRemember = document.getElementById('btnRemember');
+  const finishScreen = document.getElementById('finishScreen');
+  const finishTitle = document.getElementById('finishTitle');
+  const finishText = document.getElementById('finishText');
+  const statsTotal = document.getElementById('statsTotal');
+  const restartBtn = document.getElementById('restartBtn');
+  const cardContainer = document.getElementById('cardContainer');
+  const keyboardHint = document.getElementById('keyboardHint');
+
+  // ========== СВАЙП ==========
+  let startX = 0;
+  let currentX = 0;
+  let isDragging = false;
+  const swipeThreshold = 80;
+  let animationInProgress = false;
+
+  // ========== УТИЛИТЫ ==========
+  function shuffleArray(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function escapeHtml(str) {
+    return str.replace(/[&<>"']/g, (m) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[m]));
+  }
+
+  function highlightWord(text, word) {
+    const escaped = escapeHtml(text);
+    const escapedWord = escapeHtml(word);
+    return escaped.split(escapedWord).join(
+      `<span class="highlight">${escapedWord}</span>`
+    );
+  }
+
+  function updateUI() {
+    const total = totalCardsInRound;
+    const current = processedCount;
+    const percent = total > 0 ? (current / total) * 100 : 0;
+    progressFill.style.width = percent + '%';
+    counterLabel.textContent = `${current} / ${total}`;
+    roundLabel.textContent = `Раунд ${round}`;
+  }
+
+  function fillCardContent(item) {
+    cardWord.textContent = item.word;
+    cardPinyin.textContent = item.pinyin;
+    cardTranslation.textContent = item.translation;
+
+    if (item.examples && item.examples.length) {
+      examplesBlock.classList.remove('hidden');
+      examplesContainer.innerHTML = '';
+      const shown = item.examples.slice(0, 2);
+      for (const ex of shown) {
+        const div = document.createElement('div');
+        div.className = 'example';
+        div.innerHTML = `
+          <div class="example-zh">${highlightWord(ex.zh, item.word)}</div>
+          <div class="example-ru">${escapeHtml(ex.ru)}</div>
+        `;
+        examplesContainer.appendChild(div);
+      }
+    } else {
+      examplesBlock.classList.add('hidden');
+    }
+  }
+
+  function renderCurrentCard() {
+    if (currentRoundCards.length === 0) {
+      showFinishScreen();
+      return;
+    }
+
+    cardInner.style.transition = 'none';
+    card.classList.remove('flipped');
+    isFlipped = false;
+    awaitingForgetConfirm = false;
+    void cardInner.offsetWidth;
+    cardInner.style.transition = '';
+
+    fillCardContent(currentRoundCards[0]);
+
+    card.style.transition = 'none';
+    card.style.transform = 'translateX(0) rotate(0deg)';
+    card.style.opacity = '1';
+    void card.offsetWidth;
+    card.style.transition = 'transform 0.15s ease, opacity 0.2s ease';
+
+    updateUI();
+  }
+
+  function resetCardStyle() {
+    card.style.transition = 'transform 0.15s ease, opacity 0.2s ease';
+    card.style.transform = 'translateX(0) rotate(0deg)';
+    card.style.opacity = '1';
+  }
+
+  function flipCard() {
+    if (isFlipped) return;
+    isFlipped = true;
+    card.classList.add('flipped');
+  }
+
+  function animateSwipe(direction) {
+    if (animationInProgress || currentRoundCards.length === 0) return;
+    animationInProgress = true;
+    const cardData = currentRoundCards[0];
+
+    if (direction === 'left') {
+      forgottenCards.push(cardData);
+    } else if (direction === 'right') {
+      masteredWords.add(cardData.word);
+    }
+
+    card.style.transition = 'transform 0.28s ease, opacity 0.28s ease';
+    if (direction === 'left') {
+      card.style.transform = 'translateX(-150%) rotate(-20deg)';
+    } else {
+      card.style.transform = 'translateX(150%) rotate(20deg)';
+    }
+    card.style.opacity = '0';
+
+    setTimeout(() => {
+      currentRoundCards.shift();
+      processedCount++;
+
+      card.style.transition = 'none';
+      card.style.opacity = '0';
+      void card.offsetWidth;
+
+      if (currentRoundCards.length === 0) {
+        cardInner.style.transition = 'none';
+        card.classList.remove('flipped');
+        void cardInner.offsetWidth;
+        cardInner.style.transition = '';
+        isFlipped = false;
+        awaitingForgetConfirm = false;
+        updateUI();
+        showFinishScreen();
+        animationInProgress = false;
+        return;
+      }
+
+      fillCardContent(currentRoundCards[0]);
+
+      cardInner.style.transition = 'none';
+      card.classList.remove('flipped');
+      isFlipped = false;
+      awaitingForgetConfirm = false;
+      void cardInner.offsetWidth;
+      cardInner.style.transition = '';
+
+      card.style.transition = 'none';
+      card.style.transform = 'translateX(0) rotate(0deg)';
+      void card.offsetWidth;
+
+      card.style.transition = 'opacity 0.15s ease';
+      card.style.opacity = '1';
+
+      updateUI();
+
+      setTimeout(() => {
+        card.style.transition = 'transform 0.15s ease, opacity 0.2s ease';
+        animationInProgress = false;
+      }, 150);
+    }, 280);
+  }
+
+  function snapBack() {
+    card.style.transition = 'transform 0.2s ease, opacity 0.2s ease';
+    card.style.transform = 'translateX(0) rotate(0deg)';
+    card.style.opacity = '1';
+  }
+
+  function handleForget() {
+    if (animationInProgress || currentRoundCards.length === 0) return;
+    if (awaitingForgetConfirm) {
+      animateSwipe('left');
+      return;
+    }
+    flipCard();
+    awaitingForgetConfirm = true;
+  }
+
+  function handleRemember() {
+    if (animationInProgress || currentRoundCards.length === 0) return;
+    if (awaitingForgetConfirm) {
+      animateSwipe('left');
+      return;
+    }
+    animateSwipe('right');
+  }
+
+  function showFinishScreen() {
+    cardContainer.classList.add('hidden');
+    document.getElementById('buttons').classList.add('hidden');
+    keyboardHint.classList.add('hidden');
+    finishScreen.classList.remove('hidden');
+
+    const uniqueForgotten = [...new Set(forgottenCards.map(c => c.word))];
+    const forgottenCount = uniqueForgotten.length;
+    const remainingNew = notYetSeenWords.length;
+    const totalWords = HSK1_WORDS.length;
+    const masteredCount = masteredWords.size;
+
+    statsTotal.innerHTML = `
+      <span class="stat-pill">Выучено: ${masteredCount} / ${totalWords}</span>
+      <span class="stat-pill">Осталось новых: ${remainingNew}</span>
+    `;
+
+    if (forgottenCount > 0) {
+      finishTitle.textContent = '💪 Закрепление';
+      finishText.innerHTML = `Забыто слов: <strong>${forgottenCount}</strong><br>Сейчас повторим их ещё раз.`;
+      restartBtn.textContent = 'Повторить забытые →';
+      restartBtn.onclick = () => {
+        round++;
+        const wordsMap = new Map(HSK1_WORDS.map(w => [w.word, w]));
+        const cardsForNextRound = uniqueForgotten.map(w => wordsMap.get(w)).filter(Boolean);
+        startRoundWithCards(cardsForNextRound);
+      };
+    } else if (remainingNew > 0) {
+      finishTitle.textContent = '🎉 Отличный раунд!';
+      finishText.innerHTML = `Все слова этого раунда выучены.<br>Дальше — <strong>${Math.min(MAX_CARDS_PER_ROUND, remainingNew)}</strong> новых слов.`;
+      restartBtn.textContent = `Новые слова (${Math.min(MAX_CARDS_PER_ROUND, remainingNew)}) →`;
+      restartBtn.onclick = () => {
+        round++;
+        const nextBatch = notYetSeenWords.slice(0, MAX_CARDS_PER_ROUND);
+        notYetSeenWords = notYetSeenWords.slice(MAX_CARDS_PER_ROUND);
+        startRoundWithCards(nextBatch);
+      };
+    } else {
+      finishTitle.textContent = '🏆 Поздравляем!';
+      finishText.innerHTML = `Вы прошли все <strong>${totalWords}</strong> слов HSK 1!<br>Отличная работа!`;
+      restartBtn.textContent = 'Начать заново';
+      restartBtn.onclick = () => {
+        initGame();
+      };
+    }
+  }
+
+  function startRoundWithCards(cards) {
+    finishScreen.classList.add('hidden');
+    cardContainer.classList.remove('hidden');
+    document.getElementById('buttons').classList.remove('hidden');
+    keyboardHint.classList.remove('hidden');
+
+    const shuffled = shuffleArray(cards);
+    currentRoundCards = shuffled;
+
+    totalCardsInRound = currentRoundCards.length;
+    processedCount = 0;
+    forgottenCards = [];
+    animationInProgress = false;
+    isFlipped = false;
+    awaitingForgetConfirm = false;
+
+    card.classList.remove('flipped');
+    resetCardStyle();
+    renderCurrentCard();
+    updateUI();
+  }
+
+  function initGame() {
+    round = 1;
+    forgottenCards = [];
+    masteredWords = new Set();
+    notYetSeenWords = shuffleArray([...HSK1_WORDS]);
+    const firstBatch = notYetSeenWords.slice(0, MAX_CARDS_PER_ROUND);
+    notYetSeenWords = notYetSeenWords.slice(MAX_CARDS_PER_ROUND);
+    startRoundWithCards(firstBatch);
+  }
+
+  // ========== СОБЫТИЯ УКАЗАТЕЛЯ ==========
+  function onPointerDown(e) {
+    if (animationInProgress || currentRoundCards.length === 0) return;
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    e.preventDefault();
+    startX = e.clientX;
+    currentX = startX;
+    isDragging = true;
+    card.style.transition = 'none';
+    card.setPointerCapture(e.pointerId);
+  }
+
+  function onPointerMove(e) {
+    if (!isDragging || animationInProgress || currentRoundCards.length === 0) return;
+    e.preventDefault();
+    const dx = e.clientX - startX;
+    currentX = e.clientX;
+    const rotate = dx * 0.05;
+    card.style.transform = `translateX(${dx}px) rotate(${rotate}deg)`;
+    const opacity = 1 - Math.min(Math.abs(dx) / 600, 0.3);
+    card.style.opacity = opacity;
+  }
+
+  function onPointerUp(e) {
+    if (!isDragging || animationInProgress || currentRoundCards.length === 0) return;
+    isDragging = false;
+    e.preventDefault();
+    const dx = currentX - startX;
+
+    if (dx > swipeThreshold) {
+      if (awaitingForgetConfirm) {
+        animateSwipe('left');
+      } else {
+        animateSwipe('right');
+      }
+    } else if (dx < -swipeThreshold) {
+      if (!awaitingForgetConfirm) {
+        flipCard();
+        awaitingForgetConfirm = true;
+        snapBack();
+      } else {
+        animateSwipe('left');
+      }
+    } else {
+      snapBack();
+    }
+    if (card.hasPointerCapture(e.pointerId)) {
+      card.releasePointerCapture(e.pointerId);
+    }
+  }
+
+  function onPointerCancel(e) {
+    if (isDragging) {
+      isDragging = false;
+      snapBack();
+      if (card.hasPointerCapture(e.pointerId)) {
+        card.releasePointerCapture(e.pointerId);
+      }
+    }
+  }
+
+  card.addEventListener('pointerdown', onPointerDown);
+  card.addEventListener('pointermove', onPointerMove);
+  card.addEventListener('pointerup', onPointerUp);
+  card.addEventListener('pointercancel', onPointerCancel);
+
+  // ========== КЛАВИАТУРА ==========
+  document.addEventListener('keydown', (e) => {
+    if (!finishScreen.classList.contains('hidden')) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        restartBtn.click();
+      }
+      return;
+    }
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      handleForget();
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      handleRemember();
+    }
+  });
+
+  // ========== КНОПКИ ==========
+  btnForget.addEventListener('click', handleForget);
+  btnRemember.addEventListener('click', handleRemember);
+  card.addEventListener('dragstart', (e) => e.preventDefault());
+
+  initGame();
+</script>
+</body>
+</html>
