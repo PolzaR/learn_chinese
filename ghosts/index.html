@@ -1,0 +1,1561 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>小鬼在哪里？— Комната</title>
+<style>
+  * { box-sizing: border-box; user-select: none; }
+  html, body {
+    margin: 0; height: 100%;
+    background: #000;
+    font-family: 'Georgia', 'Segoe UI', serif;
+    overflow: hidden;
+    color: #e0d0e0;
+  }
+
+  /* ============================================================
+     СТАРТОВЫЙ ЭКРАН
+     ============================================================ */
+  #start-screen {
+    position: fixed; inset: 0;
+    background: radial-gradient(ellipse at center, #1a0a14 0%, #000 70%);
+    z-index: 5000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    cursor: pointer;
+  }
+  #start-screen::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse at 30% 40%, rgba(80,20,40,0.35) 0%, transparent 45%),
+      radial-gradient(ellipse at 70% 60%, rgba(40,10,30,0.5) 0%, transparent 50%);
+    animation: startPulse 4s ease-in-out infinite alternate;
+  }
+  @keyframes startPulse {
+    0%   { opacity: 0.6; }
+    100% { opacity: 1; }
+  }
+  #start-screen.hidden {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 1.2s ease;
+  }
+  #start-title {
+    font-size: 84px;
+    letter-spacing: 12px;
+    color: #c8a8d8;
+    text-shadow:
+      0 0 30px rgba(180,60,180,0.9),
+      0 0 60px rgba(120,30,120,0.7),
+      0 0 100px rgba(80,10,80,0.5);
+    margin-bottom: 30px;
+    position: relative;
+    z-index: 2;
+    font-weight: 900;
+  }
+  #start-sub {
+    font-size: 22px;
+    color: #807090;
+    letter-spacing: 4px;
+    margin-bottom: 80px;
+    z-index: 2;
+    position: relative;
+    font-style: italic;
+  }
+  #start-btn {
+    font-size: 32px;
+    letter-spacing: 8px;
+    color: #e0c8f0;
+    background: rgba(40,10,50,0.6);
+    border: 2px solid #8030a0;
+    border-radius: 8px;
+    padding: 22px 70px;
+    cursor: pointer;
+    transition: all 0.4s ease;
+    text-shadow: 0 0 12px rgba(200,80,220,0.9);
+    box-shadow:
+      0 0 40px rgba(120,30,160,0.6),
+      inset 0 0 30px rgba(60,10,80,0.5);
+    z-index: 2;
+    position: relative;
+    font-family: inherit;
+  }
+  #start-btn:hover {
+    background: rgba(80,20,100,0.7);
+    border-color: #c040e0;
+    color: #ffffff;
+    box-shadow:
+      0 0 60px rgba(160,40,200,0.9),
+      inset 0 0 40px rgba(100,20,130,0.7);
+    transform: scale(1.05);
+  }
+  #start-btn:active {
+    transform: scale(0.98);
+  }
+  .start-ghost {
+    position: absolute;
+    font-size: 90px;
+    opacity: 0.15;
+    filter: blur(1px) drop-shadow(0 0 30px rgba(180,255,255,0.5));
+    animation: startGhostFloat 6s ease-in-out infinite;
+  }
+  .start-ghost.g1 { top: 8%; left: 8%; animation-delay: 0s; }
+  .start-ghost.g2 { top: 12%; right: 10%; animation-delay: 2s; font-size: 70px; }
+  .start-ghost.g3 { bottom: 10%; left: 12%; animation-delay: 3.5s; font-size: 60px; }
+  .start-ghost.g4 { bottom: 8%; right: 8%; animation-delay: 1.5s; }
+  @keyframes startGhostFloat {
+    0%,100% { transform: translateY(0) rotate(-3deg); opacity: 0.15; }
+    50%     { transform: translateY(-20px) rotate(3deg); opacity: 0.3; }
+  }
+
+  /* ============================================================
+     СЦЕНА
+     ============================================================ */
+  #scene {
+    position: fixed; inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: #000;
+    opacity: 0;
+    transition: opacity 1.5s ease;
+  }
+  #scene.visible { opacity: 1; }
+
+  #frame {
+    position: relative;
+    width: 1600px;
+    height: 1000px;
+    transform-origin: center center;
+    overflow: hidden;
+    background: #000;
+  }
+
+  #world {
+    position: absolute;
+    left: 0; top: 0;
+    width: 1600px; height: 1000px;
+    perspective: 1600px;
+    perspective-origin: 50% 38%;
+    overflow: hidden;
+    background: #000;
+  }
+
+  /* ============================================================
+     СТЕНА
+     ============================================================ */
+  .wall {
+    position: absolute;
+    left: 0; top: 0;
+    width: 1600px; height: 640px;
+    background:
+      radial-gradient(circle at 18% 32%, rgba(35,55,30,0.55) 0%, transparent 18%),
+      radial-gradient(circle at 72% 50%, rgba(50,28,42,0.7) 0%, transparent 22%),
+      radial-gradient(circle at 42% 78%, rgba(28,38,22,0.5) 0%, transparent 20%),
+      radial-gradient(circle at 88% 18%, rgba(60,30,30,0.5) 0%, transparent 16%),
+      repeating-linear-gradient(90deg,
+        #1e1416 0 3px,
+        #1a1012 3px 46px,
+        #140a0c 46px 48px),
+      #1a1012;
+    box-shadow:
+      inset 0 -140px 180px rgba(0,0,0,0.98),
+      inset 0 0 300px rgba(0,0,0,0.85);
+  }
+  .wall::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(118deg, transparent 48%, rgba(0,0,0,0.75) 49%, transparent 50%),
+      linear-gradient(82deg, transparent 48%, rgba(0,0,0,0.6) 49%, transparent 50%),
+      linear-gradient(155deg, transparent 48%, rgba(0,0,0,0.45) 49%, transparent 50%),
+      radial-gradient(circle at 28% 22%, rgba(0,0,0,0.85) 0%, transparent 6%),
+      radial-gradient(circle at 62% 42%, rgba(0,0,0,0.75) 0%, transparent 5%);
+    background-size: 320px 320px, 480px 480px, 640px 640px, 800px 800px, 600px 600px;
+    background-position: 15% 30%, 70% 60%, 40% 10%, 28% 22%, 62% 42%;
+    opacity: 0.9;
+    pointer-events: none;
+  }
+  .wall::after {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; right: 0;
+    height: 120px;
+    background:
+      radial-gradient(ellipse at 20% 0%, rgba(0,0,0,0.8) 0%, transparent 40%),
+      radial-gradient(ellipse at 55% 0%, rgba(0,0,0,0.9) 0%, transparent 35%),
+      radial-gradient(ellipse at 85% 0%, rgba(0,0,0,0.85) 0%, transparent 38%),
+      linear-gradient(180deg, rgba(0,0,0,0.85) 0%, transparent 100%);
+    pointer-events: none;
+  }
+
+  /* ============================================================
+     ПОЛ
+     ============================================================ */
+  .floor {
+    position: absolute;
+    left: 0; top: 640px;
+    width: 1600px; height: 360px;
+    transform-origin: top;
+    transform: rotateX(-72deg);
+    background:
+      repeating-linear-gradient(0deg,
+        #2a1a10 0 68px,
+        #180e08 68px 74px),
+      repeating-linear-gradient(90deg,
+        rgba(0,0,0,0.5) 0 2px,
+        transparent 2px 140px),
+      linear-gradient(180deg, #3a2416 0%, #1a0e08 55%, #080404 100%);
+    box-shadow:
+      inset 0 100px 140px rgba(0,0,0,0.85),
+      inset 0 -40px 80px rgba(0,0,0,0.9);
+    transform-style: preserve-3d;
+  }
+  .floor::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse at 30% 65%, rgba(90,50,25,0.55) 0%, transparent 22%),
+      radial-gradient(ellipse at 72% 45%, rgba(70,40,20,0.6) 0%, transparent 28%);
+    pointer-events: none;
+  }
+  .floor::after {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse at 22% 30%, rgba(255,170,80,0.28) 0%, transparent 35%),
+      radial-gradient(ellipse at 78% 25%, rgba(255,150,70,0.22) 0%, transparent 40%);
+    mix-blend-mode: screen;
+    pointer-events: none;
+  }
+
+  .ceiling {
+    position: absolute;
+    left: 0; top: -220px;
+    width: 1600px; height: 220px;
+    transform-origin: bottom;
+    transform: rotateX(68deg);
+    background:
+      radial-gradient(ellipse at 30% 100%, rgba(60,30,20,0.4) 0%, transparent 40%),
+      radial-gradient(ellipse at 70% 100%, rgba(50,25,15,0.5) 0%, transparent 45%),
+      linear-gradient(180deg, #000 0%, #0a0505 100%);
+    box-shadow: inset 0 60px 120px rgba(0,0,0,1);
+  }
+
+  .light-pool {
+    position: absolute;
+    top: 640px;
+    width: 720px; height: 380px;
+    transform: rotateX(-72deg);
+    transform-origin: top;
+    pointer-events: none;
+    mix-blend-mode: screen;
+    animation: lightFlicker 2.6s infinite alternate;
+  }
+  .light-pool.a { left: 40px;  background: radial-gradient(ellipse at center, rgba(255,180,90,0.32) 0%, rgba(255,140,60,0.12) 45%, transparent 78%); }
+  .light-pool.b { left: 900px; background: radial-gradient(ellipse at center, rgba(255,160,70,0.28) 0%, rgba(255,120,50,0.1) 45%, transparent 78%); }
+  @keyframes lightFlicker {
+    0%,100% { opacity: 0.95; }
+    40%     { opacity: 0.75; }
+    70%     { opacity: 0.9; }
+  }
+
+  /* ============================================================
+     ПАУТИНА
+     ============================================================ */
+  .cobweb {
+    position: absolute;
+    pointer-events: none;
+    opacity: 0.7;
+    filter: drop-shadow(0 0 3px rgba(210,210,230,0.4));
+    z-index: 300;
+  }
+  .cobweb.tl { top: 0; left: 0; }
+  .cobweb.tr { top: 0; right: 0; transform: scaleX(-1); }
+  .cobweb.bl { bottom: 22%; left: 0; transform: scaleY(-1) scale(1.2); }
+  .cobweb.br { bottom: 22%; right: 0; transform: scale(-1,-1) scale(1.2); }
+  .cobweb.mid-l { top: 38%; left: 0; transform: scale(0.8); opacity: 0.5; }
+  .cobweb.mid-r { top: 42%; right: 0; transform: scale(0.9) scaleX(-1); opacity: 0.55; }
+
+  /* ============================================================
+     СВЕЧИ
+     ============================================================ */
+  .candle {
+    position: absolute;
+    width: 30px; height: 110px;
+    z-index: 55;
+    filter: drop-shadow(0 18px 22px rgba(0,0,0,0.95));
+  }
+  .candle .holder {
+    position: absolute; bottom: 0; left: 50%;
+    width: 46px; height: 14px;
+    transform: translateX(-50%);
+    background: linear-gradient(180deg, #4a3520 0%, #2a1a0e 100%);
+    border-radius: 4px 4px 8px 8px;
+    box-shadow: inset 0 2px 3px rgba(255,200,140,0.3), 0 4px 8px rgba(0,0,0,0.9);
+  }
+  .candle .body {
+    position: absolute; bottom: 14px; left: 50%;
+    width: 22px; height: 62px;
+    transform: translateX(-50%);
+    background: linear-gradient(90deg, #a89870 0%, #f0e8c8 45%, #d8c8a0 70%, #8a7a58 100%);
+    border-radius: 3px 3px 2px 2px;
+    box-shadow: inset -2px 0 4px rgba(0,0,0,0.4), inset 2px 0 3px rgba(255,255,255,0.2);
+  }
+  .candle .wax {
+    position: absolute; bottom: 70px; left: 50%;
+    width: 26px; height: 18px;
+    transform: translateX(-50%);
+    background: radial-gradient(ellipse at 50% 30%, #f0e8c8 0%, #a89870 70%, transparent 100%);
+    border-radius: 40% 40% 50% 50%;
+    opacity: 0.95;
+  }
+  .candle .wick {
+    position: absolute; bottom: 76px; left: 50%;
+    width: 2px; height: 6px;
+    background: #050505; transform: translateX(-50%);
+  }
+  .candle .flame {
+    position: absolute; bottom: 80px; left: 50%;
+    width: 16px; height: 30px;
+    transform: translateX(-50%);
+    background: radial-gradient(ellipse at 50% 78%,
+      #fff8d0 0%, #ffe070 30%, #ffb040 55%, #ff6020 78%, transparent 100%);
+    border-radius: 50% 50% 50% 50% / 65% 65% 35% 35%;
+    filter: drop-shadow(0 0 28px #ffaa33) drop-shadow(0 0 55px #ff7722) blur(0.5px);
+    animation: flicker 0.14s infinite alternate;
+    transform-origin: bottom center;
+  }
+  @keyframes flicker {
+    0%   { transform: translateX(-50%) scale(1, 1) rotate(-3deg); opacity: 1; }
+    50%  { transform: translateX(-50%) scale(1.05, 0.95) rotate(2deg); opacity: 0.9; }
+    100% { transform: translateX(-50%) scale(0.97, 1.05) rotate(-1deg); opacity: 0.95; }
+  }
+
+  /* ============================================================
+     ПРЕДМЕТЫ
+     ИСПРАВЛЕНИЕ ДВОЙНОГО ИЗОБРАЖЕНИЯ:
+     - убран filter на hover для svg (он создавал фантомный слой)
+     - убран will-change / backface-visibility / translate3d с .object
+     - svg получил overflow:hidden и translateZ(0) для единого слоя
+     ============================================================ */
+  .object {
+    position: absolute;
+    cursor: pointer;
+    z-index: 100;
+    transition: transform 0.7s cubic-bezier(.34,1.4,.5,1);
+  }
+  .object svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+  /* Ховер — мягкое свечение вокруг предмета, без рамки */
+  .object::after {
+    content: "";
+    position: absolute;
+    inset: -50px;
+    border-radius: 50%;
+    background: radial-gradient(
+        ellipse at center,
+        rgba(205, 145, 255, 0.38) 0%,
+        rgba(180, 120, 255, 0.20) 38%,
+        rgba(150, 90, 255, 0) 72%
+    );
+    opacity: 0;
+    pointer-events: none;
+    z-index: -1;
+    transition: opacity 0.2s ease;
+}
+
+  .object:hover::after {
+    opacity: 1;
+  }
+
+  .lid, .door-l, .door-r, .cork, .cushion, .books, .drawer, .painting {
+    transition: transform 0.7s cubic-bezier(.34,1.4,.5,1);
+    transform-origin: center;
+    transform-box: fill-box;
+  }
+
+  /* Пробка — отдельный DOM-элемент */
+  .cork-piece {
+    position: absolute;
+    pointer-events: none;
+    z-index: 130;
+    transition: transform 0.9s cubic-bezier(.2,1.4,.3,1), opacity 0.7s ease 0.4s;
+  }
+  .cork-piece.flown {
+    transform: translate(60px, -220px) rotate(180deg);
+    opacity: 0;
+  }
+
+  .ghost {
+    position: absolute;
+    opacity: 0;
+    transform: scale(0.2) translateY(40px);
+    transition: all 0.8s cubic-bezier(.34,1.7,.5,1);
+    pointer-events: none;
+    z-index: 90;
+    filter: drop-shadow(0 0 35px rgba(180,255,255,0.95))
+            drop-shadow(0 0 70px rgba(120,200,255,0.7));
+  }
+  .ghost.revealed {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    animation: ghostAppear 1.2s ease-out, ghostFloat 2.5s ease-in-out 1.2s infinite;
+  }
+  @keyframes ghostAppear {
+    0%   { opacity: 0; transform: scale(2.5) translateY(-30px); filter: blur(8px) brightness(3); }
+    40%  { opacity: 1; transform: scale(0.85) translateY(0); filter: blur(2px) brightness(2); }
+    70%  { transform: scale(1.08); filter: blur(0) brightness(1.4); }
+    100% { transform: scale(1); filter: blur(0) brightness(1); }
+  }
+  @keyframes ghostFloat {
+    0%,100% { transform: scale(1) translateY(0) rotate(-2deg); }
+    50%     { transform: scale(1) translateY(-16px) rotate(2deg); }
+  }
+
+  /* ============================================================
+     АТМОСФЕРА
+     ============================================================ */
+  #fog {
+    position: absolute; inset: 0;
+    pointer-events: none;
+    z-index: 400;
+    background:
+      radial-gradient(ellipse at 20% 95%, rgba(90,80,110,0.28) 0%, transparent 40%),
+      radial-gradient(ellipse at 80% 92%, rgba(80,60,100,0.22) 0%, transparent 45%);
+    animation: fogDrift 22s ease-in-out infinite alternate;
+  }
+  @keyframes fogDrift {
+    0%   { transform: translateX(-40px) translateY(0); }
+    100% { transform: translateX(50px) translateY(-12px); }
+  }
+  #vignette {
+    position: absolute; inset: 0;
+    pointer-events: none;
+    z-index: 500;
+    background:
+      radial-gradient(ellipse at 50% 42%,
+        transparent 30%,
+        rgba(0,0,0,0.35) 65%,
+        rgba(0,0,0,0.75) 100%);
+    mix-blend-mode: multiply;
+  }
+  #darkness {
+    position: absolute; inset: 0;
+    pointer-events: none;
+    z-index: 501;
+    background:
+      linear-gradient(180deg,
+        rgba(0,0,0,0.7) 0%,
+        rgba(0,0,0,0.15) 10%,
+        transparent 25%,
+        transparent 90%,
+        rgba(0,0,0,0.3) 100%);
+  }
+  #grain {
+    position: absolute; inset: 0;
+    pointer-events: none;
+    z-index: 502;
+    opacity: 0.06;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    mix-blend-mode: overlay;
+  }
+
+  /* ============================================================
+     HUD
+     ============================================================ */
+  #hud {
+    position: fixed;
+    top: 20px; left: 20px;
+    background: rgba(15,5,20,0.92);
+    border: 1px solid #5a2a7a;
+    border-radius: 10px;
+    padding: 14px 24px;
+    font-size: 20px;
+    z-index: 1000;
+    box-shadow: 0 0 30px rgba(120,60,180,0.6), inset 0 0 20px rgba(80,20,120,0.4);
+    text-shadow: 0 0 8px rgba(200,120,255,0.8);
+    font-family: 'Segoe UI', sans-serif;
+    opacity: 0;
+    transition: opacity 1s ease 1s;
+  }
+  #hud.visible { opacity: 1; }
+  #hud .counter { color: #ff88ff; font-weight: bold; }
+
+  #flash {
+    position: fixed; inset: 0;
+    background: #fff;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 800;
+    transition: opacity 0.15s;
+  }
+  #flash.on { opacity: 0.85; }
+
+  @keyframes shake {
+    0%,100% { transform: translate(0, 0); }
+    20%     { transform: translate(-6px, 4px); }
+    40%     { transform: translate(5px, -3px); }
+    60%     { transform: translate(-4px, -5px); }
+    80%     { transform: translate(3px, 5px); }
+  }
+  #frame.shake {
+    animation: shake 0.5s ease-out;
+  }
+
+  #win {
+    position: fixed; inset: 0;
+    background: radial-gradient(ellipse at center, rgba(20,60,30,0.95) 0%, rgba(0,0,0,0.98) 100%);
+    display: none;
+    align-items: center; justify-content: center;
+    flex-direction: column;
+    z-index: 2000;
+    font-size: 56px;
+    color: #b0ffb0;
+    text-shadow: 0 0 40px #80ff80;
+    text-align: center;
+    font-family: 'Segoe UI', sans-serif;
+  }
+  #win.show { display: flex; animation: winIn 0.8s ease; }
+  @keyframes winIn { from { opacity:0; transform: scale(0.9); } to { opacity:1; transform: scale(1); } }
+  #win .sub { font-size: 26px; color: #d0ffd0; margin-top: 20px; }
+
+  @keyframes pendulum {
+    0%,100% { transform: rotate(-15deg); }
+    50%     { transform: rotate(15deg); }
+  }
+  @keyframes spiderDrop {
+    0%,100% { transform: translateY(0); }
+    50%     { transform: translateY(8px); }
+  }
+</style>
+</head>
+<body>
+
+<!-- СТАРТОВЫЙ ЭКРАН -->
+<div id="start-screen">
+  <div class="start-ghost g1">👻</div>
+  <div class="start-ghost g2">👻</div>
+  <div class="start-ghost g3">👻</div>
+  <div class="start-ghost g4">👻</div>
+  <div id="start-title">小鬼在哪里？</div>
+  <button id="start-btn">开始 </button>
+</div>
+
+<div id="scene">
+  <div id="frame">
+    <div id="world">
+      <div class="ceiling"></div>
+      <div class="wall"></div>
+      <div class="floor"></div>
+
+      <div class="light-pool a"></div>
+      <div class="light-pool b"></div>
+
+      <div class="candle" style="left: 180px; top: 630px;">
+        <div class="holder"></div><div class="body"></div><div class="wax"></div>
+        <div class="wick"></div><div class="flame"></div>
+      </div>
+      <div class="candle" style="left: 1340px; top: 630px;">
+        <div class="holder"></div><div class="body"></div><div class="wax"></div>
+        <div class="wick"></div><div class="flame"></div>
+      </div>
+
+      <svg class="cobweb tl" width="320" height="320" viewBox="0 0 100 100">
+        <g fill="none" stroke="#d0d0e0" stroke-width="0.35">
+          <path d="M0,0 L100,0 M0,0 L85,30 M0,0 L70,55 M0,0 L45,78 M0,0 L20,95 M0,0 L0,100"/>
+          <path d="M20,0 Q15,15 0,20" /><path d="M40,0 Q35,30 0,40"/>
+          <path d="M60,0 Q50,45 0,60"/><path d="M80,0 Q65,60 0,80"/>
+        </g>
+      </svg>
+      <svg class="cobweb tr" width="280" height="280" viewBox="0 0 100 100">
+        <g fill="none" stroke="#d0d0e0" stroke-width="0.35">
+          <path d="M0,0 L100,0 M0,0 L85,30 M0,0 L70,55 M0,0 L45,78 M0,0 L20,95 M0,0 L0,100"/>
+          <path d="M20,0 Q15,15 0,20" /><path d="M40,0 Q35,30 0,40"/>
+        </g>
+      </svg>
+      <svg class="cobweb bl" width="260" height="260" viewBox="0 0 100 100">
+        <g fill="none" stroke="#b8b8c8" stroke-width="0.35">
+          <path d="M0,0 L100,0 M0,0 L85,30 M0,0 L60,60 M0,0 L30,85 M0,0 L0,100"/>
+          <path d="M25,0 Q20,20 0,25"/><path d="M50,0 Q45,40 0,50"/>
+        </g>
+      </svg>
+      <svg class="cobweb br" width="260" height="260" viewBox="0 0 100 100">
+        <g fill="none" stroke="#b8b8c8" stroke-width="0.35">
+          <path d="M0,0 L100,0 M0,0 L85,30 M0,0 L60,60 M0,0 L30,85 M0,0 L0,100"/>
+          <path d="M25,0 Q20,20 0,25"/><path d="M50,0 Q45,40 0,50"/>
+        </g>
+      </svg>
+      <svg class="cobweb mid-l" width="180" height="180" viewBox="0 0 100 100">
+        <g fill="none" stroke="#a8a8b8" stroke-width="0.4">
+          <path d="M0,0 L100,0 M0,0 L70,55 M0,0 L30,85 M0,0 L0,100"/>
+        </g>
+      </svg>
+      <svg class="cobweb mid-r" width="180" height="180" viewBox="0 0 100 100">
+        <g fill="none" stroke="#a8a8b8" stroke-width="0.4">
+          <path d="M0,0 L100,0 M0,0 L70,55 M0,0 L30,85 M0,0 L0,100"/>
+        </g>
+      </svg>
+
+      <div style="position:absolute; top:160px; left:220px; font-size:24px; z-index:301; opacity:0.9;
+                  filter: drop-shadow(0 0 5px #000); animation: spiderDrop 7s ease-in-out infinite;">
+        🕷️
+      </div>
+      <div style="position:absolute; top:120px; right:170px; font-size:18px; z-index:301; opacity:0.85;
+                  filter: drop-shadow(0 0 5px #000); animation: spiderDrop 9s ease-in-out infinite reverse;">
+        🕷️
+      </div>
+    </div>
+
+    <div id="fog"></div>
+    <div id="vignette"></div>
+    <div id="darkness"></div>
+    <div id="grain"></div>
+  </div>
+</div>
+
+<div id="hud">
+  👻 找到了 <span class="counter" id="found">0</span> / <span class="counter" id="total">0</span>
+</div>
+
+<div id="flash"></div>
+
+<div id="win">
+  🎉 全部找到了! 🎉
+  <div class="sub">Все призраки найдены!</div>
+</div>
+
+<script>
+// =====================================================================
+//  ПРЕДМЕТЫ
+// =====================================================================
+const objects = [
+  {
+    id: 'cabinet', label: '柜子', pos: '里面', type: 'on-floor',
+    x: 240, y: 400, w: 220, h: 240,
+    svg: 'cabinet', action: 'doors', z: 60,
+  },
+  {
+    id: 'door', label: '门', pos: '后面', type: 'door',
+    x: 880, y: 180, w: 200, h: 460,
+    svg: 'door', action: 'door-open', z: 40,
+  },
+  {
+    id: 'painting', label: '画', pos: '后面', type: 'on-wall',
+    x: 1230, y: 180, w: 160, h: 200,
+    svg: 'painting', action: 'painting', z: 45,
+  },
+  {
+    id: 'clock', label: '钟', pos: '下面', type: 'on-wall',
+    x: 1440, y: 210, w: 120, h: 150,
+    svg: 'clock', action: 'clock-slide', z: 45,
+  },
+  {
+    id: 'sofa', label: '沙发', pos: '下面', type: 'on-floor',
+    x: 60, y: 590, w: 320, h: 200,
+    svg: 'sofa', action: 'cushion', z: 80,
+  },
+  {
+    id: 'table', label: '桌子', pos: '下面', type: 'table',
+    x: 530, y: 600, w: 340, h: 240,
+    svg: 'table', action: 'tilt', z: 100,
+  },
+  {
+    id: 'chair', label: '椅子', pos: '后面', type: 'on-floor',
+    x: 890, y: 660, w: 130, h: 180,
+    svg: 'chair', action: 'slide-out', z: 110,
+  },
+  {
+    id: 'bottle', label: '瓶子', pos: '下面', type: 'on-floor',
+    x: 380, y: 790, w: 80, h: 170,
+    svg: 'bottle', action: 'cork', z: 120,
+    hasCork: true,
+  },
+  {
+    id: 'ball', label: '球', pos: '下面', type: 'on-floor',
+    x: 1060, y: 820, w: 150, h: 150,
+    svg: 'ball', action: 'roll', z: 120,
+  },
+  {
+    id: 'plant', label: '花盆', pos: '上面', type: 'on-table',
+    x: 640, y: 430, w: 130, h: 190,
+    svg: 'plant', action: 'lean', z: 130,
+  },
+  {
+    id: 'books', label: '书', pos: '上面', type: 'on-table',
+    x: 760, y: 490, w: 120, h: 130,
+    svg: 'books_stack', action: 'books', z: 130,
+  },
+];
+
+const GHOST_COUNT = 5;
+
+// =====================================================================
+//  SVG-ГРАФИКА
+// =====================================================================
+const SVG = {
+  cabinet: `
+    <svg viewBox="0 0 200 240" width="200" height="240" preserveAspectRatio="xMidYMax meet">
+      <ellipse cx="100" cy="236" rx="96" ry="12" fill="rgba(0,0,0,0.7)"/>
+      <rect x="0" y="14" width="200" height="226" fill="#2a1810" stroke="#0a0404" stroke-width="2"/>
+      <rect x="-4" y="6" width="208" height="14" fill="#4a2c1a" stroke="#1a0e08" stroke-width="1.5"/>
+      <rect x="-4" y="6" width="208" height="4" fill="#6a4028"/>
+      <rect x="7" y="21" width="186" height="212" fill="#140a04"/>
+      <g class="door-l" style="transform-origin: 12px 30%;">
+        <rect x="12" y="24" width="86" height="110" fill="#6a4028" stroke="#2a1808" stroke-width="2"/>
+        <rect x="24" y="36" width="62" height="42" fill="#7a4a2e" stroke="#2a1808" stroke-width="1.5"/>
+        <rect x="24" y="86" width="62" height="40" fill="#7a4a2e" stroke="#2a1808" stroke-width="1.5"/>
+        <circle cx="90" cy="80" r="4" fill="#c8a850" stroke="#3a2810" stroke-width="1.2"/>
+      </g>
+      <g class="door-r" style="transform-origin: 188px 30%;">
+        <rect x="102" y="24" width="86" height="110" fill="#6a4028" stroke="#2a1808" stroke-width="2"/>
+        <rect x="114" y="36" width="62" height="42" fill="#7a4a2e" stroke="#2a1808" stroke-width="1.5"/>
+        <rect x="114" y="86" width="62" height="40" fill="#7a4a2e" stroke="#2a1808" stroke-width="1.5"/>
+        <circle cx="110" cy="80" r="4" fill="#c8a850" stroke="#3a2810" stroke-width="1.2"/>
+      </g>
+      <g class="drawer" style="transform-origin: 50% 100%;">
+        <rect x="12" y="140" width="176" height="28" fill="#6a4028" stroke="#2a1808" stroke-width="2"/>
+        <rect x="24" y="146" width="152" height="16" fill="#7a4a2e" stroke="#2a1808" stroke-width="1"/>
+        <circle cx="100" cy="154" r="3.5" fill="#c8a850" stroke="#3a2810" stroke-width="1.2"/>
+      </g>
+      <g class="drawer" style="transform-origin: 50% 100%;">
+        <rect x="12" y="172" width="176" height="28" fill="#6a4028" stroke="#2a1808" stroke-width="2"/>
+        <rect x="24" y="178" width="152" height="16" fill="#7a4a2e" stroke="#2a1808" stroke-width="1"/>
+        <circle cx="100" cy="186" r="3.5" fill="#c8a850" stroke="#3a2810" stroke-width="1.2"/>
+      </g>
+      <g class="drawer" style="transform-origin: 50% 100%;">
+        <rect x="12" y="204" width="176" height="28" fill="#6a4028" stroke="#2a1808" stroke-width="2"/>
+        <rect x="24" y="210" width="152" height="16" fill="#7a4a2e" stroke="#2a1808" stroke-width="1"/>
+        <circle cx="100" cy="218" r="3.5" fill="#c8a850" stroke="#3a2810" stroke-width="1.2"/>
+      </g>
+    </svg>`,
+
+  bottle: `
+    <svg viewBox="0 0 120 260" width="120" height="260" preserveAspectRatio="xMidYMax meet">
+      <defs>
+        <linearGradient id="wBodyV" x1="0" x2="1" y1="0" y2="0">
+          <stop offset="0"    stop-color="#06140c"/>
+          <stop offset="0.18" stop-color="#123a24"/>
+          <stop offset="0.35" stop-color="#2a6a44"/>
+          <stop offset="0.5"  stop-color="#1a4a2c"/>
+          <stop offset="0.72" stop-color="#0a2818"/>
+          <stop offset="1"    stop-color="#020a06"/>
+        </linearGradient>
+        <linearGradient id="wNeckV" x1="0" x2="1" y1="0" y2="0">
+          <stop offset="0"   stop-color="#04100a"/>
+          <stop offset="0.4" stop-color="#2a6a44"/>
+          <stop offset="0.6" stop-color="#1a4a2c"/>
+          <stop offset="1"   stop-color="#020a06"/>
+        </linearGradient>
+        <linearGradient id="wShineV" x1="0" x2="1" y1="0" y2="0">
+          <stop offset="0"   stop-color="rgba(200,255,220,0)"/>
+          <stop offset="0.45" stop-color="rgba(200,255,220,0.55)"/>
+          <stop offset="0.55" stop-color="rgba(200,255,220,0.2)"/>
+          <stop offset="1"   stop-color="rgba(200,255,220,0)"/>
+        </linearGradient>
+        <linearGradient id="wLabelV" x1="0" x2="1" y1="0" y2="1">
+          <stop offset="0"   stop-color="#f6eecf"/>
+          <stop offset="0.5" stop-color="#e6d2a4"/>
+          <stop offset="1"   stop-color="#9a7a4a"/>
+        </linearGradient>
+        <radialGradient id="wShadowV" cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0"   stop-color="rgba(0,0,0,0.9)"/>
+          <stop offset="0.7" stop-color="rgba(0,0,0,0.4)"/>
+          <stop offset="1"   stop-color="rgba(0,0,0,0)"/>
+        </radialGradient>
+      </defs>
+
+      <ellipse cx="60" cy="252" rx="42" ry="8" fill="url(#wShadowV)"/>
+
+      <path d="M22,120
+               Q22,116 26,112
+               L36,100
+               L36,90
+               L84,90
+               L84,100
+               L94,112
+               Q98,116 98,120
+               L98,238
+               Q98,246 90,246
+               L30,246
+               Q22,246 22,238
+               Z"
+            fill="url(#wBodyV)" stroke="#000" stroke-width="2" stroke-linejoin="round"/>
+
+      <path d="M36,90 Q40,68 46,60 L74,60 Q80,68 84,90 Z"
+            fill="url(#wBodyV)" stroke="#000" stroke-width="2" stroke-linejoin="round"/>
+
+      <rect x="46" y="24" width="28" height="42" fill="url(#wNeckV)"
+            stroke="#000" stroke-width="2"/>
+
+      <rect x="42" y="18" width="36" height="12" fill="#12301c"
+            stroke="#000" stroke-width="2" rx="2"/>
+
+      <rect x="44" y="56" width="32" height="5" fill="#0a2014"
+            stroke="#000" stroke-width="1"/>
+
+      <path d="M52,28 L52,88" stroke="url(#wShineV)" stroke-width="4"
+            fill="none" stroke-linecap="round" opacity="0.9"/>
+      <path d="M56,30 L56,86" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"
+            fill="none" stroke-linecap="round"/>
+
+      <path d="M34,120 L34,236" stroke="rgba(255,255,255,0.18)" stroke-width="2"/>
+      <path d="M86,120 L86,236" stroke="rgba(0,0,0,0.4)" stroke-width="2"/>
+
+      <path d="M26,150 L94,150 L94,238 Q94,242 90,242 L30,242 Q26,242 26,238 Z"
+            fill="rgba(90,15,25,0.65)"/>
+      <path d="M26,150 Q50,146 60,150 Q70,154 94,150"
+            stroke="rgba(200,60,60,0.7)" stroke-width="1.5" fill="none"/>
+
+      <path d="M28,240 Q60,244 92,240"
+            stroke="rgba(80,220,140,0.35)" stroke-width="2" fill="none" stroke-linecap="round"/>
+
+      <g>
+        <rect x="30" y="160" width="60" height="60" fill="url(#wLabelV)"
+              stroke="#2a1808" stroke-width="2" rx="2"/>
+        <rect x="35" y="165" width="50" height="50" fill="none"
+              stroke="#3a2810" stroke-width="1"/>
+        <rect x="37" y="167" width="46" height="46" fill="none"
+              stroke="#3a2810" stroke-width="0.5" opacity="0.6"/>
+        <text x="60" y="196" text-anchor="middle" font-size="18"
+              fill="#3a1808" font-family="serif" font-weight="bold">红酒</text>
+        <line x1="42" y1="204" x2="78" y2="204" stroke="#3a1808" stroke-width="0.6" opacity="0.6"/>
+        <circle cx="46" cy="176" r="1.5" fill="#3a1808" opacity="0.7"/>
+        <circle cx="74" cy="176" r="1.5" fill="#3a1808" opacity="0.7"/>
+      </g>
+
+      <path d="M40,110 L38,130" stroke="rgba(255,255,255,0.12)" stroke-width="0.6"/>
+      <path d="M82,180 L80,220" stroke="rgba(255,255,255,0.1)" stroke-width="0.6"/>
+    </svg>`,
+
+  ball: `
+    <svg viewBox="0 0 200 200" width="200" height="200" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <radialGradient id="ballSphere" cx="0.35" cy="0.3" r="0.85">
+          <stop offset="0"    stop-color="#ffe8b0"/>
+          <stop offset="0.35" stop-color="#f4b840"/>
+          <stop offset="0.7"  stop-color="#c86820"/>
+          <stop offset="1"    stop-color="#5a2008"/>
+        </radialGradient>
+        <radialGradient id="ballHighlight" cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0"   stop-color="rgba(255,255,255,0.95)"/>
+          <stop offset="0.5" stop-color="rgba(255,255,255,0.3)"/>
+          <stop offset="1"   stop-color="rgba(255,255,255,0)"/>
+        </radialGradient>
+        <radialGradient id="ballShadowG" cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0"   stop-color="rgba(0,0,0,0.85)"/>
+          <stop offset="0.7" stop-color="rgba(0,0,0,0.4)"/>
+          <stop offset="1"   stop-color="rgba(0,0,0,0)"/>
+        </radialGradient>
+        <clipPath id="ballClip">
+          <circle cx="100" cy="100" r="86"/>
+        </clipPath>
+      </defs>
+
+      <ellipse cx="100" cy="192" rx="78" ry="10" fill="url(#ballShadowG)"/>
+      <circle cx="100" cy="100" r="86" fill="url(#ballSphere)" stroke="#2a0e04" stroke-width="2"/>
+
+      <g clip-path="url(#ballClip)">
+        <path d="M160,20 Q140,100 160,180 L200,180 L200,20 Z" fill="#8a3010" opacity="0.85"/>
+        <path d="M40,20 Q60,100 40,180 L0,180 L0,20 Z" fill="#8a3010" opacity="0.85"/>
+      </g>
+
+      <g fill="none" stroke="#3a1008" stroke-width="1.8" opacity="0.7">
+        <path d="M40,20 Q60,100 40,180"/>
+        <path d="M160,20 Q140,100 160,180"/>
+      </g>
+
+      <ellipse cx="68" cy="58" rx="26" ry="18" fill="url(#ballHighlight)"
+               transform="rotate(-30 68 58)"/>
+      <ellipse cx="48" cy="140" rx="10" ry="6" fill="rgba(255,255,255,0.25)"
+               transform="rotate(-20 48 140)"/>
+      <circle cx="100" cy="100" r="86" fill="none" stroke="rgba(0,0,0,0.6)" stroke-width="1"/>
+    </svg>`,
+
+  chair: `
+    <svg viewBox="0 0 130 180" width="130" height="180" preserveAspectRatio="xMidYMax meet">
+      <ellipse cx="65" cy="176" rx="55" ry="6" fill="rgba(0,0,0,0.6)"/>
+      <g stroke="#1a0a05" stroke-width="1.5">
+        <rect x="20" y="10" width="90" height="18" fill="#4a2a1a" rx="3"/>
+        <rect x="25" y="28" width="10" height="82" fill="#3a1f10"/>
+        <rect x="95" y="28" width="10" height="82" fill="#3a1f10"/>
+        <rect x="35" y="46" width="60" height="9" fill="#3a1f10"/>
+        <rect x="35" y="64" width="60" height="9" fill="#3a1f10"/>
+        <rect x="15" y="108" width="100" height="20" fill="#5a3520" rx="3"/>
+        <rect x="25" y="128" width="12" height="50" fill="#3a1f10"/>
+        <rect x="93" y="128" width="12" height="50" fill="#3a1f10"/>
+      </g>
+      <path d="M45,32 L48,48 L42,64" stroke="#1a0a05" stroke-width="1.2" fill="none"/>
+    </svg>`,
+
+  table: `
+    <svg viewBox="0 0 340 240" width="340" height="240" preserveAspectRatio="xMidYMax meet">
+      <ellipse cx="170" cy="236" rx="150" ry="8" fill="rgba(0,0,0,0.6)"/>
+      <g stroke="#1a0a05" stroke-width="2">
+        <rect x="10" y="30" width="320" height="26" fill="#5a3520" rx="4"/>
+        <rect x="10" y="30" width="320" height="6" fill="#7a4a2a" rx="2"/>
+        <rect x="30" y="56" width="22" height="180" fill="#3a1f10"/>
+        <rect x="288" y="56" width="22" height="180" fill="#3a1f10"/>
+      </g>
+      <path d="M60,42 L140,48 L200,40" stroke="#1a0a05" stroke-width="1.2" fill="none"/>
+    </svg>`,
+
+  sofa: `
+    <svg viewBox="0 0 320 200" width="320" height="200" preserveAspectRatio="xMidYMax meet">
+      <ellipse cx="160" cy="196" rx="150" ry="10" fill="rgba(0,0,0,0.6)"/>
+      <rect x="0" y="60" width="320" height="120" fill="#5a2a3a" rx="14" stroke="#1a0a10" stroke-width="2"/>
+      <rect x="20" y="0" width="280" height="70" fill="#6a3a4a" rx="16" stroke="#1a0a10" stroke-width="2"/>
+      <rect x="0" y="40" width="34" height="140" fill="#4a1f2a" rx="10" stroke="#1a0a10" stroke-width="2"/>
+      <rect x="286" y="40" width="34" height="140" fill="#4a1f2a" rx="10" stroke="#1a0a10" stroke-width="2"/>
+      <g class="cushion" style="transform-origin: 100px 130px;">
+        <rect x="40" y="110" width="120" height="60" fill="#7a4a5a" rx="8" stroke="#1a0a10" stroke-width="1.5"/>
+        <ellipse cx="80" cy="140" rx="18" ry="7" fill="#2a1018"/>
+      </g>
+      <rect x="165" y="110" width="120" height="60" fill="#7a4a5a" rx="8" stroke="#1a0a10" stroke-width="1.5"/>
+      <ellipse cx="240" cy="140" rx="12" ry="5" fill="#2a1018"/>
+    </svg>`,
+
+  clock: `
+    <svg viewBox="0 0 120 150" width="120" height="150" preserveAspectRatio="xMidYMax meet">
+      <rect x="45" y="0" width="30" height="14" fill="#4a3020" stroke="#1a0e08" stroke-width="1.5"/>
+      <rect x="0" y="14" width="120" height="136" fill="#3a2418" rx="4" stroke="#1a0e08" stroke-width="2"/>
+      <circle cx="60" cy="70" r="44" fill="#d8cfa8" stroke="#2a1a0a" stroke-width="3"/>
+      <circle cx="60" cy="70" r="38" fill="#f0e8c8"/>
+      <text x="60" y="42" text-anchor="middle" font-size="11" fill="#2a1a0a" font-family="serif">XII</text>
+      <text x="92" y="74" text-anchor="middle" font-size="11" fill="#2a1a0a" font-family="serif">III</text>
+      <text x="60" y="108" text-anchor="middle" font-size="11" fill="#2a1a0a" font-family="serif">VI</text>
+      <text x="28" y="74" text-anchor="middle" font-size="11" fill="#2a1a0a" font-family="serif">IX</text>
+      <line x1="60" y1="70" x2="60" y2="45" stroke="#1a0a05" stroke-width="2.5"/>
+      <line x1="60" y1="70" x2="80" y2="80" stroke="#1a0a05" stroke-width="1.8"/>
+      <rect x="18" y="118" width="84" height="28" fill="#5a3a24" stroke="#1a0e08" stroke-width="1.5"/>
+      <circle cx="60" cy="132" r="3" fill="#8a7a4a"/>
+      <g style="transform-origin: 60px 120px; animation: pendulum 2s ease-in-out infinite;">
+        <line x1="60" y1="120" x2="60" y2="140" stroke="#8a7a4a" stroke-width="2"/>
+        <circle cx="60" cy="142" r="5" fill="#b8a85a" stroke="#3a2a10" stroke-width="1"/>
+      </g>
+    </svg>`,
+
+  painting: `
+    <svg viewBox="0 0 180 220" width="180" height="220" preserveAspectRatio="xMidYMax meet">
+      <defs>
+        <linearGradient id="pFrame" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0" stop-color="#6a4a1e"/>
+          <stop offset="0.5" stop-color="#3a2408"/>
+          <stop offset="1" stop-color="#1a0e04"/>
+        </linearGradient>
+        <radialGradient id="pSky" cx="0.5" cy="0.4" r="0.8">
+          <stop offset="0" stop-color="#4a1a1a"/>
+          <stop offset="0.6" stop-color="#200808"/>
+          <stop offset="1" stop-color="#0a0202"/>
+        </radialGradient>
+      </defs>
+      <rect x="0" y="0" width="180" height="220" fill="url(#pFrame)" stroke="#1a0e04" stroke-width="2"/>
+      <rect x="14" y="14" width="152" height="192" fill="#1a0e04" stroke="#0a0504" stroke-width="1.5"/>
+      <rect x="20" y="20" width="140" height="180" fill="url(#pSky)"/>
+      <circle cx="105" cy="55" r="16" fill="#d8c890" opacity="0.85"/>
+      <circle cx="110" cy="52" r="14" fill="#200808" opacity="0.7"/>
+      <path d="M40,180 L40,140 L30,120 L42,130 L42,105 L55,120 L42,128 L50,140 L40,155"
+            stroke="#000" stroke-width="2" fill="none"/>
+      <path d="M130,180 L130,150 L145,135 L128,145 L128,120 L118,135 L128,140"
+            stroke="#000" stroke-width="1.8" fill="none"/>
+      <path d="M20,160 Q60,150 90,158 Q120,152 160,162 L160,200 L20,200 Z"
+            fill="#0a0404" opacity="0.85"/>
+      <path d="M90,90 Q80,92 78,105 Q76,125 82,145 L98,145 Q104,125 102,105 Q100,92 90,90 Z"
+            fill="rgba(200,220,240,0.55)"/>
+      <ellipse cx="86" cy="106" rx="2" ry="3" fill="#000"/>
+      <ellipse cx="94" cy="106" rx="2" ry="3" fill="#000"/>
+      <path d="M85,118 Q90,122 95,118" stroke="#000" stroke-width="0.8" fill="none"/>
+      <path d="M30,60 Q45,80 40,110" stroke="rgba(120,10,10,0.6)" stroke-width="2" fill="none"/>
+      <path d="M148,70 Q140,100 145,130" stroke="rgba(120,10,10,0.5)" stroke-width="2" fill="none"/>
+      <path d="M60,30 L75,70 L65,110 M75,70 L100,60 M75,70 L95,100"
+            stroke="rgba(255,255,255,0.15)" stroke-width="0.6" fill="none"/>
+    </svg>`,
+
+  plant: `
+    <svg viewBox="0 0 140 210" width="140" height="210" preserveAspectRatio="xMidYMax meet">
+      <ellipse cx="70" cy="206" rx="60" ry="6" fill="rgba(0,0,0,0.6)"/>
+      <path d="M20,130 L120,130 L108,205 L32,205 Z" fill="#5a3a2a" stroke="#2a1808" stroke-width="2"/>
+      <ellipse cx="70" cy="130" rx="50" ry="9" fill="#3a2418" stroke="#2a1808" stroke-width="1.5"/>
+      <g class="cushion" style="transform-origin: 70px 130px;">
+        <path d="M70,130 Q58,85 42,55" stroke="#4a3a1a" stroke-width="3" fill="none"/>
+        <path d="M70,130 Q82,90 100,65" stroke="#4a3a1a" stroke-width="3" fill="none"/>
+        <path d="M70,130 Q70,75 70,40" stroke="#4a3a1a" stroke-width="3" fill="none"/>
+        <ellipse cx="42" cy="55" rx="16" ry="9" fill="#4a5a2a" transform="rotate(-30 42 55)" stroke="#1a2a10" stroke-width="1"/>
+        <ellipse cx="100" cy="65" rx="16" ry="9" fill="#4a5a2a" transform="rotate(30 100 65)" stroke="#1a2a10" stroke-width="1"/>
+        <ellipse cx="70" cy="40" rx="13" ry="8" fill="#3a4a1a" stroke="#1a2a10" stroke-width="1"/>
+      </g>
+    </svg>`,
+
+  books_stack: `
+    <svg viewBox="0 0 140 200" width="140" height="200" preserveAspectRatio="xMidYMax meet">
+      <ellipse cx="70" cy="196" rx="60" ry="6" fill="rgba(0,0,0,0.65)"/>
+      <g class="books" style="transform-origin: 70px 170px;">
+        <rect x="10" y="170" width="120" height="24" fill="#4a2a1a" stroke="#1a0e08" stroke-width="1.5" rx="2"/>
+        <rect x="10" y="170" width="120" height="4" fill="#7a4a2e"/>
+      </g>
+      <g class="books" style="transform-origin: 70px 148px;">
+        <rect x="18" y="146" width="104" height="24" fill="#2a3a6a" stroke="#0a1230" stroke-width="1.5" rx="2"/>
+        <rect x="18" y="146" width="104" height="4" fill="#4a5a8a"/>
+        <text x="70" y="164" text-anchor="middle" font-size="10" fill="#d0d8f0" font-family="serif">诗</text>
+      </g>
+      <g class="books" style="transform-origin: 70px 124px;">
+        <rect x="26" y="122" width="90" height="24" fill="#6a1f1f" stroke="#2a0808" stroke-width="1.5" rx="2"/>
+        <rect x="26" y="122" width="90" height="4" fill="#8a3a3a"/>
+        <text x="71" y="140" text-anchor="middle" font-size="11" fill="#f0d8d8" font-family="serif">史</text>
+      </g>
+      <g class="books" style="transform-origin: 70px 102px;">
+        <rect x="36" y="100" width="70" height="20" fill="#2a5a3a" stroke="#0a2a18" stroke-width="1.2" rx="2"/>
+        <rect x="36" y="100" width="70" height="3" fill="#4a8a5a"/>
+      </g>
+    </svg>`,
+
+  door: `
+    <svg viewBox="0 0 200 460" width="200" height="460" preserveAspectRatio="xMidYMax meet">
+      <ellipse cx="100" cy="456" rx="90" ry="6" fill="rgba(0,0,0,0.55)"/>
+      <rect x="0" y="0" width="200" height="460" fill="#050202"/>
+      <rect x="0" y="0" width="200" height="460" fill="none" stroke="#4a2a18" stroke-width="12"/>
+      <rect x="0" y="0" width="200" height="460" fill="none" stroke="#2a1408" stroke-width="2"/>
+      <g class="door-r" style="transform-origin: 6px 50%;">
+        <rect x="6" y="6" width="188" height="448" fill="#6a4028" stroke="#2a1808" stroke-width="3"/>
+        <rect x="26" y="26" width="148" height="170" fill="#7a4a2e" stroke="#2a1808" stroke-width="2"/>
+        <rect x="26" y="220" width="148" height="210" fill="#7a4a2e" stroke="#2a1808" stroke-width="2"/>
+        <circle cx="165" cy="230" r="9" fill="#c8a850" stroke="#3a2810" stroke-width="2"/>
+        <circle cx="165" cy="230" r="3" fill="#f0d070"/>
+        <path d="M70,90 L95,130 L80,180" stroke="#1a0a05" stroke-width="2" fill="none"/>
+        <rect x="50" y="46" width="100" height="34" fill="#b8a868" stroke="#3a2810" stroke-width="1.5"/>
+        <text x="100" y="72" text-anchor="middle" font-size="20" fill="#1a0a05"
+              font-family="serif" font-weight="bold">危险</text>
+      </g>
+    </svg>`,
+};
+
+// =====================================================================
+//  ПРИЗРАК
+// =====================================================================
+const GHOST_SVG = `
+  <svg viewBox="0 0 100 120" width="120" height="140" preserveAspectRatio="xMidYMid meet">
+    <defs>
+      <radialGradient id="gh" cx="0.5" cy="0.3">
+        <stop offset="0" stop-color="#ffffff"/>
+        <stop offset="0.6" stop-color="#b8d8f0"/>
+        <stop offset="1" stop-color="#406080" stop-opacity="0.6"/>
+      </radialGradient>
+    </defs>
+    <path d="M50,5 C20,5 10,35 10,65 L10,105
+             Q18,95 26,105 Q34,95 42,105 Q50,95 58,105
+             Q66,95 74,105 Q82,95 90,105 L90,65
+             C90,35 80,5 50,5 Z"
+          fill="url(#gh)" stroke="#88b8d8" stroke-width="2"/>
+    <ellipse cx="35" cy="55" rx="6" ry="9" fill="#000"/>
+    <ellipse cx="65" cy="55" rx="6" ry="9" fill="#000"/>
+    <circle cx="33" cy="52" r="1.5" fill="#88d8ff"/>
+    <circle cx="63" cy="52" r="1.5" fill="#88d8ff"/>
+    <ellipse cx="50" cy="78" rx="8" ry="6" fill="#000"/>
+  </svg>`;
+
+// =====================================================================
+//  ЗВУКИ
+// =====================================================================
+let audioCtx = null;
+function ensureAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+function tone({ type='sine', freq=440, freq2=null, dur=0.3, vol=0.2, when=0, detune=0 }) {
+  const ctx = ensureAudio();
+  const t0 = ctx.currentTime + when;
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, t0);
+  if (freq2) osc.frequency.exponentialRampToValueAtTime(freq2, t0 + dur);
+  osc.detune.value = detune;
+  g.gain.setValueAtTime(0, t0);
+  g.gain.linearRampToValueAtTime(vol, t0 + 0.02);
+  g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+  osc.connect(g).connect(ctx.destination);
+  osc.start(t0); osc.stop(t0 + dur + 0.05);
+}
+
+function noise({ dur=0.3, vol=0.2, filterFreq=1500, when=0, type='lowpass', q=1 }) {
+  const ctx = ensureAudio();
+  const t0 = ctx.currentTime + when;
+  const buf = ctx.createBuffer(1, ctx.sampleRate * dur, ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = (Math.random()*2 - 1);
+  const src = ctx.createBufferSource(); src.buffer = buf;
+  const f = ctx.createBiquadFilter(); f.type = type; f.frequency.value = filterFreq; f.Q.value = q;
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0, t0);
+  g.gain.linearRampToValueAtTime(vol, t0 + 0.02);
+  g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+  src.connect(f).connect(g).connect(ctx.destination);
+  src.start(t0); src.stop(t0 + dur + 0.05);
+}
+
+const SFX = {
+  woodCreak() {
+    const ctx = ensureAudio();
+    const t0 = ctx.currentTime;
+    const buf = ctx.createBuffer(1, ctx.sampleRate * 1.2, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random()*2 - 1);
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const f = ctx.createBiquadFilter();
+    f.type = 'bandpass'; f.frequency.value = 220; f.Q.value = 12;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0, t0);
+    for (let i = 0; i < 14; i++) {
+      g.gain.linearRampToValueAtTime(0.09 + Math.random()*0.03, t0 + i * 0.08);
+      g.gain.linearRampToValueAtTime(0.01, t0 + i * 0.08 + 0.04);
+    }
+    g.gain.exponentialRampToValueAtTime(0.001, t0 + 1.2);
+    src.connect(f).connect(g).connect(ctx.destination);
+    src.start(t0); src.stop(t0 + 1.3);
+    tone({ type:'sawtooth', freq:60, freq2:40, dur:1.1, vol:0.06 });
+  },
+
+  thud() {
+    tone({ type:'sine', freq:70, freq2:28, dur:0.7, vol:0.5 });
+    tone({ type:'sine', freq:110, freq2:45, dur:0.5, vol:0.25, when:0.01 });
+    noise({ dur:0.4, vol:0.2, filterFreq:300 });
+    tone({ type:'sine', freq:50, freq2:25, dur:0.6, vol:0.15, when:0.25 });
+  },
+
+  corkPop() {
+    tone({ type:'sine', freq:120, freq2:400, dur:0.09, vol:0.5 });
+    noise({ dur:0.18, vol:0.3, filterFreq:800, type:'bandpass', q:2, when:0.03 });
+    tone({ type:'triangle', freq:2200, freq2:1400, dur:0.25, vol:0.05, when:0.05 });
+  },
+
+  hinge() {
+    const ctx = ensureAudio();
+    const t0 = ctx.currentTime;
+    const buf = ctx.createBuffer(1, ctx.sampleRate * 1.6, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random()*2 - 1);
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const f = ctx.createBiquadFilter();
+    f.type = 'bandpass'; f.frequency.value = 480; f.Q.value = 18;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0, t0);
+    for (let i = 0; i < 20; i++) {
+      const v = 0.05 + Math.random()*0.06;
+      g.gain.linearRampToValueAtTime(v, t0 + i * 0.07);
+      g.gain.linearRampToValueAtTime(0.005, t0 + i * 0.07 + 0.035);
+    }
+    g.gain.exponentialRampToValueAtTime(0.001, t0 + 1.5);
+    src.connect(f).connect(g).connect(ctx.destination);
+    src.start(t0); src.stop(t0 + 1.6);
+    tone({ type:'sine', freq:55, dur:1.4, vol:0.05 });
+  },
+
+  paper() {
+    noise({ dur:0.7, vol:0.15, filterFreq:2200, type:'bandpass', q:1.2 });
+    noise({ dur:0.5, vol:0.1, filterFreq:900, type:'lowpass', when:0.15 });
+  },
+
+  spring() {
+    tone({ type:'sine', freq:180, freq2:90, dur:0.4, vol:0.25 });
+    tone({ type:'sine', freq:280, freq2:150, dur:0.35, vol:0.15, when:0.08 });
+    tone({ type:'sine', freq:400, freq2:220, dur:0.3, vol:0.08, when:0.16 });
+  },
+
+  leaves() {
+    noise({ dur:0.9, vol:0.14, filterFreq:3500, type:'bandpass', q:0.8 });
+    noise({ dur:0.6, vol:0.1, filterFreq:1500, type:'lowpass', when:0.2 });
+  },
+
+  tick() {
+    tone({ type:'sine', freq:220, freq2:120, dur:0.06, vol:0.18 });
+    tone({ type:'sine', freq:220, freq2:120, dur:0.06, vol:0.18, when:0.35 });
+  },
+
+  roll() {
+    tone({ type:'sine', freq:80, freq2:50, dur:0.5, vol:0.3 });
+    noise({ dur:1.0, vol:0.12, filterFreq:400, type:'lowpass' });
+  },
+
+  ghostAppear() {
+    const ctx = ensureAudio();
+    const t0 = ctx.currentTime;
+    tone({ type:'sawtooth', freq:80, freq2:30, dur:1.8, vol:0.35, detune:-20 });
+    tone({ type:'sawtooth', freq:80, freq2:30, dur:1.8, vol:0.25, detune:20 });
+    tone({ type:'sawtooth', freq:400, freq2:2400, dur:1.2, vol:0.1, when:0.2 });
+    tone({ type:'sawtooth', freq:600, freq2:2800, dur:1.0, vol:0.08, when:0.3 });
+    noise({ dur:1.6, vol:0.22, filterFreq:1200, type:'bandpass', q:0.7 });
+    tone({ type:'sine', freq:60, freq2:20, dur:0.9, vol:0.5, when:1.2 });
+    noise({ dur:0.5, vol:0.25, filterFreq:300, when:1.2 });
+    tone({ type:'sine', freq:40, freq2:15, dur:1.5, vol:0.2, when:1.5 });
+  },
+};
+
+// =====================================================================
+//  ФОНОВАЯ МУЗЫКА
+// =====================================================================
+let musicNodes = null;
+
+function startAmbientMusic() {
+  const ctx = ensureAudio();
+  const t0 = ctx.currentTime;
+
+  const master = ctx.createGain();
+  master.gain.setValueAtTime(0.0001, t0);
+  master.connect(ctx.destination);
+
+  const drone1 = ctx.createOscillator();
+  drone1.type = 'sawtooth';
+  drone1.frequency.value = 55;
+  const d1f = ctx.createBiquadFilter();
+  d1f.type = 'lowpass'; d1f.frequency.value = 180;
+  const d1g = ctx.createGain(); d1g.gain.value = 0.5;
+  drone1.connect(d1f).connect(d1g).connect(master);
+
+  const drone2 = ctx.createOscillator();
+  drone2.type = 'sawtooth';
+  drone2.frequency.value = 82;
+  drone2.detune.value = 12;
+  const d2f = ctx.createBiquadFilter();
+  d2f.type = 'lowpass'; d2f.frequency.value = 220;
+  const d2g = ctx.createGain(); d2g.gain.value = 0.35;
+  drone2.connect(d2f).connect(d2g).connect(master);
+
+  const drone3 = ctx.createOscillator();
+  drone3.type = 'sine';
+  drone3.frequency.value = 36;
+  const d3g = ctx.createGain(); d3g.gain.value = 0.6;
+  drone3.connect(d3g).connect(master);
+
+  const noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 4, ctx.sampleRate);
+  const nd = noiseBuf.getChannelData(0);
+  for (let i = 0; i < nd.length; i++) nd[i] = (Math.random()*2 - 1);
+  const noiseSrc = ctx.createBufferSource();
+  noiseSrc.buffer = noiseBuf;
+  noiseSrc.loop = true;
+  const nf = ctx.createBiquadFilter();
+  nf.type = 'bandpass'; nf.frequency.value = 500; nf.Q.value = 0.6;
+  const ng = ctx.createGain(); ng.gain.value = 0.08;
+  noiseSrc.connect(nf).connect(ng).connect(master);
+
+  const lfo = ctx.createOscillator();
+  lfo.type = 'sine';
+  lfo.frequency.value = 0.08;
+  const lfoGain = ctx.createGain();
+  lfoGain.gain.value = 0.05;
+  lfo.connect(lfoGain).connect(master.gain);
+  lfo.start(t0);
+
+  drone1.start(t0);
+  drone2.start(t0);
+  drone3.start(t0);
+  noiseSrc.start(t0);
+
+  musicNodes = { master, drone1, drone2, drone3, noiseSrc, lfo };
+
+  master.gain.linearRampToValueAtTime(0.35, t0 + 120);
+  master.gain.linearRampToValueAtTime(0.55, t0 + 360);
+  master.gain.linearRampToValueAtTime(0.75, t0 + 600);
+}
+
+function stopAmbientMusic() {
+  if (!musicNodes) return;
+  const ctx = ensureAudio();
+  const t0 = ctx.currentTime;
+  try {
+    musicNodes.master.gain.cancelScheduledValues(t0);
+    musicNodes.master.gain.setValueAtTime(musicNodes.master.gain.value, t0);
+    musicNodes.master.gain.linearRampToValueAtTime(0.0001, t0 + 1.5);
+    setTimeout(() => {
+      try {
+        musicNodes.drone1.stop();
+        musicNodes.drone2.stop();
+        musicNodes.drone3.stop();
+        musicNodes.noiseSrc.stop();
+        musicNodes.lfo.stop();
+      } catch(e){}
+      musicNodes = null;
+    }, 1700);
+  } catch(e){}
+}
+
+// =====================================================================
+//  МАСШТАБ
+// =====================================================================
+function fitFrame() {
+  const frame = document.getElementById('frame');
+  const scale = Math.min(
+    window.innerWidth  / 1600,
+    window.innerHeight / 1000
+  );
+  frame.style.transform = `scale(${scale})`;
+}
+window.addEventListener('resize', fitFrame);
+fitFrame();
+
+// =====================================================================
+//  РАЗМЕЩЕНИЕ
+// =====================================================================
+const world = document.getElementById('world');
+const ghostLocations = new Set();
+
+function pickGhosts() {
+  const idx = [...Array(objects.length).keys()].sort(() => Math.random() - 0.5);
+  for (let i = 0; i < GHOST_COUNT; i++) ghostLocations.add(objects[idx[i]].id);
+}
+
+function createObject(o) {
+  const el = document.createElement('div');
+  el.className = 'object';
+  el.id = 'obj-' + o.id;
+  el.style.left   = o.x + 'px';
+  el.style.top    = o.y + 'px';
+  el.style.width  = o.w + 'px';
+  el.style.height = o.h + 'px';
+  el.style.zIndex = o.z || 100;
+  el.dataset.type = o.type;
+  el.dataset.label = o.label;
+  el.dataset.pos = o.pos;
+  el.innerHTML = SVG[o.svg];
+  el.addEventListener('click', () => onClick(o, el));
+  world.appendChild(el);
+
+  // Отдельная пробка для бутылки — висит над горлышком
+  if (o.hasCork) {
+    const cork = document.createElement('div');
+    cork.className = 'cork-piece';
+    cork.id = 'cork-' + o.id;
+    cork.style.left   = (o.x + o.w * 0.38) + 'px';
+    cork.style.top    = (o.y - 16) + 'px';
+    cork.style.width  = '18px';
+    cork.style.height = '22px';
+    cork.style.zIndex = (o.z || 100) + 3;
+    cork.innerHTML = `
+      <svg viewBox="0 0 18 22" width="18" height="22">
+        <defs>
+          <linearGradient id="corkG" x1="0" x2="1" y1="0" y2="0">
+            <stop offset="0"   stop-color="#5a3a10"/>
+            <stop offset="0.3" stop-color="#a8763a"/>
+            <stop offset="0.6" stop-color="#8a5a28"/>
+            <stop offset="1"   stop-color="#3a2208"/>
+          </linearGradient>
+        </defs>
+        <rect x="2" y="4" width="14" height="17" fill="url(#corkG)"
+              stroke="#2a1408" stroke-width="1.2" rx="2"/>
+        <ellipse cx="9" cy="4" rx="7" ry="2" fill="#b8864a"
+                 stroke="#2a1408" stroke-width="1.2"/>
+        <path d="M5,7 Q7,14 6,19" stroke="#3a2208" stroke-width="0.6" fill="none" opacity="0.7"/>
+        <path d="M13,7 Q12,15 13,19" stroke="#3a2208" stroke-width="0.6" fill="none" opacity="0.7"/>
+      </svg>`;
+    world.appendChild(cork);
+  }
+
+  if (ghostLocations.has(o.id)) {
+    const g = document.createElement('div');
+    g.className = 'ghost';
+    g.id = 'ghost-' + o.id;
+    g.style.left   = (o.x + o.w/2 - 60) + 'px';
+    g.style.top    = (o.y + o.h/2 - 70) + 'px';
+    g.style.width  = '120px';
+    g.style.height = '140px';
+    g.style.zIndex = (o.z || 100) + 5;
+    g.innerHTML = GHOST_SVG;
+    world.appendChild(g);
+  }
+}
+
+let found = 0;
+const total = GHOST_COUNT;
+
+// =====================================================================
+//  КЛИК + АНИМАЦИИ
+// =====================================================================
+function onClick(o, el) {
+  if (el.classList.contains('moved')) return;
+  el.classList.add('moved');
+
+  animateAction(o, el);
+
+  if (ghostLocations.has(o.id)) {
+    setTimeout(() => {
+      triggerScary();
+      setTimeout(() => {
+        document.getElementById('ghost-' + o.id).classList.add('revealed');
+        found++;
+        document.getElementById('found').textContent = found;
+        if (found === total) {
+          setTimeout(() => {
+            stopAmbientMusic();
+            document.getElementById('win').classList.add('show');
+          }, 1800);
+        }
+      }, 500);
+    }, 450);
+  }
+}
+
+function animateAction(o, el) {
+  const svg = el.querySelector('svg');
+  if (!svg) return;
+
+  switch (o.action) {
+    case 'cork': {
+      SFX.corkPop();
+      const corkPiece = document.getElementById('cork-' + o.id);
+      if (corkPiece) {
+        corkPiece.classList.add('flown');
+        setTimeout(() => corkPiece.remove(), 1500);
+      }
+      el.style.transform = 'translate(-4px, 0) rotate(-3deg)';
+      break;
+    }
+    case 'slide-out': {
+      SFX.woodCreak();
+      el.style.transform = 'translate(70px, 12px) rotate(6deg)';
+      break;
+    }
+    case 'tilt': {
+      SFX.thud();
+      el.style.transform = 'translate(-24px, -12px) rotate(-8deg)';
+      break;
+    }
+    case 'doors': {
+      SFX.hinge();
+      const dl = svg.querySelector('.door-l');
+      const dr = svg.querySelector('.door-r');
+      if (dl) dl.style.transform = 'perspective(600px) rotateY(-65deg)';
+      if (dr) dr.style.transform = 'perspective(600px) rotateY(65deg)';
+      const drawers = svg.querySelectorAll('.drawer');
+      drawers.forEach((d, i) => {
+        setTimeout(() => {
+          d.style.transition = 'transform 0.6s cubic-bezier(.3,1.3,.5,1)';
+          d.style.transform = `translateY(${8 + i*3}px)`;
+        }, 300 + i * 120);
+      });
+      break;
+    }
+    case 'roll': {
+      SFX.roll();
+      el.style.transform = 'translate(200px, 18px) rotate(360deg)';
+      break;
+    }
+    case 'books': {
+      SFX.paper();
+      const books = svg.querySelectorAll('.books');
+      books.forEach((b, i) => {
+        b.style.transition = 'transform 0.9s cubic-bezier(.4,.1,.3,1), opacity 0.9s';
+        const dx = (i % 2 === 0 ? -1 : 1) * (50 + i * 20);
+        const dy = 40 + i * 12;
+        b.style.transform = `translate(${dx}px, ${dy}px) rotate(${dx/2}deg)`;
+        b.style.opacity = '0.15';
+      });
+      break;
+    }
+    case 'clock-slide': {
+      SFX.tick();
+      setTimeout(() => SFX.woodCreak(), 100);
+      el.style.transform = 'translate(-90px, 0) rotate(-5deg)';
+      break;
+    }
+    case 'painting': {
+      SFX.hinge();
+      el.style.transform = 'translate(120px, -20px) rotate(8deg)';
+      break;
+    }
+    case 'cushion': {
+      SFX.spring();
+      const c = svg.querySelector('.cushion');
+      if (c) {
+        c.style.transition = 'transform 0.7s cubic-bezier(.3,1.4,.5,1)';
+        c.style.transform = 'translate(-12px, -55px) rotate(-15deg)';
+      }
+      break;
+    }
+    case 'lean': {
+      SFX.leaves();
+      el.style.transform = 'translate(-12px, 0) rotate(-10deg)';
+      break;
+    }
+    case 'door-open': {
+      SFX.hinge();
+      setTimeout(() => SFX.hinge(), 400);
+      const d = svg.querySelector('.door-r');
+      if (d) {
+        d.style.transition = 'transform 1.4s cubic-bezier(.3,.9,.4,1)';
+        d.style.transform = 'perspective(800px) rotateY(-85deg)';
+      }
+      break;
+    }
+  }
+}
+
+// =====================================================================
+//  ЭФФЕКТ ПОЯВЛЕНИЯ ПРИЗРАКА
+// =====================================================================
+function triggerScary() {
+  const frame = document.getElementById('frame');
+  frame.classList.add('shake');
+  setTimeout(() => frame.classList.remove('shake'), 550);
+
+  const flash = document.getElementById('flash');
+  flash.classList.add('on');
+  setTimeout(() => flash.classList.remove('on'), 180);
+
+  SFX.ghostAppear();
+}
+
+// =====================================================================
+//  СТАРТ
+// =====================================================================
+let gameStarted = false;
+
+function startGame(event) {
+  // Не допускаем повторный запуск игры: клик по кнопке всплывает
+  // до #start-screen, поэтому без этой защиты createObject() вызывался дважды.
+  if (gameStarted) return;
+  gameStarted = true;
+
+  if (event) event.stopPropagation();
+
+  const startScreen = document.getElementById('start-screen');
+  const scene = document.getElementById('scene');
+  const hud = document.getElementById('hud');
+
+  startScreen.classList.add('hidden');
+  setTimeout(() => startScreen.style.display = 'none', 1200);
+
+  setTimeout(() => {
+    scene.classList.add('visible');
+    hud.classList.add('visible');
+  }, 300);
+
+  pickGhosts();
+  objects.forEach(createObject);
+  document.getElementById('total').textContent = total;
+  console.log('%cПризраки спрятаны:', 'color:#b080ff;font-weight:bold',
+    [...ghostLocations].map(id => objects.find(o=>o.id===id).label).join(', '));
+
+  setTimeout(() => startAmbientMusic(), 500);
+}
+
+// Запускаем игру только один раз.
+// stopPropagation() в startGame() дополнительно не даёт клику по кнопке
+// всплыть до обработчика #start-screen.
+document.getElementById('start-btn').addEventListener('click', startGame);
+document.getElementById('start-screen').addEventListener('click', startGame);
+
+</script>
+
+</body>
+</html>
