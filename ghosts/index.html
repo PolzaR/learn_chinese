@@ -1205,89 +1205,60 @@ const SFX = {
 // =====================================================================
 //  ФОНОВАЯ МУЗЫКА
 // =====================================================================
-let musicNodes = null;
+let backgroundMusic = null;
 
 function startAmbientMusic() {
-  const ctx = ensureAudio();
-  const t0 = ctx.currentTime;
+  if (!backgroundMusic) {
+    backgroundMusic = new Audio('music/horror-music.mp3');
+    backgroundMusic.loop = true;
+    backgroundMusic.volume = 0;
+  }
 
-  const master = ctx.createGain();
-  master.gain.setValueAtTime(0.0001, t0);
-  master.connect(ctx.destination);
+  backgroundMusic.currentTime = 0;
 
-  const drone1 = ctx.createOscillator();
-  drone1.type = 'sawtooth';
-  drone1.frequency.value = 55;
-  const d1f = ctx.createBiquadFilter();
-  d1f.type = 'lowpass'; d1f.frequency.value = 180;
-  const d1g = ctx.createGain(); d1g.gain.value = 0.5;
-  drone1.connect(d1f).connect(d1g).connect(master);
+  const playPromise = backgroundMusic.play();
 
-  const drone2 = ctx.createOscillator();
-  drone2.type = 'sawtooth';
-  drone2.frequency.value = 82;
-  drone2.detune.value = 12;
-  const d2f = ctx.createBiquadFilter();
-  d2f.type = 'lowpass'; d2f.frequency.value = 220;
-  const d2g = ctx.createGain(); d2g.gain.value = 0.35;
-  drone2.connect(d2f).connect(d2g).connect(master);
+  if (playPromise !== undefined) {
+    playPromise.catch(() => {
+      // Браузер может заблокировать звук до взаимодействия пользователя.
+    });
+  }
 
-  const drone3 = ctx.createOscillator();
-  drone3.type = 'sine';
-  drone3.frequency.value = 36;
-  const d3g = ctx.createGain(); d3g.gain.value = 0.6;
-  drone3.connect(d3g).connect(master);
+  // Плавно увеличиваем громкость
+  let volume = 0;
+  const fadeIn = setInterval(() => {
+    volume += 0.02;
 
-  const noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 4, ctx.sampleRate);
-  const nd = noiseBuf.getChannelData(0);
-  for (let i = 0; i < nd.length; i++) nd[i] = (Math.random()*2 - 1);
-  const noiseSrc = ctx.createBufferSource();
-  noiseSrc.buffer = noiseBuf;
-  noiseSrc.loop = true;
-  const nf = ctx.createBiquadFilter();
-  nf.type = 'bandpass'; nf.frequency.value = 500; nf.Q.value = 0.6;
-  const ng = ctx.createGain(); ng.gain.value = 0.08;
-  noiseSrc.connect(nf).connect(ng).connect(master);
+    if (volume >= 0.35) {
+      volume = 0.35;
+      clearInterval(fadeIn);
+    }
 
-  const lfo = ctx.createOscillator();
-  lfo.type = 'sine';
-  lfo.frequency.value = 0.08;
-  const lfoGain = ctx.createGain();
-  lfoGain.gain.value = 0.05;
-  lfo.connect(lfoGain).connect(master.gain);
-  lfo.start(t0);
-
-  drone1.start(t0);
-  drone2.start(t0);
-  drone3.start(t0);
-  noiseSrc.start(t0);
-
-  musicNodes = { master, drone1, drone2, drone3, noiseSrc, lfo };
-
-  master.gain.linearRampToValueAtTime(0.35, t0 + 120);
-  master.gain.linearRampToValueAtTime(0.55, t0 + 360);
-  master.gain.linearRampToValueAtTime(0.75, t0 + 600);
+    backgroundMusic.volume = volume;
+  }, 50);
 }
 
 function stopAmbientMusic() {
-  if (!musicNodes) return;
-  const ctx = ensureAudio();
-  const t0 = ctx.currentTime;
-  try {
-    musicNodes.master.gain.cancelScheduledValues(t0);
-    musicNodes.master.gain.setValueAtTime(musicNodes.master.gain.value, t0);
-    musicNodes.master.gain.linearRampToValueAtTime(0.0001, t0 + 1.5);
-    setTimeout(() => {
-      try {
-        musicNodes.drone1.stop();
-        musicNodes.drone2.stop();
-        musicNodes.drone3.stop();
-        musicNodes.noiseSrc.stop();
-        musicNodes.lfo.stop();
-      } catch(e){}
-      musicNodes = null;
-    }, 1700);
-  } catch(e){}
+  if (!backgroundMusic) return;
+
+  const music = backgroundMusic;
+
+  // Плавно убираем звук
+  let volume = music.volume;
+
+  const fadeOut = setInterval(() => {
+    volume -= 0.03;
+
+    if (volume <= 0) {
+      volume = 0;
+      clearInterval(fadeOut);
+
+      music.pause();
+      music.currentTime = 0;
+    }
+
+    music.volume = volume;
+  }, 50);
 }
 
 // =====================================================================
