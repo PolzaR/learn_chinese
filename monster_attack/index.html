@@ -1410,7 +1410,6 @@ let zombieSpeed = 0.35;
 let lastTime = 0;
 let rafId = null;
 let slowmo = 0;          // длительность замедления (мс)
-let slowmoFactor = 1;
 
 /* =========================================================
    Тема
@@ -1914,9 +1913,8 @@ function hurtHero() {
     setTimeout(() => hero.classList.remove('hurt'), 600);
   }
 
-  // 5. Эффект замедления (slowmo)
+   // 5. Пометка о недавней атаке (используется только для визуальных эффектов)
   slowmo = 350;
-  slowmoFactor = 0.35;
 
   if (lives <= 0) {
     setTimeout(() => gameOver(), 700);
@@ -1943,13 +1941,13 @@ document.addEventListener('keydown', (e) => {
 function loop(t) {
   if (!running) return;
   if (!lastTime) lastTime = t;
-  let dt = Math.min(50, t - lastTime);
+  const rawDt = Math.min(50, t - lastTime);
   lastTime = t;
 
-  // Замедление
+  // Замедление НЕ влияет на движение зомби — только на визуальные эффекты
+  let dt = rawDt;
   if (slowmo > 0) {
-    dt *= slowmoFactor;
-    slowmo -= (t - lastTime) / slowmoFactor; // приблизительно
+    slowmo -= rawDt;
     if (slowmo < 0) slowmo = 0;
   }
 
@@ -1962,19 +1960,17 @@ function loop(t) {
     }
   }
 
-  // Движение зомби
+  // Движение зомби — всегда на полной скорости
   for (const z of zombies) {
     if (!z.alive) continue;
     z.x -= z.speed * dt * 0.06 * 60 / 16;
     z.el.style.left = z.x + 'px';
     if (z.x < 130) {
       z.alive = false;
-      // Анимация атаки
       z.el.classList.add('charging');
       const ze = z.el;
       setTimeout(() => ze.remove(), 800);
       hurtHero();
-      // Слово возвращается в конец очереди
       WORD_QUEUE.push(z.word);
     }
   }
