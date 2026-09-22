@@ -1,0 +1,2113 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>🎃 万圣节汉字防御战 🧟</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; user-select:none; }
+  body {
+    background:#050508;
+    font-family:'Microsoft YaHei','PingFang SC','Segoe UI',sans-serif;
+    overflow:hidden; color:#fff;
+    height:100vh;
+    display:flex; align-items:center; justify-content:center;
+  }
+  #game {
+    position:relative;
+    width:1100px; height:640px;
+    border:2px solid #3a1a1a; border-radius:6px;
+    overflow:hidden;
+    transition:background .5s;
+  }
+
+  body.theme-horror #game {
+    background:radial-gradient(ellipse at 50% 100%, #3a0a0a 0%, #14060a 40%, #050508 100%);
+    box-shadow:0 0 60px rgba(120,0,0,.6), inset 0 0 120px rgba(0,0,0,.9);
+  }
+  body.theme-funny #game {
+    background:linear-gradient(180deg, #87ceeb 0%, #b0e0e6 40%, #ffd9a8 80%, #d9c890 100%);
+    box-shadow:0 0 60px rgba(255,200,100,.5), inset 0 0 120px rgba(255,220,150,.3);
+  }
+  body.theme-lotr #game {
+    background:linear-gradient(180deg,
+      #7cb4d8 0%, #a8d4e8 25%, #d8e8c8 50%, #8ab86a 78%, #5a8a3a 100%);
+    box-shadow:0 0 60px rgba(120,180,80,.5), inset 0 0 120px rgba(200,230,180,.2);
+  }
+
+  #stars, #moon, #ground, #fog, #scene { position:absolute; inset:0; pointer-events:none; }
+  #stars { z-index:1; }
+  .star { position:absolute; background:#fff; border-radius:50%; opacity:.5; animation:twinkle 3s infinite; }
+  @keyframes twinkle { 0%,100%{opacity:.15} 50%{opacity:.9} }
+
+  #moon { z-index:2; }
+  body.theme-horror #moon::after {
+    content:'';
+    position:absolute;
+    top:30px; right:30px;
+    width:80px; height:80px; border-radius:50%;
+    background:radial-gradient(circle at 35% 35%, #fff4c0, #c9a04a 70%, #8a6a20);
+    box-shadow:0 0 50px rgba(200,120,20,.7), 0 0 100px rgba(150,40,0,.5);
+    opacity:.95;
+  }
+
+  #ground {
+    top:auto; bottom:0; left:0; right:0; height:90px; z-index:2;
+    transition:background .5s;
+  }
+  body.theme-horror #ground {
+    background:linear-gradient(180deg, #1a0808 0%, #050202 100%);
+    border-top:2px solid #2a0a0a;
+  }
+  body.theme-funny #ground {
+    background:radial-gradient(ellipse at 20% 0%, #a8d878 0%, #78b048 40%, #4a7a28 100%);
+    border-top:3px dashed rgba(255,255,255,.4);
+  }
+  body.theme-lotr #ground {
+    background:radial-gradient(ellipse at 30% 0%, #9ac87a 0%, #6a9a4a 40%, #3a6a2a 100%);
+    border-top:2px solid rgba(80,120,60,.5);
+  }
+
+  #fog {
+    z-index:3; opacity:0; transition:opacity .6s;
+    background:
+      radial-gradient(circle at 20% 80%, rgba(120,20,20,.15), transparent 40%),
+      radial-gradient(circle at 80% 70%, rgba(80,10,10,.15), transparent 40%);
+    animation:fogMove 20s infinite alternate;
+  }
+  body.theme-horror #fog { opacity:1; }
+  @keyframes fogMove { 0%{transform:translateX(0)} 100%{transform:translateX(-40px)} }
+
+  #vignette {
+    position:absolute; inset:0; pointer-events:none; z-index:15;
+    transition:background .5s;
+  }
+  body.theme-horror #vignette {
+    background:radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,.85) 100%);
+  }
+
+  #scene { z-index:2; overflow:hidden; }
+
+  /* FUNNY */
+  .rainbow {
+    position:absolute; top:-60px; left:50%; transform:translateX(-50%);
+    width:600px; height:300px; border-radius:50% 50% 0 0 / 100% 100% 0 0;
+    background:conic-gradient(from 200deg at 50% 100%,
+      #ff5555 0 20deg, #ffaa33 20deg 40deg, #ffee44 40deg 60deg,
+      #66dd66 60deg 80deg, #44aaff 80deg 100deg, #aa66ff 100deg 120deg,
+      #ff5555 120deg 140deg);
+    opacity:.35; filter:blur(2px);
+  }
+  .cloud {
+    position:absolute; background:#ffffff; border-radius:50%;
+    opacity:.85; filter:blur(.5px);
+  }
+  .candy {
+    position:absolute; width:14px; height:14px; border-radius:50%; opacity:.9;
+  }
+  .candy::after {
+    content:''; position:absolute; top:50%; left:50%;
+    transform:translate(-50%,-50%); width:60%; height:60%;
+    border-radius:50%; background:rgba(255,255,255,.7);
+  }
+  .balloon {
+    position:absolute; width:24px; height:30px;
+    border-radius:50% 50% 50% 50% / 60% 60% 40% 40%;
+    opacity:.9; animation:float 4s ease-in-out infinite alternate;
+  }
+  .balloon::after {
+    content:''; position:absolute; top:100%; left:50%;
+    width:1px; height:24px; background:rgba(0,0,0,.3);
+    transform:translateX(-50%);
+  }
+  @keyframes float {
+    0% { transform:translateY(0) rotate(-3deg); }
+    100% { transform:translateY(-10px) rotate(3deg); }
+  }
+
+  /* LOTR */
+  .mountain { position:absolute; bottom:80px; width:0; height:0; border-style:solid; }
+  .hill { position:absolute; bottom:60px; border-radius:50% 50% 0 0 / 100% 100% 0 0; }
+  .sun {
+    position:absolute; top:50px; right:120px;
+    width:70px; height:70px; border-radius:50%;
+    background:radial-gradient(circle, #fff8c0 0%, #ffe060 50%, #ffb020 100%);
+    box-shadow:0 0 60px rgba(255,220,120,.9), 0 0 120px rgba(255,180,60,.5);
+  }
+  .softcloud {
+    position:absolute; background:#ffffff; border-radius:50%;
+    opacity:.75; filter:blur(1px);
+  }
+  .lotr-tree {
+    position:absolute; bottom:80px; width:8px; height:80px;
+    background:linear-gradient(180deg, #6a4a20, #3a2a08);
+    border-radius:3px;
+  }
+  .lotr-tree::before {
+    content:''; position:absolute; top:-40px; left:50%;
+    transform:translateX(-50%); width:70px; height:60px;
+    border-radius:50% 50% 40% 40%;
+    background:radial-gradient(circle at 40% 40%, #6a9a3a 0%, #3a6a20 70%, #1a3a08 100%);
+    box-shadow:-20px 10px 0 -10px #4a7a28, 20px 10px 0 -10px #4a7a28;
+  }
+
+  /* HUD */
+  #hud {
+    position:absolute; top:14px; left:14px;
+    display:flex; gap:14px; font-size:15px; z-index:20;
+    font-family:'Courier New', monospace; letter-spacing:1px;
+  }
+  #hud div {
+    background:rgba(10,0,0,.75); padding:7px 14px; border-radius:4px;
+    border:1px solid #6a1010;
+    box-shadow:0 0 12px rgba(180,0,0,.4);
+    text-shadow:0 0 8px rgba(255,40,40,.6);
+    transition:all .4s;
+  }
+  body.theme-funny #hud div {
+    background:rgba(255,255,255,.9); color:#6a3a00;
+    border:2px solid #ff8844;
+    box-shadow:0 4px 12px rgba(0,0,0,.2); text-shadow:none;
+  }
+  body.theme-lotr #hud div {
+    background:rgba(30,50,20,.85); color:#e8f0c8;
+    border:1px solid #8ab86a;
+    box-shadow:0 0 15px rgba(120,180,80,.5);
+    text-shadow:0 0 8px rgba(180,220,140,.6);
+  }
+  #hud .accent { color:#ff5555; }
+  body.theme-funny #hud .accent { color:#d95400; }
+  body.theme-lotr #hud .accent { color:#d8e88a; }
+
+  /* ВРАГИ */
+  .zombie {
+    position:absolute; width:80px; height:150px; z-index:6;
+    filter:drop-shadow(0 8px 12px rgba(0,0,0,.9));
+    animation:zombieSway 2s infinite alternate;
+    transition:filter .15s;
+  }
+  @keyframes zombieSway {
+    0% { transform:rotate(-2deg) translateY(0);}
+    100% { transform:rotate(2deg) translateY(-2px);}
+  }
+  .zombie.charging { animation:chargeAttack .8s ease-in forwards !important; filter:drop-shadow(0 0 20px #ff0000) brightness(1.4); }
+  @keyframes chargeAttack {
+    0% { transform:translateX(0) scale(1) rotate(0); }
+    40% { transform:translateX(-80px) scale(1.15) rotate(-8deg); }
+    100% { transform:translateX(-150px) scale(0.4) rotate(-30deg); opacity:.2; }
+  }
+
+  .z-leg { position:absolute; top:110px; width:18px; height:40px;
+    background:linear-gradient(180deg, #3a2a24, #1a1010);
+    border-radius:4px; border:1px solid #000;
+    box-shadow:inset -3px 0 4px rgba(0,0,0,.7); }
+  .z-leg.l { left:18px; transform:rotate(-6deg); transform-origin:top center;}
+  .z-leg.r { right:18px; transform:rotate(8deg); transform-origin:top center;}
+  .z-torso { position:absolute; top:55px; left:16px;
+    width:48px; height:60px;
+    background:radial-gradient(circle at 30% 30%, #6a5a44 0%, #3a2a20 40%, #1a0e0a 100%);
+    border-radius:6px 6px 4px 4px; border:1px solid #000;
+    box-shadow:inset 0 0 10px rgba(0,0,0,.9), inset 6px 8px 6px rgba(120,20,20,.4); }
+  .z-torso::before { content:''; position:absolute; inset:4px;
+    background:
+      linear-gradient(105deg, transparent 40%, rgba(0,0,0,.5) 42%, rgba(0,0,0,.5) 46%, transparent 48%),
+      linear-gradient(75deg, transparent 55%, rgba(0,0,0,.4) 57%, rgba(0,0,0,.4) 62%, transparent 64%);
+    border-radius:4px; }
+  .z-torso::after { content:''; position:absolute; left:8px; top:24px;
+    width:16px; height:12px;
+    background:radial-gradient(ellipse, #8a0a0a 0%, #3a0000 70%, transparent 100%);
+    border-radius:50%; filter:blur(1px); }
+  .z-arm { position:absolute; top:60px; width:44px; height:12px;
+    background:linear-gradient(180deg, #5a4a3a, #2a1a10);
+    border-radius:6px; border:1px solid #000;
+    box-shadow:inset -4px 0 6px rgba(0,0,0,.7); }
+  .z-arm.l { left:-32px; transform:rotate(-8deg); transform-origin:right center; }
+  .z-arm.r { right:-32px; transform:rotate(8deg); transform-origin:left center; }
+  .z-arm::after { content:''; position:absolute; top:50%;
+    transform:translateY(-50%); width:10px; height:10px;
+    background:#2a1a10; border-radius:50%; }
+  .z-arm.l::after { left:-4px; }
+  .z-arm.r::after { right:-4px; }
+  .z-head { position:absolute; top:8px; left:16px;
+    width:48px; height:52px;
+    background:radial-gradient(circle at 35% 35%, #9a8a5a 0%, #5a4a2a 50%, #2a1e10 100%);
+    border-radius:48% 52% 50% 50% / 55% 55% 45% 45%;
+    border:1px solid #000;
+    box-shadow:inset -5px -5px 8px rgba(0,0,0,.8), inset 5px 5px 6px rgba(180,150,80,.2); }
+  .z-head::before { content:''; position:absolute; top:8px; right:6px;
+    width:18px; height:8px;
+    background:radial-gradient(ellipse, #8a0a0a 0%, #3a0000 80%, transparent);
+    border-radius:50%; transform:rotate(-20deg); filter:blur(1px); }
+  .z-head::after { content:''; position:absolute; top:-4px; left:6px; right:6px;
+    height:10px;
+    background:
+      radial-gradient(circle at 20% 50%, #1a0e0a 0 3px, transparent 4px),
+      radial-gradient(circle at 40% 30%, #1a0e0a 0 3px, transparent 4px),
+      radial-gradient(circle at 60% 60%, #1a0e0a 0 3px, transparent 4px),
+      radial-gradient(circle at 80% 40%, #1a0e0a 0 3px, transparent 4px);
+    border-radius:50%; }
+  .z-eye { position:absolute; top:22px; width:8px; height:8px;
+    background:radial-gradient(circle, #ff2200 0%, #8a0000 60%, #000 100%);
+    border-radius:50%;
+    box-shadow:0 0 10px #ff2200, 0 0 20px #ff0000;
+    animation:eyeGlow 1.5s infinite alternate; }
+  .z-eye.l { left:8px; }
+  .z-eye.r { right:8px; }
+  @keyframes eyeGlow {
+    0% { box-shadow:0 0 8px #ff2200, 0 0 14px #ff0000; }
+    100% { box-shadow:0 0 14px #ff4400, 0 0 26px #ff0000; }
+  }
+  .z-mouth { position:absolute; top:36px; left:50%;
+    transform:translateX(-50%); width:22px; height:10px;
+    background:radial-gradient(ellipse at 50% 30%, #3a0000 0%, #1a0000 80%);
+    border-radius:0 0 40% 40% / 0 0 80% 80%;
+    border-top:1px solid #000;
+    box-shadow:inset 0 2px 4px rgba(120,0,0,.8); }
+  .z-mouth::before { content:''; position:absolute; top:0; left:2px; right:2px; height:3px;
+    background:repeating-linear-gradient(90deg, #e8e0c0 0 2px, transparent 2px 4px);
+    filter:drop-shadow(0 0 1px #000); }
+  .z-mouth::after { content:''; position:absolute; top:4px; left:6px;
+    width:2px; height:12px;
+    background:linear-gradient(180deg, #8a0a0a, transparent); filter:blur(.5px); }
+  .z-shadow { position:absolute; bottom:-6px; left:50%;
+    transform:translateX(-50%); width:60px; height:8px;
+    background:radial-gradient(ellipse, rgba(0,0,0,.8), transparent 70%);
+    border-radius:50%; }
+
+  body.theme-funny .zombie .z-head {
+    background:radial-gradient(circle at 35% 35%, #a8e878 0%, #66b848 55%, #3a8a20 100%);
+  }
+  body.theme-funny .zombie .z-head::before {
+    background:radial-gradient(ellipse, #ff4477 0%, #aa2255 80%, transparent); }
+  body.theme-funny .zombie .z-eye {
+    background:radial-gradient(circle, #fff 0%, #ffdd00 50%, #aa6600 100%);
+    box-shadow:0 0 10px #ffdd00, 0 0 20px #ffaa00; }
+  body.theme-funny .zombie .z-torso {
+    background:radial-gradient(circle at 30% 30%, #d87040 0%, #a84820 40%, #6a2808 100%);
+    box-shadow:inset 0 0 10px rgba(0,0,0,.5), inset 6px 8px 6px rgba(180,60,0,.4); }
+  body.theme-funny .zombie .z-torso::after {
+    background:radial-gradient(ellipse, #ff2266 0%, #aa0044 70%, transparent 100%); }
+  body.theme-funny .zombie .z-arm {
+    background:linear-gradient(180deg, #d87040, #a84820); }
+
+  body.theme-lotr .zombie .z-head {
+    background:radial-gradient(circle at 35% 35%, #7a8a5a 0%, #3a4a20 55%, #1a2008 100%);
+    border-radius:45% 55% 48% 52% / 50% 55% 45% 50%; }
+  body.theme-lotr .zombie .z-head::before {
+    background:radial-gradient(ellipse, #6a0000 0%, #2a0000 80%, transparent); }
+  body.theme-lotr .zombie .z-eye {
+    background:radial-gradient(circle, #ffee00 0%, #aa6600 60%, #000 100%);
+    box-shadow:0 0 10px #ffcc00, 0 0 20px #ff8800; }
+  body.theme-lotr .zombie .z-torso {
+    background:radial-gradient(circle at 30% 30%, #4a3a20 0%, #2a1a08 40%, #0a0500 100%);
+    box-shadow:inset 0 0 10px rgba(0,0,0,.9), inset 6px 8px 6px rgba(60,20,0,.5); }
+  body.theme-lotr .zombie .z-arm {
+    background:linear-gradient(180deg, #5a4a2a, #2a1a08); }
+  body.theme-lotr .zombie .z-torso::before {
+    background:
+      linear-gradient(0deg, transparent 60%, rgba(0,0,0,.7) 62%, rgba(0,0,0,.7) 70%, transparent 72%),
+      linear-gradient(105deg, transparent 40%, rgba(0,0,0,.6) 42%, rgba(0,0,0,.6) 46%, transparent 48%);
+    border-radius:4px; }
+  body.theme-lotr .zombie .z-mouth::before {
+    background:repeating-linear-gradient(90deg, #e8e0c0 0 3px, transparent 3px 5px);
+    height:4px; }
+  body.theme-lotr .zombie .z-head::after {
+    content:''; position:absolute; top:-6px; left:2px; right:2px;
+    height:12px;
+    background:linear-gradient(180deg, #3a3a3a, #101010);
+    border-radius:50% 50% 0 0;
+    border:1px solid #000;
+    box-shadow:inset 0 2px 3px rgba(255,255,255,.15); }
+
+  .zombie.dying { animation:boom .55s forwards; }
+  @keyframes boom {
+    0%   { transform:scale(1) rotate(0); opacity:1; filter:brightness(1);}
+    20%  { transform:scale(1.15) rotate(-5deg); filter:brightness(3) hue-rotate(-30deg);}
+    50%  { transform:scale(1.3) rotate(20deg); filter:brightness(4) saturate(2);}
+    100% { transform:scale(0) rotate(90deg); opacity:0; }
+  }
+
+  /* ТАБЛИЧКА */
+  .sign {
+    position:absolute; top:-70px; left:50%;
+    transform:translateX(-50%);
+    background:linear-gradient(180deg, #f0e2b8 0%, #d8c48a 100%);
+    color:#2a1000;
+    font-size:32px; font-weight:bold;
+    padding:10px 18px;
+    border:3px solid #5a3a1a; border-radius:4px;
+    white-space:nowrap;
+    box-shadow:0 0 20px rgba(200,60,20,.5), 0 6px 12px rgba(0,0,0,.8),
+      inset 0 0 20px rgba(120,80,20,.3);
+    font-family:'KaiTi','SimSun','Microsoft YaHei',serif;
+    text-shadow:1px 1px 0 rgba(255,255,255,.4);
+    letter-spacing:2px;
+  }
+  .sign.len-2 { font-size:26px; padding:8px 16px; letter-spacing:1px; }
+  .sign.len-3 { font-size:21px; padding:7px 14px; letter-spacing:0; }
+  .sign.len-4 { font-size:18px; padding:6px 12px; letter-spacing:0; }
+  .sign.len-5 { font-size:15px; padding:6px 10px; letter-spacing:0; }
+  .sign::after { content:''; position:absolute; bottom:-18px; left:50%;
+    transform:translateX(-50%); width:5px; height:18px;
+    background:linear-gradient(180deg, #5a3a1a, #2a1a08);
+    box-shadow:0 0 4px rgba(0,0,0,.8); }
+  .sign::before { content:''; position:absolute; inset:0;
+    background:
+      radial-gradient(circle at 85% 20%, rgba(120,0,0,.4) 3px, transparent 6px),
+      radial-gradient(circle at 15% 80%, rgba(120,0,0,.35) 2px, transparent 5px);
+    pointer-events:none; }
+
+  /* СНАРЯДЫ */
+  .laser {
+    position:absolute; height:8px;
+    background:linear-gradient(90deg, rgba(0,255,255,0), #00ffff 20%, #ffffff 50%, #00ffff 80%, rgba(0,255,255,0));
+    border-radius:4px;
+    box-shadow:0 0 12px #00ffff, 0 0 24px #00ffff, 0 0 40px rgba(0,255,255,.6);
+    z-index:10;
+  }
+  .arrow {
+    position:absolute; height:5px; width:60px;
+    background:linear-gradient(90deg, #2a3a1a 0%, #6a8a3a 40%, #a8c86a 100%);
+    border-radius:3px;
+    box-shadow:0 0 10px rgba(180,220,140,.9), 0 0 20px rgba(120,200,80,.5);
+    z-index:10;
+    transform-origin:left center;
+  }
+  .arrow::before {
+    content:''; position:absolute; right:-10px; top:-3px;
+    width:0; height:0;
+    border-left:12px solid #d8e8c0;
+    border-top:5px solid transparent;
+    border-bottom:5px solid transparent;
+    filter:drop-shadow(0 0 3px #a8c86a);
+  }
+  .arrow::after {
+    content:''; position:absolute; left:-6px; top:-3px;
+    width:12px; height:10px;
+    background:
+      radial-gradient(circle at 30% 50%, #c8d8a0 0 2px, transparent 3px),
+      radial-gradient(circle at 70% 50%, #8aa860 0 2px, transparent 3px);
+    border-radius:2px;
+    filter:drop-shadow(0 0 2px #a8c86a);
+  }
+
+  .pumpkin-proj {
+    position:absolute; width:36px; height:36px; border-radius:50%;
+    background:radial-gradient(circle at 40% 40%, #ffb347, #ff7518);
+    box-shadow:inset -6px -4px 0 rgba(0,0,0,.2), 0 0 20px #ff7518;
+    z-index:10;
+    will-change:transform, left, top;
+  }
+  .pumpkin-proj::before, .pumpkin-proj::after {
+    content:''; position:absolute; top:12px;
+    width:6px; height:8px; background:#000;
+    border-radius:50%;
+  }
+  .pumpkin-proj::before { left:8px; }
+  .pumpkin-proj::after  { right:8px; }
+  .pumpkin-proj .pj-mouth {
+    position:absolute; top:24px; left:50%;
+    transform:translateX(-50%);
+    width:16px; height:5px;
+    border-bottom:2px solid #000;
+    border-radius:0 0 12px 12px;
+  }
+  .pumpkin-proj .pj-stem {
+    position:absolute; top:-4px; left:14px;
+    width:8px; height:8px;
+    background:#4a6a10;
+    border-radius:2px 2px 0 0;
+    transform:rotate(-15deg);
+  }
+
+  .explosion {
+    position:absolute; width:80px; height:80px; border-radius:50%;
+    background:radial-gradient(circle, #ffffff 0%, #ffff00 15%, #ff8800 35%, #ff0000 55%, #6a0000 75%, transparent 100%);
+    z-index:11; animation:explode .55s forwards;
+    pointer-events:none; box-shadow:0 0 40px #ff4400;
+  }
+  @keyframes explode {
+    0%   { transform:scale(0) rotate(0); opacity:1; }
+    60%  { transform:scale(1.6) rotate(180deg); opacity:.9; }
+    100% { transform:scale(2.6) rotate(360deg); opacity:0; }
+  }
+  .spark {
+    position:absolute; width:5px; height:5px;
+    background:#ffcc00; border-radius:50%; z-index:12;
+    pointer-events:none; box-shadow:0 0 8px #ff4400;
+  }
+
+  /* КРОВЬ (для анимации атаки) */
+  .blood-splat {
+    position:absolute;
+    width:20px; height:20px;
+    border-radius:50%;
+    background:radial-gradient(circle, #cc0000 0%, #6a0000 60%, transparent 100%);
+    z-index:13;
+    pointer-events:none;
+    animation:bloodFly .8s ease-out forwards;
+  }
+  @keyframes bloodFly {
+    0%   { transform:scale(.3); opacity:1; }
+    100% { transform:scale(1.5) translate(var(--dx), var(--dy)); opacity:0; }
+  }
+
+  /* Экран атаки */
+  #attackFlash {
+    position:absolute; inset:0;
+    background:radial-gradient(circle at 18% 82%, rgba(255,0,0,.9) 0%, rgba(120,0,0,.6) 30%, transparent 60%);
+    opacity:0; pointer-events:none; z-index:45;
+    transition:opacity .08s;
+  }
+
+  /* ГЕРОЙ */
+  #hero {
+    position:absolute; bottom:55px; left:130px;
+    width:80px; height:150px; z-index:8;
+    filter:drop-shadow(0 0 12px rgba(0,0,0,.9));
+    transition:filter .3s;
+  }
+  #hero.hurt {
+    animation:heroHurt .5s;
+  }
+  @keyframes heroHurt {
+    0%   { transform:translateX(0) rotate(0); filter:drop-shadow(0 0 12px rgba(0,0,0,.9)); }
+    20%  { transform:translateX(-25px) rotate(-15deg); filter:drop-shadow(0 0 30px #ff0000) brightness(2); }
+    50%  { transform:translateX(15px) rotate(10deg); filter:drop-shadow(0 0 20px #ff0000) brightness(1.5); }
+    80%  { transform:translateX(-5px) rotate(-3deg); filter:drop-shadow(0 0 15px #ff4444); }
+    100% { transform:translateX(0) rotate(0); filter:drop-shadow(0 0 12px rgba(0,0,0,.9)); }
+  }
+
+  .hr-leg { position:absolute; top:108px; width:20px; height:42px;
+    background:linear-gradient(180deg, #1c1c22, #0a0a0e);
+    border-radius:3px; border:1px solid #000; }
+  .hr-leg.l { left:16px; } .hr-leg.r { right:16px; }
+  .hr-boot { position:absolute; top:142px; width:24px; height:12px;
+    background:linear-gradient(180deg, #2a2a2e, #050508);
+    border-radius:3px 3px 5px 5px; border:1px solid #000; }
+  .hr-boot.l { left:14px; } .hr-boot.r { right:14px; }
+
+  .hr-torso { position:absolute; top:52px; left:12px; width:56px; height:64px;
+    background:linear-gradient(90deg, #16161c 0%, #2b2b33 20%, #2b2b33 80%, #16161c 100%);
+    border-radius:8px 8px 6px 6px; border:1px solid #000;
+    box-shadow:inset 0 0 8px rgba(0,0,0,.9); }
+  .hr-vest { position:absolute; top:60px; left:16px; width:48px; height:44px;
+    background:linear-gradient(180deg, #3a3a42 0%, #1f1f26 100%);
+    border-radius:5px; border:1px solid #0a0a0e;
+    box-shadow:inset 0 -6px 8px rgba(0,0,0,.7), inset 0 0 0 1px rgba(80,80,90,.4); }
+  .hr-vest::before { content:''; position:absolute; left:4px; right:4px; top:6px; height:6px;
+    background:repeating-linear-gradient(90deg, #5a5a62 0 3px, #2a2a32 3px 6px);
+    border-radius:2px; opacity:.7; }
+  .hr-belt { position:absolute; top:100px; left:14px; width:52px; height:8px;
+    background:linear-gradient(180deg, #4a3a20, #1a1008);
+    border-radius:2px; border:1px solid #000; }
+  .hr-arm { position:absolute; top:62px; width:14px; height:48px;
+    background:linear-gradient(180deg, #1c1c22, #0a0a0e);
+    border-radius:5px; border:1px solid #000; }
+  .hr-arm.l { left:0; transform:rotate(8deg); transform-origin:top center;}
+  .hr-arm.r { right:0; transform:rotate(-25deg); transform-origin:top center;}
+  .hr-gun { position:absolute; top:96px; right:-10px; width:26px; height:10px;
+    background:linear-gradient(180deg, #3a3a42, #0a0a0e);
+    border-radius:2px; border:1px solid #000; transform:rotate(-10deg); }
+  .hr-gun::after { content:''; position:absolute; right:-4px; top:2px;
+    width:8px; height:6px; background:#0a0a0e; border-radius:1px; }
+  .hr-gun::before { content:''; position:absolute; left:2px; top:3px;
+    width:12px; height:3px;
+    background:linear-gradient(90deg, #00ffff, #ffffff);
+    box-shadow:0 0 8px #00ffff; animation:pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{opacity:.8} 50%{opacity:1; box-shadow:0 0 14px #00ffff} }
+  .hr-head { position:absolute; top:14px; left:18px; width:44px; height:44px;
+    background:radial-gradient(circle at 40% 40%, #5a3a28, #2a1810);
+    border-radius:50%; border:1px solid #000;
+    box-shadow:inset -4px -4px 6px rgba(0,0,0,.6); }
+  .hr-cap { position:absolute; top:8px; left:16px; width:48px; height:22px;
+    background:linear-gradient(180deg, #2a2a32, #101014);
+    border-radius:24px 24px 4px 4px; border:1px solid #000; }
+  .hr-mask { position:absolute; top:26px; left:22px; width:36px; height:22px;
+    background:linear-gradient(180deg, #1a1a20, #050508);
+    border-radius:4px 4px 10px 10px; border:1px solid #000;
+    box-shadow:inset 0 0 6px rgba(0,0,0,.9); }
+  .hr-mask::before, .hr-mask::after {
+    content:''; position:absolute; top:5px; width:8px; height:6px;
+    background:radial-gradient(circle, #66ccff 0%, #003366 100%);
+    border-radius:50%; box-shadow:0 0 8px #66ccff; }
+  .hr-mask::before { left:5px; } .hr-mask::after { right:5px; }
+  .hr-filter { position:absolute; top:42px; left:30px; width:12px; height:10px;
+    background:#1a1a20; border-radius:2px; border:1px solid #000; }
+
+  /* БАБУШКА */
+  .gr-leg { position:absolute; top:108px; width:22px; height:42px;
+    background:linear-gradient(180deg, #8a4a3a, #5a2a1a);
+    border-radius:6px; border:1px solid #000;
+    box-shadow:inset -3px 0 4px rgba(0,0,0,.5); }
+  .gr-leg.l { left:14px; } .gr-leg.r { right:14px; }
+  .gr-boot { position:absolute; top:144px; width:26px; height:14px;
+    background:linear-gradient(180deg, #a87058, #6a3a20);
+    border-radius:6px 6px 8px 8px; border:1px solid #000;
+    box-shadow:inset 0 -3px 4px rgba(0,0,0,.4); }
+  .gr-boot.l { left:12px; } .gr-boot.r { right:12px; }
+  .gr-dress {
+    position:absolute; top:58px; left:8px;
+    width:64px; height:70px;
+    background:linear-gradient(180deg, #d8546a 0%, #a83050 60%, #7a1a3a 100%);
+    border-radius:10px 10px 6px 6px;
+    border:1px solid #000;
+    box-shadow:inset 0 0 12px rgba(0,0,0,.5), inset -4px 0 8px rgba(0,0,0,.4);
+    clip-path:polygon(15% 0, 85% 0, 100% 100%, 0 100%);
+  }
+  .gr-dress::before {
+    content:''; position:absolute; inset:0;
+    background:
+      radial-gradient(circle at 20% 20%, rgba(255,255,255,.7) 2px, transparent 3px),
+      radial-gradient(circle at 60% 30%, rgba(255,255,255,.7) 2px, transparent 3px),
+      radial-gradient(circle at 35% 60%, rgba(255,255,255,.7) 2px, transparent 3px),
+      radial-gradient(circle at 75% 75%, rgba(255,255,255,.7) 2px, transparent 3px),
+      radial-gradient(circle at 15% 85%, rgba(255,255,255,.7) 2px, transparent 3px);
+    background-size:24px 30px;
+    pointer-events:none;
+  }
+  .gr-apron {
+    position:absolute; top:80px; left:22px;
+    width:40px; height:46px;
+    background:linear-gradient(180deg, #f8f0e0 0%, #e0d0a8 100%);
+    border-radius:4px 4px 8px 8px;
+    border:1px solid #8a6a40;
+    box-shadow:inset 0 0 8px rgba(120,90,40,.3);
+    z-index:2;
+  }
+  .gr-apron::before {
+    content:''; position:absolute; top:-6px; left:50%;
+    transform:translateX(-50%);
+    width:16px; height:8px;
+    background:linear-gradient(180deg, #f8f0e0, #e0d0a8);
+    border:1px solid #8a6a40;
+    border-radius:3px 3px 0 0;
+  }
+  .gr-arm { position:absolute; top:64px; width:16px; height:48px;
+    background:linear-gradient(180deg, #d8546a, #a83050);
+    border-radius:6px; border:1px solid #000;
+    box-shadow:inset -3px 0 4px rgba(0,0,0,.5); }
+  .gr-arm.l { left:-2px; transform:rotate(30deg); transform-origin:top center;}
+  .gr-arm.r { right:-2px; transform:rotate(-55deg); transform-origin:top center;}
+  .gr-arm::after {
+    content:''; position:absolute; bottom:-6px; left:50%;
+    transform:translateX(-50%);
+    width:14px; height:12px;
+    background:radial-gradient(circle at 40% 40%, #ffdbaa, #c99a60);
+    border-radius:50%;
+    border:1px solid #000;
+  }
+  .gr-head {
+    position:absolute; top:12px; left:18px;
+    width:46px; height:50px;
+    background:radial-gradient(circle at 40% 35%, #ffe0b8 0%, #e8b880 60%, #c08858 100%);
+    border-radius:50% 50% 45% 45%;
+    border:1px solid #000;
+    box-shadow:inset -3px -3px 6px rgba(0,0,0,.25);
+    z-index:2;
+  }
+  .gr-head::after {
+    content:''; position:absolute; inset:0;
+    background:
+      linear-gradient(0deg, transparent 40%, rgba(160,100,60,.3) 41%, rgba(160,100,60,.3) 42%, transparent 43%),
+      linear-gradient(0deg, transparent 55%, rgba(160,100,60,.25) 56%, rgba(160,100,60,.25) 57%, transparent 58%),
+      radial-gradient(circle at 30% 40%, rgba(180,120,80,.2) 3px, transparent 4px),
+      radial-gradient(circle at 70% 40%, rgba(180,120,80,.2) 3px, transparent 4px);
+    border-radius:50% 50% 45% 45%;
+    pointer-events:none;
+  }
+  .gr-shawl {
+    position:absolute; top:2px; left:10px;
+    width:62px; height:62px;
+    background:linear-gradient(160deg, #e8d060 0%, #d8a030 50%, #a87010 100%);
+    border-radius:50% 50% 40% 40% / 60% 60% 40% 40%;
+    clip-path:polygon(50% 0, 100% 30%, 95% 90%, 5% 90%, 0 30%);
+    box-shadow:inset 0 -8px 12px rgba(120,60,10,.5);
+    z-index:3;
+  }
+  .gr-shawl::after {
+    content:''; position:absolute; bottom:-4px; left:50%;
+    transform:translateX(-50%);
+    width:12px; height:12px;
+    background:radial-gradient(circle, #e8d060 0%, #a87010 100%);
+    border-radius:50%;
+    border:1px solid #6a4010;
+  }
+  .gr-shawl::before {
+    content:''; position:absolute; top:20px; left:50%;
+    transform:translateX(-50%);
+    width:10px; height:10px;
+    background:radial-gradient(circle, #ff88cc 0%, #cc2266 100%);
+    border-radius:50%;
+    box-shadow:
+      -8px 0 0 -2px #ffaadd, 8px 0 0 -2px #ffaadd,
+      0 -8px 0 -2px #ffaadd, 0 8px 0 -2px #ffaadd;
+  }
+  .gr-glasses {
+    position:absolute; top:30px; left:14px;
+    width:54px; height:16px;
+    z-index:4;
+  }
+  .gr-glasses::before,
+  .gr-glasses::after {
+    content:''; position:absolute;
+    top:0; width:20px; height:16px;
+    border:2px solid #3a2a1a;
+    background:radial-gradient(circle at 40% 40%, rgba(255,255,255,.7), rgba(180,200,220,.4));
+    border-radius:50%;
+    box-shadow:0 0 4px rgba(0,0,0,.4);
+  }
+  .gr-glasses::before { left:0; }
+  .gr-glasses::after  { right:0; }
+  .gr-glasses .bridge {
+    position:absolute; top:6px; left:50%;
+    transform:translateX(-50%);
+    width:14px; height:2px;
+    background:#3a2a1a;
+  }
+  .gr-glasses .temple-l,
+  .gr-glasses .temple-r {
+    position:absolute; top:4px;
+    width:10px; height:2px;
+    background:#3a2a1a;
+  }
+  .gr-glasses .temple-l { left:-8px; }
+  .gr-glasses .temple-r { right:-8px; }
+  .gr-eye {
+    position:absolute; top:36px;
+    width:4px; height:4px;
+    background:#3a2010;
+    border-radius:50%;
+    z-index:5;
+  }
+  .gr-eye.l { left:26px; } .gr-eye.r { right:26px; }
+  .gr-smile {
+    position:absolute; top:48px; left:50%;
+    transform:translateX(-50%);
+    width:14px; height:5px;
+    border-bottom:2px solid #8a3a20;
+    border-radius:0 0 12px 12px;
+    z-index:5;
+  }
+  .gr-basket {
+    position:absolute; top:92px; right:-32px;
+    width:36px; height:26px;
+    background:
+      repeating-linear-gradient(0deg, #a87030 0 3px, #6a4010 3px 5px),
+      repeating-linear-gradient(90deg, #a87030 0 3px, #6a4010 3px 5px);
+    border-radius:4px 4px 10px 10px;
+    border:2px solid #4a2a08;
+    box-shadow:inset 0 0 8px rgba(0,0,0,.5);
+    z-index:3;
+    animation:basketBob 1.4s infinite alternate;
+  }
+  .gr-basket::before {
+    content:''; position:absolute; top:-10px; left:50%;
+    transform:translateX(-50%);
+    width:28px; height:12px;
+    border:3px solid #6a4010;
+    border-bottom:none;
+    border-radius:14px 14px 0 0;
+  }
+  .gr-basket::after {
+    content:''; position:absolute; top:-10px; left:4px; right:4px;
+    height:10px;
+    background:
+      radial-gradient(circle at 20% 100%, #ffb347 0 5px, transparent 6px),
+      radial-gradient(circle at 50% 80%, #ff7518 0 6px, transparent 7px),
+      radial-gradient(circle at 80% 100%, #ffb347 0 5px, transparent 6px);
+  }
+  @keyframes basketBob {
+    0% { transform:rotate(-3deg) translateY(0); }
+    100% { transform:rotate(3deg) translateY(-2px); }
+  }
+
+  /* ЛЕГОЛАС */
+  .lg-cloak {
+    position:absolute; top:48px; left:2px;
+    width:76px; height:86px;
+    background:linear-gradient(160deg, #4a6a3a 0%, #2a4a20 50%, #0a1a08 100%);
+    clip-path:polygon(35% 0, 65% 0, 100% 60%, 90% 100%, 10% 100%, 0 60%);
+    z-index:-1;
+    box-shadow:inset 0 0 20px rgba(0,0,0,.6);
+  }
+  .lg-body {
+    position:absolute; top:52px; left:16px;
+    width:48px; height:62px;
+    background:linear-gradient(180deg, #6a8a4a 0%, #3a5a2a 60%, #1a2a10 100%);
+    border-radius:8px 8px 4px 4px;
+    border:1px solid #000;
+    box-shadow:inset 0 0 12px rgba(0,0,0,.7), inset -4px 0 8px rgba(0,0,0,.5);
+  }
+  .lg-body::before {
+    content:''; position:absolute; top:8px; left:50%;
+    transform:translateX(-50%);
+    width:20px; height:30px;
+    background:
+      radial-gradient(ellipse at 50% 20%, rgba(220,200,120,.7) 0 3px, transparent 4px),
+      radial-gradient(ellipse at 50% 50%, rgba(220,200,120,.5) 0 4px, transparent 5px),
+      radial-gradient(ellipse at 50% 80%, rgba(220,200,120,.7) 0 3px, transparent 4px);
+    border-radius:2px;
+  }
+  .lg-belt {
+    position:absolute; top:102px; left:14px;
+    width:52px; height:10px;
+    background:linear-gradient(180deg, #8a5a20, #4a2a08);
+    border-radius:2px;
+    border:1px solid #000;
+  }
+  .lg-belt::before {
+    content:''; position:absolute; left:50%; top:2px;
+    transform:translateX(-50%);
+    width:8px; height:6px;
+    background:radial-gradient(circle, #d8c060 0 2px, #8a6a20 100%);
+    border-radius:2px;
+  }
+  .lg-head {
+    position:absolute; top:14px; left:18px;
+    width:44px; height:46px;
+    background:radial-gradient(circle at 40% 35%, #ffdbaa 0%, #e8b880 60%, #a87a50 100%);
+    border-radius:50% 50% 45% 45%;
+    border:1px solid #000;
+    box-shadow:inset -3px -3px 6px rgba(0,0,0,.3);
+    z-index:2;
+  }
+  .lg-hair {
+    position:absolute; top:6px; left:10px;
+    width:60px; height:80px;
+    background:linear-gradient(180deg, #f0d88a 0%, #d8b860 40%, #a88838 100%);
+    border-radius:50% 50% 30% 30%;
+    clip-path:polygon(
+      10% 0, 90% 0, 100% 20%, 95% 60%, 88% 95%, 80% 100%,
+      78% 70%, 70% 95%, 60% 100%, 55% 70%, 45% 100%, 40% 95%,
+      30% 70%, 22% 100%, 15% 95%, 12% 60%, 5% 20%);
+    box-shadow:inset 0 -20px 30px rgba(0,0,0,.3);
+    z-index:1;
+  }
+  .lg-hair::after {
+    content:''; position:absolute; top:16px; left:4px;
+    width:10px; height:14px;
+    background:linear-gradient(180deg, #6a8a3a, #2a4a10);
+    border-radius:50% 0 50% 0;
+    transform:rotate(-20deg);
+    box-shadow:inset -2px 0 3px rgba(0,0,0,.4);
+  }
+  .lg-ear {
+    position:absolute; top:36px;
+    width:10px; height:16px;
+    background:linear-gradient(180deg, #e8b880, #c99a60);
+    border-radius:50% 0 50% 50%;
+    border:1px solid #000;
+    box-shadow:inset -1px 0 2px rgba(0,0,0,.4);
+    z-index:3;
+  }
+  .lg-ear.l { left:8px; transform:rotate(-25deg); clip-path:polygon(0 0, 100% 40%, 100% 100%, 0 100%); }
+  .lg-ear.r { right:8px; transform:rotate(25deg);  clip-path:polygon(100% 0, 0 40%, 0 100%, 100% 100%); }
+  .lg-eye {
+    position:absolute; top:34px;
+    width:7px; height:7px;
+    background:radial-gradient(circle, #aaddff 0%, #3a7aff 60%, #1028a0 100%);
+    border-radius:50%;
+    box-shadow:0 0 8px #3a7aff, 0 0 14px #3a7aff;
+    z-index:4;
+  }
+  .lg-eye.l { left:26px; } .lg-eye.r { right:26px; }
+  .lg-brow {
+    position:absolute; top:28px;
+    width:8px; height:2px;
+    background:#8a6a30;
+    border-radius:1px;
+    z-index:4;
+  }
+  .lg-brow.l { left:25px; transform:rotate(-10deg); }
+  .lg-brow.r { right:25px; transform:rotate(10deg); }
+  .lg-leg {
+    position:absolute; top:108px;
+    width:18px; height:44px;
+    background:linear-gradient(180deg, #3a4a2a, #0a1008);
+    border-radius:4px;
+    border:1px solid #000;
+  }
+  .lg-leg.l { left:18px; } .lg-leg.r { right:18px; }
+  .lg-boot {
+    position:absolute; top:144px;
+    width:22px; height:10px;
+    background:linear-gradient(180deg, #5a3a10, #2a1a04);
+    border-radius:3px 3px 6px 6px;
+    border:1px solid #000;
+  }
+  .lg-boot.l { left:16px; } .lg-boot.r { right:16px; }
+  .lg-arm {
+    position:absolute; top:64px;
+    width:14px; height:46px;
+    background:linear-gradient(180deg, #5a8a3a, #1a2a10);
+    border-radius:6px;
+    border:1px solid #000;
+  }
+  .lg-arm.l { left:2px; transform:rotate(15deg); transform-origin:top center;}
+  .lg-arm.r { right:2px; transform:rotate(-30deg); transform-origin:top center;}
+  .lg-arm::after {
+    content:''; position:absolute;
+    left:-1px; right:-1px; top:28px;
+    height:10px;
+    background:linear-gradient(180deg, #8a5a20, #4a2a08);
+    border-radius:2px;
+    border:1px solid #000;
+  }
+  .lg-bow {
+    position:absolute; top:50px; right:-16px;
+    width:8px; height:86px;
+    background:linear-gradient(180deg,
+      #a87a30 0%, #d8a848 30%, #a87a30 60%, #6a4a10 100%);
+    border-radius:6px 6px 3px 3px;
+    transform:rotate(8deg);
+    box-shadow:inset -1px 0 2px rgba(0,0,0,.5), 0 0 6px rgba(200,150,60,.4);
+    z-index:0;
+  }
+  .lg-bow::before, .lg-bow::after {
+    content:''; position:absolute; left:-4px;
+    width:16px; height:16px;
+    background:linear-gradient(180deg, #d8a848, #8a5a10);
+    border-radius:50% 50% 0 0;
+  }
+  .lg-bow::before { top:-4px; transform:rotate(-20deg); }
+  .lg-bow::after  { bottom:-4px; transform:rotate(160deg); }
+  .lg-string {
+    position:absolute; top:52px; right:-14px;
+    width:2px; height:82px;
+    background:linear-gradient(180deg, transparent, #e8e0c0 20%, #ffffff 50%, #e8e0c0 80%, transparent);
+    transform:rotate(8deg);
+    box-shadow:0 0 3px rgba(255,255,255,.8);
+    z-index:1;
+  }
+  .lg-quiver {
+    position:absolute; top:56px; left:-6px;
+    width:16px; height:50px;
+    background:linear-gradient(180deg, #6a4a20, #2a1a08);
+    border-radius:4px;
+    border:1px solid #000;
+    transform:rotate(-18deg);
+    z-index:-1;
+  }
+  .lg-quiver::before {
+    content:''; position:absolute; top:-10px; left:1px; right:1px;
+    height:12px;
+    background:repeating-linear-gradient(90deg,
+        transparent 0 2px, #d8e8c0 2px 4px, #8aa860 4px 5px);
+  }
+  .lg-quiver::after {
+    content:''; position:absolute; top:-6px; left:50%;
+    transform:translateX(-50%);
+    width:10px; height:8px;
+    background:radial-gradient(ellipse, #d8e8c0, #6a8a3a);
+    clip-path:polygon(50% 0, 100% 100%, 0 100%);
+  }
+
+  /* ОВЕРЛЕИ */
+  .overlay {
+    position:absolute; inset:0;
+    background:rgba(0,0,0,.94);
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    z-index:100; text-align:center; padding:24px;
+    overflow-y:auto;
+  }
+  .overlay h1 {
+    font-size:40px; margin-bottom:10px; color:#cc2222;
+    text-shadow:0 0 20px #8a0000, 0 0 40px #ff2200;
+    letter-spacing:3px;
+  }
+  .overlay h2 { font-size:20px; margin:10px 0 6px; color:#ff8844; letter-spacing:2px; }
+  .overlay p { font-size:15px; margin:4px 0; color:#bbbbbb; max-width:840px; }
+  .overlay b { color:#ff8844; }
+
+  #wordInput {
+    width:420px; height:170px;
+    margin:14px 0;
+    padding:14px 18px;
+    background:linear-gradient(180deg, #f5e9c8 0%, #e8d8a8 100%);
+    color:#3a2000;
+    border:3px solid #8a5a20;
+    border-radius:8px;
+    font-size:24px;
+    font-family:'KaiTi','SimSun','Microsoft YaHei',serif;
+    resize:none; outline:none;
+    line-height:1.5;
+    text-align:left;
+    letter-spacing:4px;
+    box-shadow:inset 0 0 30px rgba(180,140,60,.3), 0 6px 20px rgba(0,0,0,.5);
+    font-weight:500;
+    transition:all .2s;
+  }
+  #wordInput::placeholder {
+    color:rgba(120,80,20,.5);
+    font-style:italic;
+    font-size:16px;
+    letter-spacing:1px;
+  }
+  #wordInput:focus {
+    border-color:#cc2222;
+    box-shadow:inset 0 0 30px rgba(180,140,60,.4), 0 6px 20px rgba(0,0,0,.5),
+      0 0 30px rgba(200,40,40,.6);
+    transform:translateY(-1px);
+  }
+
+  .optGroup { margin:10px 0; }
+  .optGroup h3 { font-size:16px; color:#ff8844; margin-bottom:8px; letter-spacing:2px; }
+  .optRow { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+  .optBtn {
+    padding:10px 22px; font-size:15px;
+    background:rgba(30,10,10,.8); color:#dddddd;
+    border:2px solid #6a1010; border-radius:6px;
+    cursor:pointer; letter-spacing:1px;
+    font-family:inherit; transition:all .15s;
+  }
+  .optBtn:hover { border-color:#cc2222; color:#fff; }
+  .optBtn.active {
+    background:linear-gradient(180deg, #8a1010, #3a0505);
+    border-color:#cc2222; color:#ffffff;
+    box-shadow:0 0 20px rgba(200,20,20,.7);
+    text-shadow:0 0 8px rgba(255,60,60,.9);
+  }
+
+  .overlay .bigBtn {
+    margin-top:16px; padding:14px 44px;
+    font-size:22px; font-weight:bold;
+    background:linear-gradient(180deg, #8a1010, #3a0505);
+    color:#ffdddd; border:2px solid #cc2222; border-radius:6px;
+    cursor:pointer; letter-spacing:3px;
+    font-family:inherit;
+    box-shadow:0 0 25px rgba(180,0,0,.6), inset 0 0 20px rgba(0,0,0,.6);
+    transition:all .15s;
+    text-shadow:0 0 10px rgba(255,60,60,.8);
+  }
+  .overlay .bigBtn:hover {
+    background:linear-gradient(180deg, #cc1818, #5a0808);
+    box-shadow:0 0 40px rgba(255,40,40,.9), inset 0 0 20px rgba(0,0,0,.6);
+  }
+  .overlay .bigBtn:active { transform:translateY(2px); }
+
+  .hidden { display:none !important; }
+
+  #hint {
+    position:absolute; bottom:12px; left:50%;
+    transform:translateX(-50%);
+    background:rgba(10,0,0,.8);
+    padding:6px 22px; border-radius:20px;
+    font-size:13px; color:#ff8844;
+    border:1px solid #6a1010;
+    letter-spacing:1px; z-index:20;
+    transition:all .4s;
+  }
+  body.theme-funny #hint {
+    background:rgba(255,255,255,.9); color:#6a3a00;
+    border:2px solid #ff8844;
+  }
+  body.theme-lotr #hint {
+    background:rgba(30,50,20,.85); color:#e8f0c8;
+    border:1px solid #8ab86a;
+  }
+  #hint b { color:#ff2222; text-shadow:0 0 8px #ff2200; }
+  body.theme-funny #hint b { color:#d95400; text-shadow:none; }
+  body.theme-lotr #hint b { color:#d8e88a; text-shadow:0 0 8px rgba(180,220,140,.6); }
+
+  #hitFlash {
+    position:absolute; inset:0;
+    background:radial-gradient(circle, transparent 40%, rgba(180,0,0,.7) 100%);
+    opacity:0; pointer-events:none; z-index:50;
+    transition:opacity .2s;
+  }
+
+  /* Победа */
+  #winScreen h1 { color:#ffd84a; text-shadow:0 0 20px #ffaa00, 0 0 40px #ff6600; }
+  .confetti {
+    position:absolute;
+    width:8px; height:14px;
+    top:-20px;
+    border-radius:2px;
+    z-index:99;
+    animation:confettiFall linear forwards;
+  }
+  @keyframes confettiFall {
+    0%   { transform:translateY(0) rotate(0); opacity:1; }
+    100% { transform:translateY(700px) rotate(720deg); opacity:0; }
+  }
+
+  /* Кнопка звука */
+  #muteBtn {
+    position:absolute; top:14px; right:14px;
+    padding:6px 12px;
+    background:rgba(10,0,0,.75);
+    border:1px solid #6a1010;
+    border-radius:4px;
+    color:#ff8844;
+    font-size:14px;
+    cursor:pointer;
+    z-index:21;
+    font-family:inherit;
+    transition:all .15s;
+  }
+  #muteBtn:hover { background:rgba(60,10,10,.9); color:#fff; }
+  body.theme-funny #muteBtn {
+    background:rgba(255,255,255,.9); color:#6a3a00;
+    border:2px solid #ff8844;
+  }
+  body.theme-lotr #muteBtn {
+    background:rgba(30,50,20,.85); color:#e8f0c8;
+    border:1px solid #8ab86a;
+  }
+
+  /* Начало игры — тоже с небольшой анимацией */
+  .intro-banner {
+    position:absolute; top:50%; left:50%;
+    transform:translate(-50%,-50%);
+    font-size:48px; font-weight:bold;
+    color:#fff;
+    text-shadow:0 0 30px #ff0000, 0 0 60px #ff0000;
+    z-index:80;
+    pointer-events:none;
+    animation:introAnim 2s ease-out forwards;
+    letter-spacing:4px;
+    font-family:'Courier New', monospace;
+  }
+  @keyframes introAnim {
+    0%   { opacity:0; transform:translate(-50%,-50%) scale(.3); }
+    20%  { opacity:1; transform:translate(-50%,-50%) scale(1.1); }
+    80%  { opacity:1; transform:translate(-50%,-50%) scale(1); }
+    100% { opacity:0; transform:translate(-50%,-50%) scale(2); }
+  }
+</style>
+</head>
+<body class="theme-horror">
+<div id="game">
+  <div id="stars"></div>
+  <div id="moon"></div>
+  <div id="scene"></div>
+  <div id="ground"></div>
+  <div id="fog"></div>
+  <div id="vignette"></div>
+
+  <div id="hud">
+    <div>💀 击杀: <span class="accent" id="score">0</span></div>
+    <div>❤ 生命: <span class="accent" id="lives">3</span></div>
+    <div>🌊 剩余: <span class="accent" id="wave">0</span></div>
+  </div>
+
+  <button id="muteBtn">🔊 声音: 开</button>
+
+  <div id="hint">老师: 学生读对时按 <b>空格键</b> 发射</div>
+  <div id="hitFlash"></div>
+  <div id="attackFlash"></div>
+
+  <div class="overlay" id="setupScreen">
+    <h1>🎃 万圣节汉字防御战 🧟</h1>
+    <h2>— 中文版 —</h2>
+    <p>老师，请输入要复习的汉字或词语，<b>每行一个</b>（如 妈妈、服务员、中国人）。</p>
+
+    <textarea id="wordInput" spellcheck="false"
+      placeholder="每行一个汉字或词语，例如：&#10;妈妈&#10;服务员&#10;中国人&#10;老师&#10;学生"></textarea>
+
+    <div class="optGroup">
+      <h3>选择难度</h3>
+      <div class="optRow" id="diffRow">
+        <button class="optBtn active" data-diff="easy">简单</button>
+        <button class="optBtn" data-diff="normal">普通</button>
+        <button class="optBtn" data-diff="hard">困难</button>
+      </div>
+    </div>
+
+    <div class="optGroup">
+      <h3>选择视觉风格</h3>
+      <div class="optRow" id="themeRow">
+        <button class="optBtn active" data-theme="horror">恐怖战士</button>
+        <button class="optBtn" data-theme="funny">搞笑奶奶</button>
+        <button class="optBtn" data-theme="lotr">魔戒弓箭手</button>
+      </div>
+    </div>
+
+    <button class="bigBtn" id="startBtn">▶ 开始防御</button>
+  </div>
+
+  <div class="overlay hidden" id="loseScreen">
+    <h1>💀 你死了 💀</h1>
+    <h2>— 僵尸突破了防线 —</h2>
+    <p>击杀数: <b id="finalScore">0</b></p>
+    <p>到达波次: <b id="finalWave">1</b></p>
+    <button class="bigBtn" id="restartBtn">🔄 再玩一次</button>
+  </div>
+
+  <div class="overlay hidden" id="winScreen">
+    <h1>🏆 胜利！ 🏆</h1>
+    <h2>— 全部汉字已击破！ —</h2>
+    <p>你答对了全部 <b id="winTotal">0</b> 个汉字！</p>
+    <p>剩余生命: <b id="winLives">3</b> / 3</p>
+    <p style="font-size:20px; margin-top:20px; color:#ffd84a;">🎉 恭喜你，学习小英雄！ 🎉</p>
+    <button class="bigBtn" id="winRestartBtn">🔄 再玩一次</button>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   ЗВУК (Web Audio API, без внешних файлов)
+   ========================================================= */
+const Sound = (() => {
+  let ctx = null;
+  let muted = false;
+  let bgGain = null;
+  let bgSources = [];   // активные узлы фоновой музыки
+  let bgLoopId = null;
+
+  function ensure() {
+    if (!ctx) {
+      try {
+        ctx = new (window.AudioContext || window.webkitAudioContext)();
+      } catch (e) {
+        console.warn('Web Audio не поддерживается');
+      }
+    }
+    if (ctx && ctx.state === 'suspended') ctx.resume();
+    return ctx;
+  }
+
+  /* ---------- простые генераторы ---------- */
+  function playOsc({ freq=440, dur=0.2, type='sine', vol=0.15, slideTo=null, delay=0, attack=0.005, release=0.05 }) {
+    if (muted) return;
+    const c = ensure();
+    if (!c) return;
+    const t0 = c.currentTime + delay;
+    const osc = c.createOscillator();
+    const g = c.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, t0);
+    if (slideTo) osc.frequency.exponentialRampToValueAtTime(Math.max(1, slideTo), t0 + dur);
+    g.gain.setValueAtTime(0, t0);
+    g.gain.linearRampToValueAtTime(vol, t0 + attack);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur + release);
+    osc.connect(g).connect(c.destination);
+    osc.start(t0);
+    osc.stop(t0 + dur + release + 0.02);
+  }
+
+  function playNoise({ dur=0.2, vol=0.15, filterFreq=1000, filterQ=1, filterType='lowpass', delay=0 }) {
+    if (muted) return;
+    const c = ensure();
+    if (!c) return;
+    const t0 = c.currentTime + delay;
+    const bufferSize = Math.floor(c.sampleRate * dur);
+    const buffer = c.createBuffer(1, bufferSize, c.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+    const src = c.createBufferSource();
+    src.buffer = buffer;
+    const filter = c.createBiquadFilter();
+    filter.type = filterType;
+    filter.frequency.value = filterFreq;
+    filter.Q.value = filterQ;
+    const g = c.createGain();
+    g.gain.setValueAtTime(vol, t0);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    src.connect(filter).connect(g).connect(c.destination);
+    src.start(t0);
+    src.stop(t0 + dur + 0.05);
+  }
+
+  /* ---------- эффекты ---------- */
+  // выстрел бластера (sci-fi)
+  function blaster() {
+    playOsc({ freq:1600, dur:0.12, type:'sawtooth', vol:0.12, slideTo:200 });
+    playOsc({ freq:800, dur:0.15, type:'square', vol:0.06, slideTo:100, delay:0.02 });
+    playNoise({ dur:0.06, vol:0.05, filterFreq:4000 });
+  }
+  // стрела Леголаса
+  function arrow() {
+    playNoise({ dur:0.25, vol:0.12, filterFreq:3000, filterType:'bandpass', filterQ:2 });
+    playOsc({ freq:1800, dur:0.18, type:'sine', vol:0.05, slideTo:400 });
+  }
+  // бросок тыквы
+  function pumpkinThrow() {
+    playOsc({ freq:280, dur:0.18, type:'triangle', vol:0.15, slideTo:120 });
+    playNoise({ dur:0.15, vol:0.08, filterFreq:800 });
+  }
+  // попадание/взрыв
+  function hit() {
+    playNoise({ dur:0.35, vol:0.28, filterFreq:600, filterQ:1 });
+    playOsc({ freq:120, dur:0.35, type:'sine', vol:0.22, slideTo:40 });
+    playOsc({ freq:240, dur:0.2, type:'sawtooth', vol:0.1, slideTo:60, delay:0.02 });
+  }
+  // атака зомби — жуткий рык
+  function zombieAttack() {
+    playOsc({ freq:90, dur:0.6, type:'sawtooth', vol:0.22, slideTo:45 });
+    playNoise({ dur:0.5, vol:0.18, filterFreq:400, filterType:'lowpass' });
+    playOsc({ freq:220, dur:0.4, type:'triangle', vol:0.1, slideTo:80, delay:0.05 });
+  }
+  // победа
+  function victory() {
+    const notes = [523.25, 659.25, 783.99, 1046.5]; // C E G C
+    notes.forEach((f, i) => {
+      playOsc({ freq:f, dur:0.35, type:'triangle', vol:0.18, delay:i * 0.15 });
+      playOsc({ freq:f*2, dur:0.3, type:'sine', vol:0.08, delay:i * 0.15 });
+    });
+  }
+  // проигрыш
+  function defeat() {
+    playOsc({ freq:220, dur:0.4, type:'sawtooth', vol:0.18 });
+    playOsc({ freq:180, dur:0.5, type:'sawtooth', vol:0.18, delay:0.25 });
+    playOsc({ freq:120, dur:0.9, type:'sawtooth', vol:0.22, delay:0.55 });
+  }
+
+  /* ---------- фоновая музыка ---------- */
+  function stopBg() {
+    bgSources.forEach(s => { try { s.stop(); } catch(e){} });
+    bgSources = [];
+    if (bgLoopId) { clearTimeout(bgLoopId); bgLoopId = null; }
+  }
+
+  // создаём непрерывный «дрон» (низкая нота)
+  function drone(freq, vol, type='sine') {
+    const c = ensure();
+    if (!c) return;
+    const osc = c.createOscillator();
+    const g = c.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    g.gain.value = vol;
+    osc.connect(g).connect(c.destination);
+    osc.start();
+    bgSources.push(osc);
+    return { osc, g };
+  }
+
+  function startBg(themeName) {
+    if (muted) return;
+    stopBg();
+    const c = ensure();
+    if (!c) return;
+
+    if (themeName === 'horror') {
+      // мрачный эмбиент
+      drone(55, 0.05, 'sine');
+      drone(82.4, 0.04, 'triangle');
+      drone(110, 0.03, 'sine');
+      // лёгкий «шум ветра»
+      const bufferSize = c.sampleRate * 4;
+      const buffer = c.createBuffer(1, bufferSize, c.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) data[i] = (Math.random()*2-1)*0.15;
+      const src = c.createBufferSource();
+      src.buffer = buffer; src.loop = true;
+      const filter = c.createBiquadFilter();
+      filter.type = 'lowpass'; filter.frequency.value = 250;
+      const g = c.createGain(); g.gain.value = 0.15;
+      src.connect(filter).connect(g).connect(c.destination);
+      src.start();
+      bgSources.push(src);
+    } else if (themeName === 'funny') {
+      // весёлая мелодия — короткие ноты по кругу
+      const melody = [
+        [659.25, 0.15], [784.0, 0.15], [880.0, 0.15], [1046.5, 0.15],
+        [880.0, 0.15], [784.0, 0.15], [659.25, 0.3],
+        [587.33, 0.15], [659.25, 0.15], [784.0, 0.15], [880.0, 0.3],
+        [784.0, 0.15], [659.25, 0.15], [587.33, 0.4]
+      ];
+      let idx = 0;
+      function playNote() {
+        if (muted) return;
+        const [freq, dur] = melody[idx];
+        playOsc({ freq, dur, type:'triangle', vol:0.06 });
+        idx = (idx + 1) % melody.length;
+        bgLoopId = setTimeout(playNote, dur * 1000 + 80);
+      }
+      playNote();
+      // лёгкий бас
+      drone(130.8, 0.03, 'sine');
+    } else if (themeName === 'lotr') {
+      // эпичный эмбиент с «шантом»
+      drone(98, 0.05, 'sine');
+      drone(146.8, 0.035, 'triangle');
+      drone(196, 0.03, 'sine');
+      // далёкие «эльфийские» колокольчики
+      const notes = [523.25, 587.33, 659.25, 783.99];
+      let i = 0;
+      function chime() {
+        if (muted) return;
+        playOsc({ freq: notes[i % notes.length], dur: 1.2, type:'sine', vol:0.035 });
+        i++;
+        bgLoopId = setTimeout(chime, 1800);
+      }
+      chime();
+    }
+  }
+
+  function setMuted(v) {
+    muted = v;
+    if (v) stopBg();
+  }
+  function isMuted() { return muted; }
+
+  return { blaster, arrow, pumpkinThrow, hit, zombieAttack, victory, defeat, startBg, stopBg, setMuted, isMuted };
+})();
+
+/* =========================================================
+   DOM и состояние
+   ========================================================= */
+const game       = document.getElementById('game');
+const scoreEl    = document.getElementById('score');
+const livesEl    = document.getElementById('lives');
+const waveEl     = document.getElementById('wave');
+const setupScr   = document.getElementById('setupScreen');
+const loseScr    = document.getElementById('loseScreen');
+const winScr     = document.getElementById('winScreen');
+const finalScr   = document.getElementById('finalScore');
+const finalWv    = document.getElementById('finalWave');
+const winTotal   = document.getElementById('winTotal');
+const winLives   = document.getElementById('winLives');
+const startBtn   = document.getElementById('startBtn');
+const restartBtn = document.getElementById('restartBtn');
+const winRestartBtn = document.getElementById('winRestartBtn');
+const wordInput  = document.getElementById('wordInput');
+const hitFlash   = document.getElementById('hitFlash');
+const attackFlash= document.getElementById('attackFlash');
+const sceneEl    = document.getElementById('scene');
+const starsEl    = document.getElementById('stars');
+const muteBtn    = document.getElementById('muteBtn');
+
+wordInput.value = '';
+
+let difficulty = 'easy';
+let theme = 'horror';
+
+document.querySelectorAll('#diffRow .optBtn').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('#diffRow .optBtn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    difficulty = btn.dataset.diff;
+  };
+});
+document.querySelectorAll('#themeRow .optBtn').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('#themeRow .optBtn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    theme = btn.dataset.theme;
+    applyTheme();
+  };
+});
+
+const DIFF = {
+  easy:   { startSpeed: 0.35, spawn: 3000, speedStep: 0.10, spawnStep: 250, minSpawn: 1300, minSpeed: 1.3 },
+  normal: { startSpeed: 0.55, spawn: 2400, speedStep: 0.14, spawnStep: 300, minSpawn: 950,  minSpeed: 1.8 },
+  hard:   { startSpeed: 0.85, spawn: 1800, speedStep: 0.18, spawnStep: 320, minSpawn: 700,  minSpeed: 2.4 },
+};
+
+/* --------- состояние игры --------- */
+let WORD_QUEUE = [];     // оставшиеся слова (по одному на каждого будущего зомби)
+let TOTAL_WORDS = 0;     // сколько всего уникальных слов в начале
+let KILLED = 0;          // сколько слов убито
+let running = false;
+let score = 0, lives = 3, wave = 1;
+let zombies = [];
+let spawnTimer = 0;
+let spawnInterval = 3000;
+let zombieSpeed = 0.35;
+let lastTime = 0;
+let rafId = null;
+let slowmo = 0;          // длительность замедления (мс)
+let slowmoFactor = 1;
+
+/* =========================================================
+   Тема
+   ========================================================= */
+function applyTheme() {
+  document.body.className = 'theme-' + theme;
+  buildStars();
+  buildScene();
+}
+
+function buildStars() {
+  starsEl.innerHTML = '';
+  if (theme !== 'horror') return;
+  for (let i = 0; i < 80; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const size = Math.random() * 2 + 1;
+    s.style.width = size + 'px';
+    s.style.height = size + 'px';
+    s.style.left = Math.random() * 100 + '%';
+    s.style.top  = Math.random() * 55 + '%';
+    s.style.animationDelay = (Math.random() * 3) + 's';
+    starsEl.appendChild(s);
+  }
+}
+
+function buildScene() {
+  sceneEl.innerHTML = '';
+  if (theme === 'horror') return;
+
+  if (theme === 'funny') {
+    const rb = document.createElement('div');
+    rb.className = 'rainbow';
+    sceneEl.appendChild(rb);
+
+    for (let i = 0; i < 5; i++) {
+      const c = document.createElement('div');
+      c.className = 'cloud';
+      const w = 80 + Math.random() * 80;
+      const h = 30 + Math.random() * 20;
+      c.style.width = w + 'px';
+      c.style.height = h + 'px';
+      c.style.left = (Math.random() * 90) + '%';
+      c.style.top  = (5 + Math.random() * 30) + '%';
+      c.style.animation = `float ${3 + Math.random() * 2}s ease-in-out infinite alternate`;
+      sceneEl.appendChild(c);
+    }
+
+    const candyColors = ['#ff4466', '#ffaa33', '#44cc44', '#4488ff', '#cc44ff'];
+    for (let i = 0; i < 25; i++) {
+      const cd = document.createElement('div');
+      cd.className = 'candy';
+      cd.style.left = (Math.random() * 95) + '%';
+      cd.style.bottom = (5 + Math.random() * 70) + 'px';
+      cd.style.background = candyColors[Math.floor(Math.random() * candyColors.length)];
+      sceneEl.appendChild(cd);
+    }
+
+    const balloonColors = ['#ff4466', '#ffaa33', '#44cc44', '#4488ff', '#cc44ff', '#ff88cc'];
+    for (let i = 0; i < 6; i++) {
+      const b = document.createElement('div');
+      b.className = 'balloon';
+      b.style.left = (5 + Math.random() * 90) + '%';
+      b.style.top = (15 + Math.random() * 30) + '%';
+      b.style.background = `radial-gradient(circle at 35% 35%, #fff 0%, ${balloonColors[i]} 60%)`;
+      b.style.animationDelay = (Math.random() * 3) + 's';
+      sceneEl.appendChild(b);
+    }
+    return;
+  }
+
+  if (theme === 'lotr') {
+    const sun = document.createElement('div');
+    sun.className = 'sun';
+    sceneEl.appendChild(sun);
+
+    for (let i = 0; i < 6; i++) {
+      const c = document.createElement('div');
+      c.className = 'softcloud';
+      const w = 100 + Math.random() * 100;
+      const h = 24 + Math.random() * 20;
+      c.style.width = w + 'px';
+      c.style.height = h + 'px';
+      c.style.left = (Math.random() * 90) + '%';
+      c.style.top  = (5 + Math.random() * 25) + '%';
+      c.style.animation = `float ${5 + Math.random() * 3}s ease-in-out infinite alternate`;
+      sceneEl.appendChild(c);
+    }
+
+    const mts = [
+      { x:'5%',  w:200, h:140, color:'#8aa4b8' },
+      { x:'25%', w:260, h:180, color:'#7a94a8' },
+      { x:'55%', w:240, h:160, color:'#8aa4b8' },
+      { x:'78%', w:220, h:150, color:'#7a94a8' },
+    ];
+    mts.forEach(m => {
+      const t = document.createElement('div');
+      t.className = 'mountain';
+      t.style.left = m.x;
+      t.style.borderLeftWidth  = (m.w/2) + 'px';
+      t.style.borderRightWidth = (m.w/2) + 'px';
+      t.style.borderBottomWidth = m.h + 'px';
+      t.style.borderLeftColor  = 'transparent';
+      t.style.borderRightColor = 'transparent';
+      t.style.borderBottomColor = m.color;
+      t.style.filter = 'drop-shadow(0 4px 8px rgba(0,0,0,.2))';
+      sceneEl.appendChild(t);
+      const snow = document.createElement('div');
+      snow.style.cssText = `
+        position:absolute; left:${m.x}; bottom:${80 + m.h - 30}px;
+        width:0; height:0;
+        border-left:${m.w/6}px solid transparent;
+        border-right:${m.w/6}px solid transparent;
+        border-bottom:30px solid rgba(255,255,255,.85);
+        transform:translateX(${m.w/3}px);
+      `;
+      sceneEl.appendChild(snow);
+    });
+
+    for (let i = 0; i < 3; i++) {
+      const h = document.createElement('div');
+      h.className = 'hill';
+      const w = 400 + Math.random() * 300;
+      const hh = 60 + Math.random() * 40;
+      h.style.width = w + 'px';
+      h.style.height = hh + 'px';
+      h.style.left = (i * 35 - 10) + '%';
+      h.style.background = `radial-gradient(ellipse at 50% 100%, #7aad5a 0%, #4a7a28 100%)`;
+      h.style.opacity = .95;
+      sceneEl.appendChild(h);
+    }
+
+    const trees = [{ x:'10%' }, { x:'30%' }, { x:'55%' }, { x:'80%' }, { x:'92%' }];
+    trees.forEach(t => {
+      const tr = document.createElement('div');
+      tr.className = 'lotr-tree';
+      tr.style.left = t.x;
+      tr.style.transform = `scale(${0.8 + Math.random() * 0.4})`;
+      sceneEl.appendChild(tr);
+    });
+    return;
+  }
+}
+
+applyTheme();
+
+/* =========================================================
+   Герой
+   ========================================================= */
+function renderHero() {
+  const hero = document.createElement('div');
+  hero.id = 'hero';
+
+  if (theme === 'horror')      hero.innerHTML = heroHorror();
+  else if (theme === 'funny')  hero.innerHTML = heroGranny();
+  else                         hero.innerHTML = heroLOTR();
+
+  const old = document.getElementById('hero');
+  if (old) old.remove();
+  game.appendChild(hero);
+}
+
+function heroHorror() {
+  return `
+    <div class="hr-leg l"></div><div class="hr-leg r"></div>
+    <div class="hr-boot l"></div><div class="hr-boot r"></div>
+    <div class="hr-torso"></div><div class="hr-vest"></div><div class="hr-belt"></div>
+    <div class="hr-arm l"></div><div class="hr-arm r"></div><div class="hr-gun"></div>
+    <div class="hr-head"></div><div class="hr-cap"></div>
+    <div class="hr-mask"></div><div class="hr-filter"></div>
+  `;
+}
+function heroGranny() {
+  return `
+    <div class="gr-leg l"></div><div class="gr-leg r"></div>
+    <div class="gr-boot l"></div><div class="gr-boot r"></div>
+    <div class="gr-dress"></div>
+    <div class="gr-arm l"></div><div class="gr-arm r"></div>
+    <div class="gr-apron"></div>
+    <div class="gr-head"></div>
+    <div class="gr-shawl"></div>
+    <div class="gr-glasses">
+      <div class="bridge"></div>
+      <div class="temple-l"></div>
+      <div class="temple-r"></div>
+    </div>
+    <div class="gr-eye l"></div><div class="gr-eye r"></div>
+    <div class="gr-smile"></div>
+    <div class="gr-basket"></div>
+  `;
+}
+function heroLOTR() {
+  return `
+    <div class="lg-quiver"></div>
+    <div class="lg-cloak"></div>
+    <div class="lg-leg l"></div><div class="lg-leg r"></div>
+    <div class="lg-boot l"></div><div class="lg-boot r"></div>
+    <div class="lg-body"></div>
+    <div class="lg-belt"></div>
+    <div class="lg-arm l"></div><div class="lg-arm r"></div>
+    <div class="lg-bow"></div>
+    <div class="lg-string"></div>
+    <div class="lg-head"></div>
+    <div class="lg-ear l"></div><div class="lg-ear r"></div>
+    <div class="lg-hair"></div>
+    <div class="lg-brow l"></div><div class="lg-brow r"></div>
+    <div class="lg-eye l"></div><div class="lg-eye r"></div>
+  `;
+}
+
+/* =========================================================
+   Враги
+   ========================================================= */
+function heroPos() {
+  const h = document.getElementById('hero');
+  if (!h) return { x: 170, y: 480 };
+  const r = h.getBoundingClientRect();
+  const g = game.getBoundingClientRect();
+  return { x: r.left - g.left + r.width / 2, y: r.top - g.top + r.height / 2 };
+}
+
+function pickNextWord() {
+  if (WORD_QUEUE.length === 0) return null;
+  return WORD_QUEUE.shift();
+}
+
+function spawnEnemy() {
+  if (WORD_QUEUE.length === 0) return false;
+  const word = pickNextWord();
+  if (!word) return false;
+
+  const z = document.createElement('div');
+  z.className = 'zombie';
+  if (theme === 'lotr') z.classList.add('orc');
+
+  const lenClass = word.length <= 1 ? '' :
+                   word.length === 2 ? 'len-2' :
+                   word.length === 3 ? 'len-3' :
+                   word.length === 4 ? 'len-4' : 'len-5';
+
+  z.innerHTML = `
+    <div class="sign ${lenClass}">${word}</div>
+    <div class="z-head">
+      <div class="z-eye l"></div><div class="z-eye r"></div>
+      <div class="z-mouth"></div>
+    </div>
+    <div class="z-torso"></div>
+    <div class="z-arm l"></div><div class="z-arm r"></div>
+    <div class="z-leg l"></div><div class="z-leg r"></div>
+    <div class="z-shadow"></div>
+  `;
+  game.appendChild(z);
+
+  const startX = game.clientWidth + 30;
+  z.style.left = startX + 'px';
+  z.style.bottom = '50px';
+
+  zombies.push({
+    el: z, word,
+    x: startX,
+    speed: zombieSpeed * (0.9 + Math.random() * 0.4),
+    alive: true
+  });
+  return true;
+}
+
+/* =========================================================
+   Выстрел
+   ========================================================= */
+function shoot(target) {
+  if (!target || !target.alive) return;
+
+  const hp = heroPos();
+  const zr = target.el.getBoundingClientRect();
+  const gr = game.getBoundingClientRect();
+
+  const signEl = target.el.querySelector('.sign');
+  const sr = signEl ? signEl.getBoundingClientRect() : zr;
+  const tx = sr.left - gr.left + sr.width / 2;
+  const ty = sr.top  - gr.top  + sr.height / 2;
+
+  let sx = hp.x + 30;
+  let sy = hp.y + 5;
+  if (theme === 'funny')      { sx = hp.x + 30; sy = hp.y + 10; }
+  else if (theme === 'lotr')  { sx = hp.x + 25; sy = hp.y - 10; }
+
+  const dx = tx - sx;
+  const dy = ty - sy;
+  const dist = Math.hypot(dx, dy);
+  const angleDeg = Math.atan2(dy, dx) * 180 / Math.PI;
+
+  /* === HORROR: мгновенный лазер === */
+  if (theme === 'horror') {
+    Sound.blaster();
+    const laser = document.createElement('div');
+    laser.className = 'laser';
+    laser.style.left = sx + 'px';
+    laser.style.top  = (sy - 4) + 'px';
+    laser.style.width = '0px';
+    laser.style.transformOrigin = '0 50%';
+    laser.style.transform = `rotate(${angleDeg}deg)`;
+    game.appendChild(laser);
+
+    let w = 0;
+    const grow = setInterval(() => {
+      w += dist / 5;
+      if (w >= dist) { w = dist; clearInterval(grow); }
+      laser.style.width = w + 'px';
+    }, 15);
+
+    setTimeout(() => {
+      laser.style.transition = 'opacity .12s';
+      laser.style.opacity = '0';
+      setTimeout(() => laser.remove(), 130);
+      killEnemy(target);
+    }, 150);
+    recoil();
+    return;
+  }
+
+  /* === FUNNY: тыковка === */
+  if (theme === 'funny') {
+    Sound.pumpkinThrow();
+    const proj = document.createElement('div');
+    proj.className = 'pumpkin-proj';
+    proj.innerHTML = `<div class="pj-stem"></div><div class="pj-mouth"></div>`;
+    proj.style.left = (sx - 18) + 'px';
+    proj.style.top  = (sy - 18) + 'px';
+    game.appendChild(proj);
+
+    const flightTime = Math.max(180, Math.min(600, dist * 1.1));
+    const startT = performance.now();
+    function flyPumpkin(now) {
+      const t = Math.min(1, (now - startT) / flightTime);
+      const cx = sx + (tx - sx) * t;
+      const cy = sy + (ty - sy) * t;
+      proj.style.left = (cx - 18) + 'px';
+      proj.style.top  = (cy - 18) + 'px';
+      proj.style.transform = `rotate(${t * 360}deg)`;
+      if (t < 1) requestAnimationFrame(flyPumpkin);
+      else { proj.remove(); killEnemy(target); }
+    }
+    requestAnimationFrame(flyPumpkin);
+    recoil();
+    return;
+  }
+
+  /* === LOTR: стрела === */
+  Sound.arrow();
+  const proj = document.createElement('div');
+  proj.className = 'arrow';
+  proj.style.left = sx + 'px';
+  proj.style.top  = (sy - 3) + 'px';
+  proj.style.transformOrigin = '0 50%';
+  proj.style.transform = `rotate(${angleDeg}deg)`;
+  game.appendChild(proj);
+
+  const flightTime = Math.max(180, Math.min(600, dist * 1.1));
+  const startT = performance.now();
+  const cos = Math.cos(angleDeg * Math.PI / 180);
+  const sin = Math.sin(angleDeg * Math.PI / 180);
+
+  function flyArrow(now) {
+    const t = Math.min(1, (now - startT) / flightTime);
+    const cx = sx + cos * dist * t;
+    const cy = sy + sin * dist * t;
+    proj.style.left = cx + 'px';
+    proj.style.top  = (cy - 3) + 'px';
+    if (t < 1) requestAnimationFrame(flyArrow);
+    else { proj.remove(); killEnemy(target); }
+  }
+  requestAnimationFrame(flyArrow);
+  recoil();
+}
+
+function recoil() {
+  const hero = document.getElementById('hero');
+  if (!hero) return;
+  hero.animate([
+    { transform:'translateX(0)' },
+    { transform:'translateX(-6px)' },
+    { transform:'translateX(0)' }
+  ], { duration:150 });
+}
+
+function killEnemy(z) {
+  if (!z.alive) return;
+  z.alive = false;
+
+  // звук попадания
+  Sound.hit();
+
+  const r = z.el.getBoundingClientRect();
+  const gr = game.getBoundingClientRect();
+  const cx = r.left - gr.left + r.width / 2;
+  const cy = r.top  - gr.top  + r.height / 2;
+
+  const ex = document.createElement('div');
+  ex.className = 'explosion';
+  ex.style.left = (cx - 40) + 'px';
+  ex.style.top  = (cy - 40) + 'px';
+  game.appendChild(ex);
+  setTimeout(() => ex.remove(), 600);
+
+  for (let i = 0; i < 10; i++) {
+    const sp = document.createElement('div');
+    sp.className = 'spark';
+    sp.style.left = cx + 'px';
+    sp.style.top  = cy + 'px';
+    const ang = Math.random() * Math.PI * 2;
+    const d = 30 + Math.random() * 50;
+    sp.style.transition = 'transform .5s ease-out, opacity .5s';
+    game.appendChild(sp);
+    requestAnimationFrame(() => {
+      sp.style.transform = `translate(${Math.cos(ang)*d}px, ${Math.sin(ang)*d}px) scale(0)`;
+      sp.style.opacity = '0';
+    });
+    setTimeout(() => sp.remove(), 550);
+  }
+
+  z.el.classList.add('dying');
+  setTimeout(() => z.el.remove(), 550);
+
+  score++;
+  KILLED++;
+  scoreEl.textContent = score;
+
+  // Обновляем счётчик оставшихся
+  updateRemaining();
+
+  if (score % 4 === 0) {
+    wave++;
+    const d = DIFF[difficulty];
+    spawnInterval = Math.max(d.minSpawn, spawnInterval - d.spawnStep);
+    zombieSpeed = Math.min(d.minSpeed, zombieSpeed + d.speedStep);
+  }
+
+  // Победа?
+  if (KILLED >= TOTAL_WORDS) {
+    setTimeout(winGame, 600);
+  }
+}
+
+function updateRemaining() {
+  const left = TOTAL_WORDS - KILLED;
+  waveEl.textContent = Math.max(0, left);
+}
+
+/* =========================================================
+   АТАКА ЗОМБИ (зрелищная)
+   ========================================================= */
+function hurtHero() {
+  // звук рыка
+  Sound.zombieAttack();
+
+  lives--;
+  livesEl.textContent = lives;
+
+  // 1. Красная вспышка
+  attackFlash.style.transition = 'opacity .05s';
+  attackFlash.style.opacity = '1';
+  setTimeout(() => {
+    attackFlash.style.transition = 'opacity .4s';
+    attackFlash.style.opacity = '0';
+  }, 90);
+
+  // 2. Тряска экрана
+  game.animate([
+    { transform:'translate(0,0) rotate(0)' },
+    { transform:'translate(-12px,8px) rotate(-1.5deg)' },
+    { transform:'translate(10px,-6px) rotate(1.5deg)' },
+    { transform:'translate(-8px,4px) rotate(-1deg)' },
+    { transform:'translate(6px,-3px) rotate(.5deg)' },
+    { transform:'translate(-3px,2px) rotate(0)' },
+    { transform:'translate(0,0) rotate(0)' }
+  ], { duration:500, easing:'ease-out' });
+
+  // 3. Кровавые брызги у героя
+  const hp = heroPos();
+  for (let i = 0; i < 12; i++) {
+    const b = document.createElement('div');
+    b.className = 'blood-splat';
+    const angle = Math.random() * Math.PI * 2;
+    const dist = 40 + Math.random() * 80;
+    b.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
+    b.style.setProperty('--dy', Math.sin(angle) * dist + 'px');
+    b.style.left = hp.x + 'px';
+    b.style.top  = hp.y + 'px';
+    b.style.width  = (8 + Math.random() * 16) + 'px';
+    b.style.height = (8 + Math.random() * 16) + 'px';
+    game.appendChild(b);
+    setTimeout(() => b.remove(), 850);
+  }
+
+  // 4. Анимация героя (отбрасывание)
+  const hero = document.getElementById('hero');
+  if (hero) {
+    hero.classList.remove('hurt');
+    void hero.offsetWidth;
+    hero.classList.add('hurt');
+    setTimeout(() => hero.classList.remove('hurt'), 600);
+  }
+
+  // 5. Эффект замедления (slowmo)
+  slowmo = 350;
+  slowmoFactor = 0.35;
+
+  if (lives <= 0) {
+    setTimeout(() => gameOver(), 700);
+  }
+}
+
+/* =========================================================
+   Очередь и игра
+   ========================================================= */
+function fireAtClosest() {
+  if (!running || zombies.length === 0) return;
+  let target = null, minX = Infinity;
+  for (const z of zombies) if (z.alive && z.x < minX) { minX = z.x; target = z; }
+  if (target) shoot(target);
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'Space') {
+    e.preventDefault();
+    if (running) fireAtClosest();
+  }
+});
+
+function loop(t) {
+  if (!running) return;
+  if (!lastTime) lastTime = t;
+  let dt = Math.min(50, t - lastTime);
+  lastTime = t;
+
+  // Замедление
+  if (slowmo > 0) {
+    dt *= slowmoFactor;
+    slowmo -= (t - lastTime) / slowmoFactor; // приблизительно
+    if (slowmo < 0) slowmo = 0;
+  }
+
+  // Спавн
+  if (WORD_QUEUE.length > 0) {
+    spawnTimer += dt;
+    if (spawnTimer >= spawnInterval) {
+      spawnTimer = 0;
+      spawnEnemy();
+    }
+  }
+
+  // Движение зомби
+  for (const z of zombies) {
+    if (!z.alive) continue;
+    z.x -= z.speed * dt * 0.06 * 60 / 16;
+    z.el.style.left = z.x + 'px';
+    if (z.x < 130) {
+      z.alive = false;
+      // Анимация атаки
+      z.el.classList.add('charging');
+      const ze = z.el;
+      setTimeout(() => ze.remove(), 800);
+      hurtHero();
+      // Слово возвращается в конец очереди
+      WORD_QUEUE.push(z.word);
+    }
+  }
+  zombies = zombies.filter(z => z.alive);
+  rafId = requestAnimationFrame(loop);
+}
+
+/* =========================================================
+   Старт / финал
+   ========================================================= */
+function startGame() {
+  // Собираем слова (уникальные, каждая строка = 1 слово)
+  const raw = wordInput.value
+    .split('\n')
+    .map(l => l.trim())
+    .filter(l => l.length > 0);
+
+  if (raw.length === 0) {
+    alert('请至少输入一个汉字或词语！');
+    return;
+  }
+
+  // Уникальные слова
+  const unique = [...new Set(raw)];
+  WORDS = unique;
+
+  // Очередь слов — перемешиваем
+  WORD_QUEUE = [...unique].sort(() => Math.random() - 0.5);
+  TOTAL_WORDS = unique.length;
+  KILLED = 0;
+
+  document.querySelectorAll('.zombie').forEach(z => z.remove());
+  zombies = [];
+
+  renderHero();
+
+  const d = DIFF[difficulty];
+  zombieSpeed = d.startSpeed;
+  spawnInterval = d.spawn;
+
+  score = 0; lives = 3; wave = 1;
+  spawnTimer = 0; lastTime = 0;
+  slowmo = 0;
+  scoreEl.textContent = '0';
+  livesEl.textContent = '3';
+  updateRemaining();
+
+  setupScr.classList.add('hidden');
+  loseScr.classList.add('hidden');
+  winScr.classList.add('hidden');
+
+  // Музыка по теме
+  Sound.startBg(theme);
+
+  // Интро-баннер
+  const intro = document.createElement('div');
+  intro.className = 'intro-banner';
+  intro.textContent = '准备！';
+  game.appendChild(intro);
+  setTimeout(() => intro.remove(), 2000);
+
+  running = true;
+  setTimeout(() => {
+    if (running) spawnEnemy();
+  }, 500);
+
+  rafId = requestAnimationFrame(loop);
+}
+
+function gameOver() {
+  running = false;
+  if (rafId) cancelAnimationFrame(rafId);
+  Sound.stopBg();
+  Sound.defeat();
+
+  finalScr.textContent = score;
+  finalWv.textContent = wave;
+  loseScr.classList.remove('hidden');
+  document.querySelectorAll('.zombie').forEach(z => z.remove());
+  zombies = [];
+}
+
+function winGame() {
+  running = false;
+  if (rafId) cancelAnimationFrame(rafId);
+  Sound.stopBg();
+  Sound.victory();
+
+  // Конфетти
+  const colors = ['#ff4466', '#ffaa33', '#44cc44', '#4488ff', '#cc44ff', '#ffd84a'];
+  for (let i = 0; i < 80; i++) {
+    const c = document.createElement('div');
+    c.className = 'confetti';
+    c.style.left = (Math.random() * 100) + '%';
+    c.style.top = '-20px';
+    c.style.background = colors[Math.floor(Math.random() * colors.length)];
+    c.style.animationDuration = (2 + Math.random() * 3) + 's';
+    c.style.animationDelay = (Math.random() * 1.5) + 's';
+    c.style.transform = `rotate(${Math.random() * 360}deg)`;
+    game.appendChild(c);
+    setTimeout(() => c.remove(), 5500);
+  }
+
+  winTotal.textContent = TOTAL_WORDS;
+  winLives.textContent = lives;
+  winScr.classList.remove('hidden');
+  document.querySelectorAll('.zombie').forEach(z => z.remove());
+  zombies = [];
+}
+
+startBtn.addEventListener('click', startGame);
+restartBtn.addEventListener('click', () => {
+  loseScr.classList.add('hidden');
+  setupScr.classList.remove('hidden');
+  running = false;
+  Sound.stopBg();
+  if (rafId) cancelAnimationFrame(rafId);
+});
+winRestartBtn.addEventListener('click', () => {
+  winScr.classList.add('hidden');
+  setupScr.classList.remove('hidden');
+  running = false;
+  Sound.stopBg();
+  if (rafId) cancelAnimationFrame(rafId);
+});
+
+/* Кнопка звука */
+muteBtn.addEventListener('click', () => {
+  const m = !Sound.isMuted();
+  Sound.setMuted(m);
+  muteBtn.textContent = m ? '🔇 声音: 关' : '🔊 声音: 开';
+  if (!m && running) Sound.startBg(theme);
+});
+</script>
+</body>
+</html>
