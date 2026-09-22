@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>汉字落篮 — 把汉字接进篮子里</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🀄</text></svg>">
+<style>
+  body {
+    margin: 0;
+    font-family: 'Microsoft YaHei', 'PingFang SC', 'Segoe UI', sans-serif;
+    background: linear-gradient(180deg, #1a1a2e, #16213e);
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+  }
+  #game {
+    width: 760px;
+    background: #0f172a;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 0 40px rgba(0,200,255,.3);
+  }
+  h1 { text-align: center; margin: 0 0 6px; color: #4dd0e1; font-size: 28px; }
+  #subtitle {
+    text-align: center;
+    color: #9ca3af;
+    margin: 0 0 12px;
+    font-size: 14px;
+  }
+  #hud {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    font-size: 18px;
+  }
+  #soundBtn {
+    background: #1f2937;
+    color: #cbd5e1;
+    border: 1px solid #4b5563;
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 16px;
+    cursor: pointer;
+    margin: 0;
+  }
+  #soundBtn:hover { background: #374151; }
+  #field {
+    position: relative;
+    height: 420px;
+    background: #111827;
+    border: 2px solid #374151;
+    border-radius: 10px 10px 0 0;
+    overflow: hidden;
+  }
+  .guide {
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 1px;
+    background: rgba(255,255,255,.05);
+  }
+  .glyph {
+    position: absolute;
+    font-size: 52px;
+    color: #ffd54f;
+    text-shadow: 0 0 15px #ffb300;
+    line-height: 1;
+    user-select: none;
+    white-space: nowrap;
+    text-align: center;
+  }
+  #baskets {
+    display: flex;
+    border: 2px solid #374151;
+    border-top: none;
+    border-radius: 0 0 10px 10px;
+    background: #0b1220;
+  }
+  .basket {
+    flex: 1;
+    border-right: 1px solid rgba(0,0,0,.4);
+    padding: 18px 6px;
+    text-align: center;
+    font-size: 16px;
+    font-weight: bold;
+    color: #fff;
+    position: relative;
+    transition: filter .15s, transform .15s;
+    overflow: hidden;
+    text-shadow: 0 1px 3px rgba(0,0,0,.6);
+  }
+  .basket:last-child { border-right: none; }
+  .basket.under {
+    filter: brightness(1.35) saturate(1.3);
+    box-shadow: inset 0 0 0 3px rgba(255,255,255,.7);
+  }
+  .basket.flash-ok {
+    animation: flashOk .55s ease-out;
+  }
+  .basket.flash-bad {
+    animation: flashBad .55s ease-out;
+  }
+  @keyframes flashOk {
+    0%   { filter: brightness(2.2); transform: translateY(-4px); }
+    100% { filter: brightness(1); transform: translateY(0); }
+  }
+  @keyframes flashBad {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-8px); }
+    40% { transform: translateX(8px); }
+    60% { transform: translateX(-6px); }
+    80% { transform: translateX(6px); }
+  }
+  #msg {
+    text-align: center;
+    margin-top: 10px;
+    height: 26px;
+    font-size: 18px;
+  }
+  #overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,.9);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    text-align: center;
+    z-index: 10;
+    overflow-y: auto;
+  }
+  #overlay.hidden { display: none; }
+  #overlay h2 { margin: 0 0 10px; }
+  #overlay p { margin: 6px 0; }
+  textarea {
+    width: 90%;
+    height: 140px;
+    font-family: 'Microsoft YaHei', monospace;
+    font-size: 14px;
+    background: #1f2937;
+    color: #fff;
+    border: 1px solid #4b5563;
+    border-radius: 6px;
+    padding: 8px;
+    resize: vertical;
+    line-height: 1.5;
+  }
+  button {
+    margin-top: 10px;
+    padding: 10px 24px;
+    font-size: 16px;
+    background: #4dd0e1;
+    color: #0f172a;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    font-family: inherit;
+  }
+  button:hover { background: #26c6da; }
+  .hint { font-size: 13px; color: #9ca3af; margin-top: 6px; max-width: 90%; }
+  .err { color: #ef5350; font-size: 14px; min-height: 18px; margin-top: 8px; }
+  code {
+    background: #1f2937;
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: #ffd54f;
+  }
+</style>
+</head>
+<body>
+<div id="game">
+  <h1>🀄 汉字落篮 🧺</h1>
+  <p id="subtitle">汉字从天而降，把它们接进正确的篮子里 🌠</p>
+  <div id="hud">
+    <span>得分：<b id="score">0</b></span>
+    <span>进度：<b id="progress">0/0</b></span>
+    <span>生命：<b id="lives">3</b></span>
+    <button id="soundBtn" title="开启 / 关闭声音">🔊</button>
+  </div>
+
+  <div id="field">
+    <div id="overlay">
+      <h2>游戏设置</h2>
+      <p>格式：<code>名称：词语1，词语2，日</code></p>
+      <textarea id="config">人：人，男，女，子，学生，朋友
+自然：日，月，山，水，火，天气
+食物：米，肉，魚，茶，苹果</textarea>
+      <div class="hint">每行一个篮子。分隔符可用：<code>, ， 、 ; | /</code>（任意输入法都可以）。</div>
+      <div class="hint">操作：← → 移动汉字，↓ 加快下落。篮子数量：2 到 5 个。</div>
+      <div id="error" class="err"></div>
+      <button onclick="startGame()">▶ 开始游戏</button>
+    </div>
+  </div>
+
+  <div id="baskets"></div>
+  <div id="msg"></div>
+</div>
+
+<script>
+/* ============================================================
+   声音（Web Audio API）
+   ============================================================ */
+let audioCtx = null;
+let soundOn = true;
+let musicGain = null;
+let musicTimer = null;
+let musicStep = 0;
+
+function initAudio() {
+  if (audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+
+function playNote(freq, startTime, duration, type = 'sine', volume = 0.15, dest = null) {
+  if (!soundOn) return;
+  initAudio();
+  const t = startTime ?? audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, t);
+
+  gain.gain.setValueAtTime(0, t);
+  gain.gain.linearRampToValueAtTime(volume, t + 0.01);
+  gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
+
+  osc.connect(gain);
+  gain.connect(dest || audioCtx.destination);
+  osc.start(t);
+  osc.stop(t + duration + 0.05);
+}
+
+function soundCorrect() {
+  if (!soundOn) return;
+  initAudio();
+  const t = audioCtx.currentTime;
+  playNote(523.25, t,        0.18, 'triangle', 0.18);
+  playNote(659.25, t + 0.08, 0.18, 'triangle', 0.18);
+  playNote(783.99, t + 0.16, 0.22, 'triangle', 0.18);
+  playNote(1046.50, t + 0.24, 0.35, 'triangle', 0.20);
+}
+
+function soundWrong() {
+  if (!soundOn) return;
+  initAudio();
+  const t = audioCtx.currentTime;
+  playNote(160, t,       0.32, 'sawtooth', 0.16);
+  playNote(170, t + 0.05, 0.32, 'sawtooth', 0.16);
+  playNote(110, t + 0.18, 0.45, 'square',   0.10);
+}
+
+function soundWin() {
+  if (!soundOn) return;
+  initAudio();
+  const t = audioCtx.currentTime;
+  const seq = [523.25, 659.25, 783.99, 1046.5];
+  seq.forEach((f, i) => playNote(f, t + i * 0.13, 0.25, 'triangle', 0.20));
+  [523.25, 659.25, 783.99, 1046.5].forEach(f =>
+    playNote(f, t + 0.62, 1.1, 'sine', 0.16));
+}
+
+function soundLose() {
+  if (!soundOn) return;
+  initAudio();
+  const t = audioCtx.currentTime;
+  const seq = [
+    [440, 0],
+    [392, 0.18],
+    [349.23, 0.36],
+    [329.63, 0.54],
+    [293.66, 0.72],
+    [261.63, 0.92],
+  ];
+  seq.forEach(([f, off]) => playNote(f, t + off, 0.30, 'sawtooth', 0.14));
+  playNote(130.81, t + 1.25, 1.0, 'sine', 0.18);
+  playNote(155.56, t + 1.25, 1.0, 'sine', 0.14);
+}
+
+const MUSIC_NOTES = [523.25, 587.33, 659.25, 783.99, 880.00, 783.99, 659.25, 587.33];
+const MUSIC_STEP_MS = 420;
+
+function startMusic() {
+  if (!soundOn) return;
+  initAudio();
+  if (musicTimer) return;
+
+  musicGain = audioCtx.createGain();
+  musicGain.gain.value = 0.045;
+  musicGain.connect(audioCtx.destination);
+
+  const tick = () => {
+    if (!soundOn) return;
+    const t = audioCtx.currentTime;
+    const note = MUSIC_NOTES[musicStep % MUSIC_NOTES.length];
+
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = note;
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(1, t + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+    osc.connect(g); g.connect(musicGain);
+    osc.start(t); osc.stop(t + 0.55);
+
+    if (musicStep % 4 === 2) {
+      const osc2 = audioCtx.createOscillator();
+      const g2 = audioCtx.createGain();
+      osc2.type = 'triangle';
+      osc2.frequency.value = note * 2;
+      g2.gain.setValueAtTime(0, t);
+      g2.gain.linearRampToValueAtTime(0.4, t + 0.02);
+      g2.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+      osc2.connect(g2); g2.connect(musicGain);
+      osc2.start(t); osc2.stop(t + 0.4);
+    }
+
+    musicStep++;
+  };
+
+  tick();
+  musicTimer = setInterval(tick, MUSIC_STEP_MS);
+}
+
+function stopMusic() {
+  if (musicTimer) { clearInterval(musicTimer); musicTimer = null; }
+  if (musicGain) {
+    try { musicGain.disconnect(); } catch(e){}
+    musicGain = null;
+  }
+}
+
+document.getElementById('soundBtn').addEventListener('click', () => {
+  soundOn = !soundOn;
+  const btn = document.getElementById('soundBtn');
+  if (soundOn) {
+    btn.textContent = '🔊';
+    if (running) startMusic();
+  } else {
+    btn.textContent = '🔇';
+    stopMusic();
+  }
+});
+
+/* ============================================================
+   篮子颜色
+   ============================================================ */
+const BASKET_COLORS = [
+  '#3b82f6',
+  '#10b981',
+  '#f59e0b',
+  '#ec4899',
+  '#8b5cf6',
+];
+
+/* ============================================================
+   游戏逻辑
+   ============================================================ */
+let baskets = [];
+let queue = [];
+let current = null;
+let speed = 0;
+let score = 0, lives = 3;
+let totalItems = 0;
+let running = false;
+let dropTimer = null;
+
+const field = document.getElementById('field');
+const basketsEl = document.getElementById('baskets');
+const msgEl = document.getElementById('msg');
+
+const SPLIT_RE = /[,，、;；|\/\n]+/;
+const COLON_RE = /[:：]/;
+
+function parseConfig(text) {
+  const lines = text.split('\n');
+  const result = [];
+  let currentBasket = null;
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+    if (!line) continue;
+
+    if (COLON_RE.test(line)) {
+      const idx = line.search(COLON_RE);
+      const name = line.slice(0, idx).trim();
+      const itemsRaw = line.slice(idx + 1);
+      if (!name) continue;
+
+      const items = splitItems(itemsRaw);
+      currentBasket = { name, items };
+      result.push(currentBasket);
+    } else if (currentBasket) {
+      const items = splitItems(line);
+      currentBasket.items.push(...items);
+    }
+  }
+
+  return result
+    .map(b => ({ name: b.name, items: b.items.filter(x => x.length > 0) }))
+    .filter(b => b.items.length > 0);
+}
+
+function splitItems(str) {
+  return str.split(SPLIT_RE).map(s => s.trim()).filter(Boolean);
+}
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function startGame() {
+  const errEl = document.getElementById('error');
+  errEl.textContent = '';
+
+  const cfg = parseConfig(document.getElementById('config').value);
+  if (cfg.length < 2) { errEl.textContent = '❌ 至少需要 2 个篮子。'; return; }
+  if (cfg.length > 5) { errEl.textContent = '❌ 最多只能有 5 个篮子。'; return; }
+
+  baskets = cfg.map(c => ({ name: c.name, items: new Set(c.items), el: null, center: 0 }));
+
+  queue = [];
+  baskets.forEach((b, i) => b.items.forEach(item => queue.push({ text: item, basketIndex: i })));
+  queue = shuffle(queue);
+  totalItems = queue.length;
+
+  score = 0; lives = 3; running = true;
+  document.getElementById('score').textContent = 0;
+  document.getElementById('lives').textContent = 3;
+  document.getElementById('progress').textContent = `0/${totalItems}`;
+  msgEl.textContent = '';
+
+  basketsEl.innerHTML = '';
+  baskets.forEach((b, i) => {
+    const div = document.createElement('div');
+    div.className = 'basket';
+    div.textContent = b.name;
+    div.style.background = `linear-gradient(180deg, ${BASKET_COLORS[i]}, ${shade(BASKET_COLORS[i], -25)})`;
+    basketsEl.appendChild(div);
+    b.el = div;
+  });
+
+  document.getElementById('overlay').classList.add('hidden');
+
+  requestAnimationFrame(() => {
+    computeBasketCenters();
+    drawGuides();
+    spawnNext();
+    clearInterval(dropTimer);
+    dropTimer = setInterval(tick, 30);
+    startMusic();
+  });
+}
+
+function shade(hex, amount) {
+  const num = parseInt(hex.slice(1), 16);
+  let r = (num >> 16) + amount;
+  let g = ((num >> 8) & 0x00FF) + amount;
+  let b = (num & 0x0000FF) + amount;
+  r = Math.max(0, Math.min(255, r));
+  g = Math.max(0, Math.min(255, g));
+  b = Math.max(0, Math.min(255, b));
+  return '#' + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
+}
+
+function computeBasketCenters() {
+  const fieldRect = field.getBoundingClientRect();
+  baskets.forEach(b => {
+    const r = b.el.getBoundingClientRect();
+    b.center = (r.left + r.width / 2) - fieldRect.left;
+  });
+  speed = 1.4;
+}
+
+function drawGuides() {
+  field.querySelectorAll('.guide').forEach(e => e.remove());
+  baskets.forEach(b => {
+    const g = document.createElement('div');
+    g.className = 'guide';
+    g.style.left = b.center + 'px';
+    field.appendChild(g);
+  });
+}
+
+function spawnNext() {
+  if (!running) return;
+  if (current) { current.el.remove(); }
+
+  if (queue.length === 0) { win(); return; }
+
+  const item = queue.shift();
+  updateProgress();
+
+  const el = document.createElement('div');
+  el.className = 'glyph';
+  el.textContent = item.text;
+  field.appendChild(el);
+
+  const w = el.getBoundingClientRect().width;
+  const startX = field.clientWidth / 2 - w / 2;
+
+  current = {
+    text: item.text,
+    basketIndex: item.basketIndex,
+    el,
+    x: startX,
+    y: 0,
+    width: w
+  };
+  el.style.left = current.x + 'px';
+  el.style.top = '0px';
+}
+
+function updateProgress() {
+  const done = totalItems - queue.length;
+  document.getElementById('progress').textContent = `${done}/${totalItems}`;
+}
+
+function tick() {
+  if (!running || !current) return;
+  current.y += speed;
+  current.el.style.top = current.y + 'px';
+  highlightUnder();
+
+  if (current.y >= field.clientHeight - 55) {
+    resolveDrop();
+  }
+}
+
+function getUnderBasket() {
+  const cx = current.x + current.width / 2;
+  let best = 0, bestDist = Infinity;
+  baskets.forEach((b, i) => {
+    const d = Math.abs(b.center - cx);
+    if (d < bestDist) { bestDist = d; best = i; }
+  });
+  return best;
+}
+
+function highlightUnder() {
+  if (!current) return;
+  const idx = getUnderBasket();
+  baskets.forEach((b, i) => b.el.classList.toggle('under', i === idx));
+}
+
+function resolveDrop() {
+  const underIdx = getUnderBasket();
+  const correct = underIdx === current.basketIndex;
+
+  baskets.forEach(b => b.el.classList.remove('under'));
+  const basketEl = baskets[underIdx].el;
+
+  if (correct) {
+    score += 10;
+    basketEl.classList.add('flash-ok');
+    msgEl.style.color = '#4dd0e1';
+    msgEl.textContent = `✅ 正确！「${current.text}」→ ${baskets[underIdx].name}`;
+    soundCorrect();
+  } else {
+    lives--;
+    basketEl.classList.add('flash-bad');
+    msgEl.style.color = '#ef5350';
+    msgEl.textContent = `❌ 错误！「${current.text}」应属于「${baskets[current.basketIndex].name}」`;
+    soundWrong();
+  }
+  setTimeout(() => basketEl.classList.remove('flash-ok', 'flash-bad'), 600);
+
+  document.getElementById('score').textContent = score;
+  document.getElementById('lives').textContent = lives;
+
+  current.el.remove();
+  current = null;
+
+  if (lives <= 0) { gameOver(); return; }
+  setTimeout(spawnNext, 250);
+}
+
+function win() {
+  running = false;
+  clearInterval(dropTimer);
+  stopMusic();
+  soundWin();
+
+  const overlay = document.getElementById('overlay');
+  overlay.classList.remove('hidden');
+  overlay.innerHTML = `
+    <h2>🏆 恭喜通关！</h2>
+    <p>所有汉字都归位啦！</p>
+    <p>最终得分：<b>${score}</b></p>
+    <button onclick="location.reload()">🔄 再玩一次</button>
+  `;
+}
+
+function gameOver() {
+  running = false;
+  clearInterval(dropTimer);
+  stopMusic();
+  soundLose();
+
+  if (current) { current.el.remove(); current = null; }
+  const overlay = document.getElementById('overlay');
+  overlay.classList.remove('hidden');
+  overlay.innerHTML = `
+    <h2>游戏结束</h2>
+    <p>最终得分：<b>${score}</b></p>
+    <button onclick="location.reload()">🔄 再玩一次</button>
+  `;
+}
+
+document.addEventListener('keydown', e => {
+  if (!running || !current) return;
+  const step = 25;
+
+  if (e.key === 'ArrowLeft') {
+    current.x = Math.max(0, current.x - step);
+    current.el.style.left = current.x + 'px';
+    highlightUnder();
+    e.preventDefault();
+  } else if (e.key === 'ArrowRight') {
+    current.x = Math.min(field.clientWidth - current.width, current.x + step);
+    current.el.style.left = current.x + 'px';
+    highlightUnder();
+    e.preventDefault();
+  } else if (e.key === 'ArrowDown' || e.key === ' ') {
+    current.y += 60;
+    current.el.style.top = current.y + 'px';
+    e.preventDefault();
+  }
+});
+
+window.addEventListener('resize', () => {
+  if (!running) return;
+  computeBasketCenters();
+  drawGuides();
+});
+</script>
+</body>
+</html>
