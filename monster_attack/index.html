@@ -2,11 +2,11 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<title>🎃 万圣节汉字防御战 🧟</title>
+<title>🎃 僵尸来袭 🧟</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; user-select:none; }
   body {
-    background:#050508;
+    background:#000;
     font-family:'Microsoft YaHei','PingFang SC','Segoe UI',sans-serif;
     overflow:hidden; color:#fff;
     height:100vh;
@@ -20,9 +20,11 @@
     transition:background .5s;
   }
 
+  /* ============ ФОН ============ */
   body.theme-horror #game {
-    background:radial-gradient(ellipse at 50% 100%, #3a0a0a 0%, #14060a 40%, #050508 100%);
-    box-shadow:0 0 60px rgba(120,0,0,.6), inset 0 0 120px rgba(0,0,0,.9);
+    background:
+      radial-gradient(ellipse at 50% 120%, #5a0808 0%, #2a0303 30%, #0a0000 60%, #000 100%);
+    box-shadow:0 0 100px rgba(150,0,0,.9), inset 0 0 250px rgba(0,0,0,1);
   }
   body.theme-funny #game {
     background:linear-gradient(180deg, #87ceeb 0%, #b0e0e6 40%, #ffd9a8 80%, #d9c890 100%);
@@ -34,7 +36,10 @@
     box-shadow:0 0 60px rgba(120,180,80,.5), inset 0 0 120px rgba(200,230,180,.2);
   }
 
-  #stars, #moon, #ground, #fog, #scene { position:absolute; inset:0; pointer-events:none; }
+  /* ============ СЛОИ ============ */
+  #stars, #moon, #ground, #fog, #scene, #bloodfog, #bloodDrops,
+  #vignette, #glitch, #flashLightning { position:absolute; inset:0; pointer-events:none; }
+
   #stars { z-index:1; }
   .star { position:absolute; background:#fff; border-radius:50%; opacity:.5; animation:twinkle 3s infinite; }
   @keyframes twinkle { 0%,100%{opacity:.15} 50%{opacity:.9} }
@@ -42,21 +47,56 @@
   #moon { z-index:2; }
   body.theme-horror #moon::after {
     content:'';
-    position:absolute;
-    top:30px; right:30px;
-    width:80px; height:80px; border-radius:50%;
-    background:radial-gradient(circle at 35% 35%, #fff4c0, #c9a04a 70%, #8a6a20);
-    box-shadow:0 0 50px rgba(200,120,20,.7), 0 0 100px rgba(150,40,0,.5);
-    opacity:.95;
+    position:absolute; top:25px; right:25px;
+    width:100px; height:100px; border-radius:50%;
+    background:radial-gradient(circle at 40% 35%, #ffe8a0 0%, #cc6622 35%, #8a1a08 90%);
+    box-shadow:
+      0 0 80px rgba(220,60,20,1),
+      0 0 160px rgba(150,20,0,.9),
+      0 0 260px rgba(100,0,0,.6);
+    animation:moonPulse 3s infinite alternate;
+  }
+  @keyframes moonPulse {
+    0% { box-shadow:0 0 80px rgba(220,60,20,1), 0 0 160px rgba(150,20,0,.9); }
+    100% { box-shadow:0 0 120px rgba(255,80,40,1), 0 0 240px rgba(220,30,0,1), 0 0 340px rgba(140,0,0,.8); }
   }
 
+  #flashLightning {
+    z-index:14; opacity:0;
+    background:radial-gradient(ellipse at 70% 20%, rgba(255,255,255,1), rgba(200,200,255,.6) 30%, transparent 70%);
+    display:none;
+  }
+  body.theme-horror #flashLightning { display:block; }
+
+  #bloodfog {
+    left:0; right:0; bottom:0; top:auto; height:220px;
+    background:linear-gradient(0deg, rgba(150,10,10,.9) 0%, rgba(90,5,5,.6) 40%, transparent 100%);
+    z-index:3; opacity:0; pointer-events:none;
+    animation:fogPulse 5s infinite alternate;
+    transition:opacity .6s;
+  }
+  body.theme-horror #bloodfog { opacity:1; }
+  @keyframes fogPulse { 0% { opacity:.7; transform:translateY(0); } 100% { opacity:1; transform:translateY(-8px); } }
+
   #ground {
-    top:auto; bottom:0; left:0; right:0; height:90px; z-index:2;
+    top:auto; bottom:0; left:0; right:0; height:100px; z-index:4;
     transition:background .5s;
   }
   body.theme-horror #ground {
-    background:linear-gradient(180deg, #1a0808 0%, #050202 100%);
-    border-top:2px solid #2a0a0a;
+    background:
+      radial-gradient(ellipse at 50% 0%, #4a0a0a 0%, #1a0202 60%, #000 100%),
+      linear-gradient(180deg, transparent 0%, #000 100%);
+    border-top:2px solid #6a0000;
+  }
+  body.theme-horror #ground::before {
+    content:''; position:absolute; inset:0;
+    background:
+      radial-gradient(circle at 15% 40%, rgba(150,0,0,.8) 8px, transparent 20px),
+      radial-gradient(circle at 38% 60%, rgba(180,0,0,.7) 12px, transparent 26px),
+      radial-gradient(circle at 62% 35%, rgba(120,0,0,.8) 10px, transparent 22px),
+      radial-gradient(circle at 85% 55%, rgba(160,0,0,.7) 14px, transparent 30px);
+    background-size:200px 100px;
+    filter:blur(2px);
   }
   body.theme-funny #ground {
     background:radial-gradient(ellipse at 20% 0%, #a8d878 0%, #78b048 40%, #4a7a28 100%);
@@ -70,19 +110,74 @@
   #fog {
     z-index:3; opacity:0; transition:opacity .6s;
     background:
-      radial-gradient(circle at 20% 80%, rgba(120,20,20,.15), transparent 40%),
-      radial-gradient(circle at 80% 70%, rgba(80,10,10,.15), transparent 40%);
-    animation:fogMove 20s infinite alternate;
+      radial-gradient(circle at 20% 80%, rgba(180,20,20,.25), transparent 45%),
+      radial-gradient(circle at 80% 70%, rgba(120,10,10,.25), transparent 45%),
+      radial-gradient(circle at 50% 50%, rgba(60,0,0,.3), transparent 60%);
+    animation:fogMove 12s infinite alternate;
   }
   body.theme-horror #fog { opacity:1; }
-  @keyframes fogMove { 0%{transform:translateX(0)} 100%{transform:translateX(-40px)} }
-
-  #vignette {
-    position:absolute; inset:0; pointer-events:none; z-index:15;
-    transition:background .5s;
+  @keyframes fogMove {
+    0% { transform:translateX(0) scale(1); }
+    100% { transform:translateX(-60px) scale(1.1); }
   }
+
+  #bloodDrops {
+    z-index:6; overflow:hidden; display:none;
+  }
+  body.theme-horror #bloodDrops { display:block; }
+  .blood-drop {
+    position:absolute; top:-30px; width:4px;
+    background:linear-gradient(180deg, #cc0000, #5a0000);
+    border-radius:50% 50% 40% 40%;
+    filter:blur(.5px);
+    animation:dropFall linear forwards;
+  }
+  .blood-drop::after {
+    content:''; position:absolute; bottom:-3px; left:50%;
+    transform:translateX(-50%); width:10px; height:10px;
+    background:radial-gradient(circle, #8a0000 0%, transparent 70%);
+    border-radius:50%;
+  }
+  @keyframes dropFall {
+    0%   { transform:translateY(0); opacity:0; }
+    10%  { opacity:1; }
+    100% { transform:translateY(700px); opacity:.6; }
+  }
+
+  #vignette { z-index:15; transition:background .5s; }
   body.theme-horror #vignette {
-    background:radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,.85) 100%);
+    background:radial-gradient(ellipse at 50% 55%,
+      transparent 15%,
+      rgba(40,0,0,.5) 45%,
+      rgba(0,0,0,.95) 85%);
+    animation:vignettePulse 2.5s infinite alternate;
+  }
+  @keyframes vignettePulse {
+    0% { opacity:.9; }
+    100% { opacity:1; }
+  }
+
+  .shadow-runner {
+    position:absolute; width:60px; height:180px;
+    background:radial-gradient(ellipse at 50% 50%, #000 0%, transparent 70%);
+    opacity:.9; z-index:5; filter:blur(4px);
+    pointer-events:none;
+  }
+
+  #glitch {
+    z-index:16; opacity:0;
+    background:linear-gradient(90deg, transparent 0%, rgba(255,0,0,.4) 48%, transparent 50%, rgba(255,0,0,.4) 52%, transparent 100%);
+    mix-blend-mode:screen; display:none;
+  }
+  body.theme-horror #glitch { display:block; }
+  #glitch.active { animation:glitchFlash .3s; }
+  @keyframes glitchFlash {
+    0%   { opacity:0; transform:translate(0); }
+    20%  { opacity:1; transform:translate(-8px, 4px); }
+    40%  { opacity:0; transform:translate(6px, -3px); }
+    60%  { opacity:1; transform:translate(-4px, 2px); }
+    80%  { opacity:0; transform:translate(2px, -1px); }
+    100% { opacity:0; transform:translate(0); }
   }
 
   #scene { z-index:2; overflow:hidden; }
@@ -150,17 +245,19 @@
     box-shadow:-20px 10px 0 -10px #4a7a28, 20px 10px 0 -10px #4a7a28;
   }
 
-  /* HUD */
+  /* ============ HUD ============ */
   #hud {
     position:absolute; top:14px; left:14px;
     display:flex; gap:14px; font-size:15px; z-index:20;
     font-family:'Courier New', monospace; letter-spacing:1px;
   }
   #hud div {
-    background:rgba(10,0,0,.75); padding:7px 14px; border-radius:4px;
-    border:1px solid #6a1010;
-    box-shadow:0 0 12px rgba(180,0,0,.4);
-    text-shadow:0 0 8px rgba(255,40,40,.6);
+    background:rgba(20,0,0,.9);
+    padding:7px 14px; border-radius:4px;
+    border:1px solid #8a0000;
+    box-shadow:0 0 15px rgba(255,0,0,.6), inset 0 0 10px rgba(80,0,0,.5);
+    text-shadow:0 0 10px rgba(255,20,20,.9);
+    color:#ffaaaa;
     transition:all .4s;
   }
   body.theme-funny #hud div {
@@ -174,195 +271,667 @@
     box-shadow:0 0 15px rgba(120,180,80,.5);
     text-shadow:0 0 8px rgba(180,220,140,.6);
   }
-  #hud .accent { color:#ff5555; }
-  body.theme-funny #hud .accent { color:#d95400; }
-  body.theme-lotr #hud .accent { color:#d8e88a; }
+  #hud .accent { color:#ff2222; text-shadow:0 0 15px #ff0000; font-weight:bold; }
+  body.theme-funny #hud .accent { color:#d95400; text-shadow:none; }
+  body.theme-lotr #hud .accent { color:#d8e88a; text-shadow:0 0 8px rgba(180,220,140,.6); }
 
-  /* ВРАГИ */
+  /* ============ ВРАГИ ============ */
   .zombie {
-    position:absolute; width:80px; height:150px; z-index:6;
-    filter:drop-shadow(0 8px 12px rgba(0,0,0,.9));
-    animation:zombieSway 2s infinite alternate;
+    position:absolute; width:85px; height:160px; z-index:8;
     transition:filter .15s;
   }
-  @keyframes zombieSway {
-    0% { transform:rotate(-2deg) translateY(0);}
-    100% { transform:rotate(2deg) translateY(-2px);}
+
+  body.theme-horror .zombie {
+    filter:
+      drop-shadow(0 12px 20px rgba(0,0,0,1))
+      drop-shadow(0 0 20px rgba(180,10,10,.8))
+      contrast(1.15) saturate(1.2);
+    animation:zombieSway 2.4s infinite alternate;
   }
-  .zombie.charging { animation:chargeAttack .8s ease-in forwards !important; filter:drop-shadow(0 0 20px #ff0000) brightness(1.4); }
+  @keyframes zombieSway {
+    0% { transform:rotate(-3deg) translateY(0);}
+    100% { transform:rotate(3deg) translateY(-3px);}
+  }
+  body.theme-horror .zombie.charging {
+    animation:chargeAttack .8s ease-in forwards !important;
+    filter:drop-shadow(0 0 60px #ff0000) brightness(1.8) saturate(2.5);
+  }
   @keyframes chargeAttack {
     0% { transform:translateX(0) scale(1) rotate(0); }
-    40% { transform:translateX(-80px) scale(1.15) rotate(-8deg); }
-    100% { transform:translateX(-150px) scale(0.4) rotate(-30deg); opacity:.2; }
+    40% { transform:translateX(-90px) scale(1.4) rotate(-12deg); }
+    100% { transform:translateX(-170px) scale(0.3) rotate(-45deg); opacity:.1; }
   }
 
-  .z-leg { position:absolute; top:110px; width:18px; height:40px;
-    background:linear-gradient(180deg, #3a2a24, #1a1010);
-    border-radius:4px; border:1px solid #000;
-    box-shadow:inset -3px 0 4px rgba(0,0,0,.7); }
-  .z-leg.l { left:18px; transform:rotate(-6deg); transform-origin:top center;}
-  .z-leg.r { right:18px; transform:rotate(8deg); transform-origin:top center;}
-  .z-torso { position:absolute; top:55px; left:16px;
-    width:48px; height:60px;
-    background:radial-gradient(circle at 30% 30%, #6a5a44 0%, #3a2a20 40%, #1a0e0a 100%);
-    border-radius:6px 6px 4px 4px; border:1px solid #000;
-    box-shadow:inset 0 0 10px rgba(0,0,0,.9), inset 6px 8px 6px rgba(120,20,20,.4); }
-  .z-torso::before { content:''; position:absolute; inset:4px;
+  body.theme-horror .z-torso {
+    position:absolute; top:55px; left:15px;
+    width:55px; height:70px;
     background:
-      linear-gradient(105deg, transparent 40%, rgba(0,0,0,.5) 42%, rgba(0,0,0,.5) 46%, transparent 48%),
-      linear-gradient(75deg, transparent 55%, rgba(0,0,0,.4) 57%, rgba(0,0,0,.4) 62%, transparent 64%);
-    border-radius:4px; }
-  .z-torso::after { content:''; position:absolute; left:8px; top:24px;
-    width:16px; height:12px;
-    background:radial-gradient(ellipse, #8a0a0a 0%, #3a0000 70%, transparent 100%);
-    border-radius:50%; filter:blur(1px); }
-  .z-arm { position:absolute; top:60px; width:44px; height:12px;
-    background:linear-gradient(180deg, #5a4a3a, #2a1a10);
-    border-radius:6px; border:1px solid #000;
-    box-shadow:inset -4px 0 6px rgba(0,0,0,.7); }
-  .z-arm.l { left:-32px; transform:rotate(-8deg); transform-origin:right center; }
-  .z-arm.r { right:-32px; transform:rotate(8deg); transform-origin:left center; }
-  .z-arm::after { content:''; position:absolute; top:50%;
-    transform:translateY(-50%); width:10px; height:10px;
-    background:#2a1a10; border-radius:50%; }
-  .z-arm.l::after { left:-4px; }
-  .z-arm.r::after { right:-4px; }
-  .z-head { position:absolute; top:8px; left:16px;
-    width:48px; height:52px;
-    background:radial-gradient(circle at 35% 35%, #9a8a5a 0%, #5a4a2a 50%, #2a1e10 100%);
-    border-radius:48% 52% 50% 50% / 55% 55% 45% 45%;
+      radial-gradient(ellipse at 30% 40%, #7a4a28 0%, #3a1a10 50%, #0a0200 100%),
+      linear-gradient(180deg, #8a3a18 0%, #2a0808 100%);
+    border-radius:8px 8px 5px 5px;
     border:1px solid #000;
-    box-shadow:inset -5px -5px 8px rgba(0,0,0,.8), inset 5px 5px 6px rgba(180,150,80,.2); }
-  .z-head::before { content:''; position:absolute; top:8px; right:6px;
-    width:18px; height:8px;
-    background:radial-gradient(ellipse, #8a0a0a 0%, #3a0000 80%, transparent);
-    border-radius:50%; transform:rotate(-20deg); filter:blur(1px); }
-  .z-head::after { content:''; position:absolute; top:-4px; left:6px; right:6px;
-    height:10px;
-    background:
-      radial-gradient(circle at 20% 50%, #1a0e0a 0 3px, transparent 4px),
-      radial-gradient(circle at 40% 30%, #1a0e0a 0 3px, transparent 4px),
-      radial-gradient(circle at 60% 60%, #1a0e0a 0 3px, transparent 4px),
-      radial-gradient(circle at 80% 40%, #1a0e0a 0 3px, transparent 4px);
-    border-radius:50%; }
-  .z-eye { position:absolute; top:22px; width:8px; height:8px;
-    background:radial-gradient(circle, #ff2200 0%, #8a0000 60%, #000 100%);
-    border-radius:50%;
-    box-shadow:0 0 10px #ff2200, 0 0 20px #ff0000;
-    animation:eyeGlow 1.5s infinite alternate; }
-  .z-eye.l { left:8px; }
-  .z-eye.r { right:8px; }
-  @keyframes eyeGlow {
-    0% { box-shadow:0 0 8px #ff2200, 0 0 14px #ff0000; }
-    100% { box-shadow:0 0 14px #ff4400, 0 0 26px #ff0000; }
+    box-shadow:
+      inset 0 0 20px rgba(0,0,0,1),
+      inset 8px 10px 12px rgba(180,10,10,.85),
+      inset -6px -6px 10px rgba(0,0,0,.95),
+      0 0 25px rgba(180,0,0,.5);
+    overflow:hidden;
   }
-  .z-mouth { position:absolute; top:36px; left:50%;
-    transform:translateX(-50%); width:22px; height:10px;
-    background:radial-gradient(ellipse at 50% 30%, #3a0000 0%, #1a0000 80%);
-    border-radius:0 0 40% 40% / 0 0 80% 80%;
-    border-top:1px solid #000;
-    box-shadow:inset 0 2px 4px rgba(120,0,0,.8); }
-  .z-mouth::before { content:''; position:absolute; top:0; left:2px; right:2px; height:3px;
-    background:repeating-linear-gradient(90deg, #e8e0c0 0 2px, transparent 2px 4px);
-    filter:drop-shadow(0 0 1px #000); }
-  .z-mouth::after { content:''; position:absolute; top:4px; left:6px;
-    width:2px; height:12px;
-    background:linear-gradient(180deg, #8a0a0a, transparent); filter:blur(.5px); }
-  .z-shadow { position:absolute; bottom:-6px; left:50%;
-    transform:translateX(-50%); width:60px; height:8px;
-    background:radial-gradient(ellipse, rgba(0,0,0,.8), transparent 70%);
-    border-radius:50%; }
+  body.theme-horror .z-torso::before {
+    content:''; position:absolute;
+    top:15px; left:8px;
+    width:34px; height:26px;
+    background:
+      radial-gradient(ellipse at 30% 30%,
+        #f0d8b0 0%, #c01818 30%, #8a0a0a 60%, #2a0000 90%, transparent 100%);
+    border-radius:50%;
+    transform:rotate(-15deg);
+    box-shadow:0 0 14px rgba(0,0,0,.9), inset 0 0 10px rgba(180,0,0,.9);
+    filter:blur(.4px);
+  }
+  body.theme-horror .z-torso::after {
+    content:''; position:absolute;
+    bottom:0; left:20px;
+    width:16px; height:40px;
+    background:linear-gradient(180deg, #b80a0a 0%, #6a0000 60%, #1a0000 100%);
+    border-radius:0 0 40% 40%;
+    box-shadow:inset 2px 0 6px rgba(0,0,0,.9), 0 0 8px rgba(180,0,0,.6);
+    transform:rotate(8deg);
+    filter:blur(.3px);
+  }
 
+  body.theme-horror .z-arm {
+    position:absolute; top:60px;
+    width:52px; height:14px;
+    background:linear-gradient(180deg, #6a4028 0%, #4a2010 40%, #1a0800 100%);
+    border-radius:6px;
+    border:1px solid #000;
+    box-shadow:
+      inset -4px 0 10px rgba(0,0,0,.95),
+      0 0 12px rgba(180,0,0,.7);
+  }
+  body.theme-horror .z-arm.l { left:-40px; transform:rotate(-10deg); transform-origin:right center; }
+  body.theme-horror .z-arm.r { right:-40px; transform:rotate(10deg); transform-origin:left center; }
+  body.theme-horror .z-arm::after {
+    content:''; position:absolute; top:50%;
+    transform:translateY(-50%);
+    width:16px; height:16px;
+    background:radial-gradient(circle at 40% 40%, #ff2222 0%, #a80000 50%, #2a0000 100%);
+    border-radius:50%;
+    box-shadow:0 0 15px #ff0000, 0 0 30px #ff0000, inset 0 0 8px rgba(0,0,0,.9);
+  }
+  body.theme-horror .z-arm.l::after { left:-8px; }
+  body.theme-horror .z-arm.r::after { right:-8px; }
+  body.theme-horror .z-arm::before {
+    content:''; position:absolute;
+    top:50%; transform:translateY(-50%);
+    width:8px; height:20px;
+    background:linear-gradient(180deg, #f0e0b8, #8a7040);
+    clip-path:polygon(50% 0, 100% 100%, 0 100%);
+    filter:drop-shadow(0 0 4px rgba(0,0,0,.9));
+  }
+  body.theme-horror .z-arm.l::before { left:-6px; }
+  body.theme-horror .z-arm.r::before { right:-6px; transform:translateY(-50%) rotate(180deg); }
+
+  body.theme-horror .z-head {
+    position:absolute; top:5px; left:14px;
+    width:55px; height:60px;
+    background:
+      radial-gradient(circle at 35% 35%,
+        #b8a878 0%,
+        #7a5a38 40%,
+        #3a2010 80%,
+        #0a0400 100%);
+    border-radius:50% 50% 45% 45% / 55% 55% 45% 45%;
+    border:1px solid #000;
+    box-shadow:
+      inset -6px -6px 14px rgba(0,0,0,.95),
+      inset 6px 6px 10px rgba(200,160,80,.2),
+      0 0 30px rgba(180,0,0,.7);
+    animation:headTwitch 2.5s infinite;
+  }
+  @keyframes headTwitch {
+    0%, 88%, 100% { transform:rotate(0); }
+    90% { transform:rotate(6deg); }
+    92% { transform:rotate(-8deg); }
+    94% { transform:rotate(4deg); }
+  }
+  body.theme-horror .z-head::before {
+    content:''; position:absolute;
+    top:-10px; left:8px;
+    width:40px; height:24px;
+    background:
+      radial-gradient(ellipse at 50% 80%,
+        #2a0000 0%, #8a0a0a 30%, #d8a0a0 55%, transparent 85%);
+    border-radius:50% 50% 0 0;
+    box-shadow:
+      inset 0 -6px 12px rgba(0,0,0,.95),
+      0 0 18px rgba(180,0,0,.9);
+    filter:blur(.4px);
+  }
+  body.theme-horror .z-head::after {
+    content:''; position:absolute;
+    top:-2px; left:4px; right:4px;
+    height:14px;
+    background:
+      radial-gradient(circle at 15% 50%, #1a0e0a 0 3px, transparent 4px),
+      radial-gradient(circle at 32% 30%, #1a0e0a 0 3px, transparent 4px),
+      radial-gradient(circle at 52% 60%, #1a0e0a 0 3px, transparent 4px),
+      radial-gradient(circle at 72% 40%, #1a0e0a 0 3px, transparent 4px),
+      radial-gradient(circle at 88% 55%, #1a0e0a 0 3px, transparent 4px);
+    border-radius:50%;
+    filter:drop-shadow(0 0 3px rgba(0,0,0,.95));
+  }
+
+  body.theme-horror .z-eye {
+    position:absolute;
+    width:14px; height:14px;
+    background:radial-gradient(circle,
+      #fff 0%,
+      #ff5500 20%,
+      #ff0000 45%,
+      #5a0000 75%,
+      #000 100%);
+    border-radius:50%;
+    box-shadow:
+      0 0 20px #ff2200,
+      0 0 40px #ff0000,
+      0 0 70px rgba(255,0,0,.9),
+      0 0 100px rgba(255,0,0,.6),
+      inset 0 0 10px #000;
+    animation:eyeGlow 0.9s infinite alternate;
+    z-index:2;
+  }
+  body.theme-horror .z-eye.l { top:22px; left:8px; }
+  body.theme-horror .z-eye.r { top:20px; right:6px; }
+  @keyframes eyeGlow {
+    0% { box-shadow:0 0 15px #ff2200, 0 0 30px #ff0000, 0 0 50px rgba(255,0,0,.7); }
+    100% { box-shadow:0 0 25px #ff5500, 0 0 55px #ff0000, 0 0 100px rgba(255,0,0,1); }
+  }
+
+  body.theme-horror .z-mouth {
+    position:absolute; top:42px; left:50%;
+    transform:translateX(-50%);
+    width:32px; height:18px;
+    background:radial-gradient(ellipse at 50% 20%,
+        #000 0%, #2a0000 40%, #8a0000 100%);
+    border-radius:0 0 50% 50% / 0 0 90% 90%;
+    border-top:2px solid #1a0000;
+    box-shadow:
+      inset 0 6px 12px rgba(180,0,0,.9),
+      0 0 15px rgba(180,0,0,.8);
+    z-index:2;
+  }
+  body.theme-horror .z-mouth::before {
+    content:''; position:absolute;
+    top:0; left:2px; right:2px; height:7px;
+    background:repeating-linear-gradient(90deg,
+        #f0e0b8 0 3px, #8a7040 3px 4px, transparent 4px 6px);
+    clip-path:polygon(
+      0 0, 15% 100%, 30% 0, 45% 100%, 60% 0, 75% 100%, 90% 0, 100% 100%, 100% 0);
+    filter:drop-shadow(0 1px 2px #000);
+  }
+  body.theme-horror .z-mouth::after {
+    content:''; position:absolute;
+    top:100%; left:50%;
+    transform:translateX(-50%);
+    width:4px; height:22px;
+    background:linear-gradient(180deg, #b80a0a, #3a0000, transparent);
+    border-radius:0 0 50% 50%;
+    filter:blur(.3px);
+    box-shadow:0 0 6px rgba(180,0,0,.9);
+  }
+
+  body.theme-horror .z-leg {
+    position:absolute; top:118px;
+    width:20px; height:45px;
+    background:linear-gradient(180deg, #4a2818 0%, #2a1008 70%, #0a0200 100%);
+    border-radius:4px;
+    border:1px solid #000;
+    box-shadow:inset -4px 0 8px rgba(0,0,0,.95);
+  }
+  body.theme-horror .z-leg.l { left:18px; transform:rotate(-8deg); transform-origin:top center; }
+  body.theme-horror .z-leg.r { right:18px; transform:rotate(10deg); transform-origin:top center; }
+
+  body.theme-horror .z-shadow {
+    position:absolute; bottom:-8px; left:50%;
+    transform:translateX(-50%);
+    width:90px; height:16px;
+    background:radial-gradient(ellipse, rgba(180,0,0,.9) 0%, rgba(0,0,0,.9) 40%, transparent 80%);
+    border-radius:50%;
+    filter:blur(3px);
+  }
+
+  /* ============ FUNNY: МОНСТРЫ ============ */
+  body.theme-funny .zombie {
+    filter:drop-shadow(0 8px 12px rgba(0,0,0,.5));
+    animation:zombieSway 2.4s infinite alternate;
+  }
+  body.theme-funny .zombie.charging {
+    animation:chargeAttack .8s ease-in forwards !important;
+    filter:drop-shadow(0 0 30px #ff8844) brightness(1.3);
+  }
   body.theme-funny .zombie .z-head {
+    position:absolute; top:5px; left:14px;
+    width:55px; height:60px;
     background:radial-gradient(circle at 35% 35%, #a8e878 0%, #66b848 55%, #3a8a20 100%);
+    border-radius:50% 50% 45% 45%;
+    border:1px solid #000;
+    box-shadow:inset -4px -4px 8px rgba(0,0,0,.3), inset 4px 4px 6px rgba(255,255,255,.2);
   }
   body.theme-funny .zombie .z-head::before {
-    background:radial-gradient(ellipse, #ff4477 0%, #aa2255 80%, transparent); }
-  body.theme-funny .zombie .z-eye {
-    background:radial-gradient(circle, #fff 0%, #ffdd00 50%, #aa6600 100%);
-    box-shadow:0 0 10px #ffdd00, 0 0 20px #ffaa00; }
-  body.theme-funny .zombie .z-torso {
-    background:radial-gradient(circle at 30% 30%, #d87040 0%, #a84820 40%, #6a2808 100%);
-    box-shadow:inset 0 0 10px rgba(0,0,0,.5), inset 6px 8px 6px rgba(180,60,0,.4); }
-  body.theme-funny .zombie .z-torso::after {
-    background:radial-gradient(ellipse, #ff2266 0%, #aa0044 70%, transparent 100%); }
-  body.theme-funny .zombie .z-arm {
-    background:linear-gradient(180deg, #d87040, #a84820); }
-
-  body.theme-lotr .zombie .z-head {
-    background:radial-gradient(circle at 35% 35%, #7a8a5a 0%, #3a4a20 55%, #1a2008 100%);
-    border-radius:45% 55% 48% 52% / 50% 55% 45% 50%; }
-  body.theme-lotr .zombie .z-head::before {
-    background:radial-gradient(ellipse, #6a0000 0%, #2a0000 80%, transparent); }
-  body.theme-lotr .zombie .z-eye {
-    background:radial-gradient(circle, #ffee00 0%, #aa6600 60%, #000 100%);
-    box-shadow:0 0 10px #ffcc00, 0 0 20px #ff8800; }
-  body.theme-lotr .zombie .z-torso {
-    background:radial-gradient(circle at 30% 30%, #4a3a20 0%, #2a1a08 40%, #0a0500 100%);
-    box-shadow:inset 0 0 10px rgba(0,0,0,.9), inset 6px 8px 6px rgba(60,20,0,.5); }
-  body.theme-lotr .zombie .z-arm {
-    background:linear-gradient(180deg, #5a4a2a, #2a1a08); }
-  body.theme-lotr .zombie .z-torso::before {
-    background:
-      linear-gradient(0deg, transparent 60%, rgba(0,0,0,.7) 62%, rgba(0,0,0,.7) 70%, transparent 72%),
-      linear-gradient(105deg, transparent 40%, rgba(0,0,0,.6) 42%, rgba(0,0,0,.6) 46%, transparent 48%);
-    border-radius:4px; }
-  body.theme-lotr .zombie .z-mouth::before {
-    background:repeating-linear-gradient(90deg, #e8e0c0 0 3px, transparent 3px 5px);
-    height:4px; }
-  body.theme-lotr .zombie .z-head::after {
-    content:''; position:absolute; top:-6px; left:2px; right:2px;
-    height:12px;
-    background:linear-gradient(180deg, #3a3a3a, #101010);
+    content:''; position:absolute;
+    top:-4px; left:8px;
+    width:38px; height:16px;
+    background:radial-gradient(ellipse, #ff4477 0%, #aa2255 80%, transparent);
     border-radius:50% 50% 0 0;
+  }
+  body.theme-funny .zombie .z-head::after {
+    content:''; position:absolute;
+    top:-2px; left:4px; right:4px;
+    height:10px;
+    background:
+      radial-gradient(circle at 20% 50%, #3a5a1a 0 3px, transparent 4px),
+      radial-gradient(circle at 45% 30%, #3a5a1a 0 3px, transparent 4px),
+      radial-gradient(circle at 70% 55%, #3a5a1a 0 3px, transparent 4px);
+    border-radius:50%;
+  }
+  body.theme-funny .zombie .z-eye {
+    position:absolute;
+    width:12px; height:12px;
+    background:radial-gradient(circle, #fff 0%, #ffdd00 50%, #aa6600 100%);
+    border-radius:50%;
+    box-shadow:0 0 10px #ffdd00, 0 0 20px #ffaa00;
+  }
+  body.theme-funny .zombie .z-eye.l { top:22px; left:10px; }
+  body.theme-funny .zombie .z-eye.r { top:22px; right:8px; }
+  body.theme-funny .zombie .z-mouth {
+    position:absolute; top:42px; left:50%;
+    transform:translateX(-50%);
+    width:26px; height:14px;
+    background:radial-gradient(ellipse at 50% 40%, #3a0000 0%, #6a0000 100%);
+    border-radius:0 0 50% 50% / 0 0 90% 90%;
+  }
+  body.theme-funny .zombie .z-torso {
+    position:absolute; top:55px; left:15px;
+    width:55px; height:70px;
+    background:radial-gradient(circle at 30% 30%, #d87040 0%, #a84820 40%, #6a2808 100%);
+    border-radius:8px 8px 5px 5px;
     border:1px solid #000;
-    box-shadow:inset 0 2px 3px rgba(255,255,255,.15); }
-
-  .zombie.dying { animation:boom .55s forwards; }
-  @keyframes boom {
-    0%   { transform:scale(1) rotate(0); opacity:1; filter:brightness(1);}
-    20%  { transform:scale(1.15) rotate(-5deg); filter:brightness(3) hue-rotate(-30deg);}
-    50%  { transform:scale(1.3) rotate(20deg); filter:brightness(4) saturate(2);}
-    100% { transform:scale(0) rotate(90deg); opacity:0; }
+    box-shadow:inset 0 0 10px rgba(0,0,0,.4), inset 6px 8px 6px rgba(180,60,0,.4);
+  }
+  body.theme-funny .zombie .z-torso::before {
+    content:''; position:absolute;
+    top:15px; left:12px;
+    width:30px; height:24px;
+    background:radial-gradient(ellipse, #ff2266 0%, #aa0044 70%, transparent 100%);
+    border-radius:50%;
+    filter:blur(.5px);
+  }
+  body.theme-funny .zombie .z-arm {
+    position:absolute; top:60px;
+    width:44px; height:12px;
+    background:linear-gradient(180deg, #d87040, #a84820);
+    border-radius:6px;
+    border:1px solid #000;
+    box-shadow:inset -4px 0 6px rgba(0,0,0,.4);
+  }
+  body.theme-funny .zombie .z-arm.l { left:-32px; transform:rotate(-8deg); transform-origin:right center; }
+  body.theme-funny .zombie .z-arm.r { right:-32px; transform:rotate(8deg); transform-origin:left center; }
+  body.theme-funny .zombie .z-arm::after {
+    content:''; position:absolute; top:50%;
+    transform:translateY(-50%);
+    width:12px; height:12px;
+    background:radial-gradient(circle at 40% 40%, #ffdd88, #aa6600 60%, #4a2800 100%);
+    border-radius:50%;
+  }
+  body.theme-funny .zombie .z-arm.l::after { left:-4px; }
+  body.theme-funny .zombie .z-arm.r::after { right:-4px; }
+  body.theme-funny .zombie .z-leg {
+    position:absolute; top:118px;
+    width:20px; height:45px;
+    background:linear-gradient(180deg, #a84820, #6a2808);
+    border-radius:4px;
+    border:1px solid #000;
+  }
+  body.theme-funny .zombie .z-leg.l { left:18px; }
+  body.theme-funny .zombie .z-leg.r { right:18px; }
+  body.theme-funny .zombie .z-shadow {
+    position:absolute; bottom:-6px; left:50%;
+    transform:translateX(-50%);
+    width:70px; height:12px;
+    background:radial-gradient(ellipse, rgba(0,0,0,.6), transparent 75%);
+    border-radius:50%;
   }
 
-  /* ТАБЛИЧКА */
-  .sign {
-    position:absolute; top:-70px; left:50%;
+  /* ============ LOTR: УРУК-ХАИ ============ */
+  body.theme-lotr .zombie {
+    filter:
+      drop-shadow(0 12px 20px rgba(0,0,0,.9))
+      drop-shadow(0 0 10px rgba(40,20,0,.6))
+      saturate(1.2);
+    animation:zombieSway 2.6s infinite alternate;
+  }
+  body.theme-lotr .zombie.charging {
+    animation:chargeAttack .8s ease-in forwards !important;
+    filter:drop-shadow(0 0 40px #ffaa00) brightness(1.5) saturate(2);
+  }
+
+  body.theme-lotr .z-torso {
+    position:absolute; top:55px; left:12px;
+    width:60px; height:68px;
+    background:
+      radial-gradient(ellipse at 40% 30%, #5a4020 0%, #2a1a08 50%, #0a0500 100%),
+      linear-gradient(180deg, #4a3010 0%, #1a0a00 100%);
+    border-radius:6px 6px 4px 4px;
+    border:2px solid #1a0e04;
+    box-shadow:
+      inset 0 0 20px rgba(0,0,0,1),
+      inset 6px 8px 10px rgba(120,80,20,.4),
+      inset -6px -6px 12px rgba(0,0,0,.95);
+    overflow:hidden;
+  }
+  body.theme-lotr .z-torso::before {
+    content:''; position:absolute;
+    top:8px; left:4px; right:4px;
+    height:50px;
+    background:
+      repeating-linear-gradient(0deg,
+        rgba(120,120,120,.35) 0 2px,
+        transparent 2px 6px),
+      linear-gradient(180deg, rgba(80,80,80,.4) 0%, transparent 100%);
+    border-radius:3px;
+    box-shadow:inset 0 0 8px rgba(0,0,0,.9);
+  }
+  body.theme-lotr .z-torso::after {
+    content:''; position:absolute;
+    top:-6px; left:8px;
+    width:0; height:0;
+    border-left:6px solid transparent;
+    border-right:6px solid transparent;
+    border-bottom:12px solid #3a3a3a;
+    filter:drop-shadow(0 0 2px rgba(0,0,0,.9));
+    box-shadow:22px 2px 0 -2px #3a3a3a;
+  }
+
+  body.theme-lotr .z-arm {
+    position:absolute; top:60px;
+    width:52px; height:14px;
+    background:linear-gradient(180deg, #5a4a2a 0%, #3a2010 40%, #0a0500 100%);
+    border-radius:6px;
+    border:1px solid #000;
+    box-shadow:inset -4px 0 8px rgba(0,0,0,.9);
+  }
+  body.theme-lotr .z-arm.l { left:-38px; transform:rotate(-12deg); transform-origin:right center; }
+  body.theme-lotr .z-arm.r { right:-40px; transform:rotate(15deg); transform-origin:left center; }
+  body.theme-lotr .z-arm::after {
+    content:''; position:absolute; top:50%;
+    transform:translateY(-50%);
+    width:16px; height:16px;
+    background:
+      radial-gradient(circle at 35% 35%, #6a5a3a 0%, #3a2010 60%, #0a0500 100%);
+    border-radius:50%;
+    box-shadow:inset -3px -3px 6px rgba(0,0,0,.9);
+  }
+  body.theme-lotr .z-arm.l::after { left:-8px; }
+  body.theme-lotr .z-arm.r::after { right:-8px; }
+  body.theme-lotr .z-arm.r::before {
+    content:''; position:absolute;
+    right:-30px; top:-40px;
+    width:6px; height:52px;
+    background:
+      linear-gradient(180deg,
+        #b8b8b8 0%,
+        #8a8a8a 40%,
+        #4a4a4a 60%,
+        #2a2a2a 100%);
+    transform:rotate(20deg);
+    border-radius:2px;
+    box-shadow:
+      0 0 8px rgba(180,180,180,.6),
+      inset -1px 0 2px rgba(0,0,0,.7);
+  }
+
+  body.theme-lotr .z-head {
+    position:absolute; top:2px; left:10px;
+    width:64px; height:58px;
+    background:
+      radial-gradient(ellipse at 40% 45%,
+        #7a7a5a 0%,
+        #4a4a28 35%,
+        #2a2a10 70%,
+        #0a0a02 100%);
+    border-radius:45% 55% 42% 58% / 50% 50% 45% 55%;
+    border:1px solid #000;
+    box-shadow:
+      inset -8px -6px 14px rgba(0,0,0,.95),
+      inset 8px 6px 10px rgba(120,140,60,.2),
+      0 0 15px rgba(80,100,0,.5);
+    animation:headTwitch 3.5s infinite;
+    transform:rotate(-3deg);
+  }
+  @keyframes headTwitch {
+    0%, 88%, 100% { transform:rotate(-3deg); }
+    90% { transform:rotate(2deg); }
+    92% { transform:rotate(-6deg); }
+    94% { transform:rotate(0deg); }
+  }
+  body.theme-lotr .z-head::before {
+    content:''; position:absolute;
+    top:16px; left:6px;
+    width:50px; height:3px;
+    background:linear-gradient(90deg,
+      transparent 0%,
+      #8a0000 20%,
+      #4a0000 50%,
+      #8a0000 80%,
+      transparent 100%);
+    transform:rotate(-15deg);
+    filter:blur(.5px);
+    box-shadow:0 0 6px rgba(120,0,0,.7);
+  }
+  body.theme-lotr .z-head::after {
+    content:''; position:absolute;
+    top:-8px; left:-2px; right:-2px;
+    height:20px;
+    background:
+      linear-gradient(180deg, #4a4a4a 0%, #2a2a2a 50%, #0a0a0a 100%);
+    border-radius:50% 50% 0 0 / 100% 100% 0 0;
+    border:1px solid #000;
+    box-shadow:
+      inset 0 3px 4px rgba(200,200,200,.3),
+      inset 0 -4px 6px rgba(0,0,0,.9);
+  }
+
+  body.theme-lotr .z-eye {
+    position:absolute;
+    width:13px; height:13px;
+    background:radial-gradient(circle,
+      #ffff00 0%,
+      #ffcc00 30%,
+      #aa5500 60%,
+      #4a1a00 85%,
+      #000 100%);
+    border-radius:50%;
+    box-shadow:
+      0 0 15px #ffcc00,
+      0 0 30px #ff8800,
+      0 0 50px rgba(255,100,0,.8);
+    animation:eyeGlow 1.4s infinite alternate;
+    z-index:2;
+    border:1px solid #1a0a00;
+  }
+  body.theme-lotr .z-eye.l { top:22px; left:14px; }
+  body.theme-lotr .z-eye.r { top:20px; right:12px; }
+
+  body.theme-lotr .z-mouth {
+    position:absolute; top:38px; left:50%;
     transform:translateX(-50%);
-    background:linear-gradient(180deg, #f0e2b8 0%, #d8c48a 100%);
-    color:#2a1000;
+    width:34px; height:16px;
+    background:radial-gradient(ellipse at 50% 30%,
+      #000 0%, #2a0500 40%, #6a1000 100%);
+    border-radius:0 0 50% 50% / 0 0 95% 95%;
+    border-top:2px solid #1a0000;
+    box-shadow:
+      inset 0 4px 10px rgba(120,0,0,.9),
+      0 0 10px rgba(120,0,0,.7);
+    z-index:2;
+  }
+  body.theme-lotr .z-mouth::before {
+    content:''; position:absolute;
+    top:-2px; left:2px;
+    width:8px; height:14px;
+    background:linear-gradient(180deg, #f0e0b8 0%, #a89050 100%);
+    clip-path:polygon(50% 0, 100% 100%, 0 100%);
+    filter:drop-shadow(0 1px 2px #000);
+    box-shadow:
+      12px 2px 0 -1px #f0e0b8,
+      24px -1px 0 -1px #f0e0b8;
+  }
+  body.theme-lotr .z-mouth::after {
+    content:''; position:absolute;
+    bottom:-2px; left:8px;
+    width:6px; height:10px;
+    background:linear-gradient(180deg, #a89050 0%, #f0e0b8 100%);
+    clip-path:polygon(0 0, 100% 0, 50% 100%);
+    filter:drop-shadow(0 -1px 2px #000);
+    box-shadow:
+      10px 0 0 -1px #a89050;
+  }
+
+  body.theme-lotr .z-leg {
+    position:absolute; top:116px;
+    width:22px; height:48px;
+    background:linear-gradient(180deg, #3a2810 0%, #1a0a00 70%, #050200 100%);
+    border-radius:4px;
+    border:1px solid #000;
+    box-shadow:
+      inset -4px 0 8px rgba(0,0,0,.95),
+      inset 2px 2px 4px rgba(120,80,20,.3);
+  }
+  body.theme-lotr .z-leg.l { left:16px; transform:rotate(-5deg); transform-origin:top center; }
+  body.theme-lotr .z-leg.r { right:16px; transform:rotate(7deg); transform-origin:top center; }
+  body.theme-lotr .z-leg::after {
+    content:''; position:absolute;
+    bottom:-2px; left:-3px; right:-3px;
+    height:10px;
+    background:linear-gradient(180deg, #2a1a08, #0a0500);
+    border-radius:3px 3px 5px 5px;
+    border:1px solid #000;
+    box-shadow:inset 0 2px 3px rgba(120,80,20,.3);
+  }
+
+  body.theme-lotr .z-shadow {
+    position:absolute; bottom:-8px; left:50%;
+    transform:translateX(-50%);
+    width:85px; height:14px;
+    background:radial-gradient(ellipse, rgba(0,0,0,.9) 0%, transparent 80%);
+    border-radius:50%;
+    filter:blur(2px);
+  }
+
+  /* ============ СМЕРТЬ ВРАГА ============ */
+  .zombie.dying { animation:bloodyDeath .6s forwards !important; }
+  @keyframes bloodyDeath {
+    0%   { transform:scale(1) rotate(0); opacity:1; filter:brightness(1);}
+    15%  { transform:scale(1.2) rotate(-8deg); filter:brightness(4) hue-rotate(-40deg) saturate(3);}
+    35%  { transform:scale(1.1) rotate(15deg); filter:brightness(3) saturate(4) hue-rotate(-20deg);}
+    60%  { transform:scale(.7) rotate(45deg); filter:brightness(2) saturate(3); opacity:.8;}
+    100% { transform:scale(0) rotate(180deg); opacity:0; }
+  }
+
+  /* ============ ТАБЛИЧКА ============ */
+  .sign {
+    position:absolute; top:-75px; left:50%;
+    transform:translateX(-50%);
     font-size:32px; font-weight:bold;
     padding:10px 18px;
-    border:3px solid #5a3a1a; border-radius:4px;
+    border-radius:4px;
     white-space:nowrap;
-    box-shadow:0 0 20px rgba(200,60,20,.5), 0 6px 12px rgba(0,0,0,.8),
-      inset 0 0 20px rgba(120,80,20,.3);
     font-family:'KaiTi','SimSun','Microsoft YaHei',serif;
-    text-shadow:1px 1px 0 rgba(255,255,255,.4);
     letter-spacing:2px;
   }
+  body.theme-horror .sign {
+    background:linear-gradient(180deg, #a88850 0%, #7a5a20 50%, #4a2808 100%);
+    color:#fff8e0;
+    border:3px solid #2a1000;
+    box-shadow:
+      0 0 30px rgba(255,20,0,.7),
+      0 6px 12px rgba(0,0,0,.95),
+      inset 0 0 20px rgba(0,0,0,.5),
+      0 0 60px rgba(180,0,0,.6);
+    text-shadow:0 0 12px rgba(255,40,0,.8), 1px 1px 0 #000;
+    animation:signFlicker 2.5s infinite;
+  }
+  @keyframes signFlicker {
+    0%, 90%, 100% { opacity:1; }
+    92% { opacity:.5; }
+    94% { opacity:1; }
+    96% { opacity:.6; }
+  }
+  body.theme-horror .sign::before {
+    content:''; position:absolute;
+    top:0; left:20%; right:25%; height:100%;
+    background:linear-gradient(180deg, rgba(150,0,0,.7) 0%, rgba(100,0,0,.5) 30%, transparent 100%);
+    border-radius:0 0 40% 40%;
+    pointer-events:none;
+    filter:blur(1px);
+  }
+  body.theme-horror .sign::after {
+    content:''; position:absolute;
+    bottom:-22px; left:50%;
+    transform:translateX(-50%);
+    width:6px; height:22px;
+    background:linear-gradient(180deg, #4a2808, #1a0800);
+    box-shadow:0 0 4px rgba(0,0,0,.9);
+  }
+  body.theme-funny .sign {
+    background:linear-gradient(180deg, #ffffff 0%, #fff8e8 100%);
+    color:#8a3a10;
+    border:4px solid #ff8844;
+    box-shadow:0 6px 12px rgba(0,0,0,.2), inset 0 0 15px rgba(255,180,80,.3);
+    text-shadow:0 1px 0 #fff;
+  }
+  body.theme-funny .sign::after {
+    content:''; position:absolute;
+    bottom:-20px; left:50%;
+    transform:translateX(-50%);
+    width:6px; height:20px;
+    background:linear-gradient(180deg, #ff8844, #8a3a10);
+  }
+  body.theme-lotr .sign {
+    background:linear-gradient(180deg, #e8d8a8 0%, #c8b878 100%);
+    color:#3a2a08;
+    border:3px solid #6a4a10;
+    box-shadow:
+      0 0 15px rgba(200,150,60,.4),
+      0 6px 12px rgba(0,0,0,.5),
+      inset 0 0 20px rgba(120,80,20,.3);
+    text-shadow:1px 1px 0 rgba(255,255,255,.4);
+  }
+  body.theme-lotr .sign::after {
+    content:''; position:absolute;
+    bottom:-20px; left:50%;
+    transform:translateX(-50%);
+    width:5px; height:20px;
+    background:linear-gradient(180deg, #6a4a10, #2a1a04);
+  }
+
   .sign.len-2 { font-size:26px; padding:8px 16px; letter-spacing:1px; }
   .sign.len-3 { font-size:21px; padding:7px 14px; letter-spacing:0; }
   .sign.len-4 { font-size:18px; padding:6px 12px; letter-spacing:0; }
   .sign.len-5 { font-size:15px; padding:6px 10px; letter-spacing:0; }
-  .sign::after { content:''; position:absolute; bottom:-18px; left:50%;
-    transform:translateX(-50%); width:5px; height:18px;
-    background:linear-gradient(180deg, #5a3a1a, #2a1a08);
-    box-shadow:0 0 4px rgba(0,0,0,.8); }
-  .sign::before { content:''; position:absolute; inset:0;
-    background:
-      radial-gradient(circle at 85% 20%, rgba(120,0,0,.4) 3px, transparent 6px),
-      radial-gradient(circle at 15% 80%, rgba(120,0,0,.35) 2px, transparent 5px);
-    pointer-events:none; }
 
-  /* СНАРЯДЫ */
+  /* ============ СНАРЯДЫ ============ */
   .laser {
-    position:absolute; height:8px;
-    background:linear-gradient(90deg, rgba(0,255,255,0), #00ffff 20%, #ffffff 50%, #00ffff 80%, rgba(0,255,255,0));
-    border-radius:4px;
-    box-shadow:0 0 12px #00ffff, 0 0 24px #00ffff, 0 0 40px rgba(0,255,255,.6);
-    z-index:10;
+    position:absolute; height:10px;
+    background:linear-gradient(90deg,
+      rgba(255,20,0,0), #ff3300 15%, #ffaa00 40%, #ffffff 50%, #ffaa00 60%, #ff3300 85%, rgba(255,20,0,0));
+    border-radius:5px;
+    box-shadow:
+      0 0 15px #ff4400, 0 0 30px #ff2200,
+      0 0 60px rgba(255,60,0,.9), 0 0 120px rgba(255,40,0,.6);
+    z-index:12;
   }
   .arrow {
     position:absolute; height:5px; width:60px;
@@ -389,7 +958,6 @@
     border-radius:2px;
     filter:drop-shadow(0 0 2px #a8c86a);
   }
-
   .pumpkin-proj {
     position:absolute; width:36px; height:36px; border-radius:50%;
     background:radial-gradient(circle at 40% 40%, #ffb347, #ff7518);
@@ -419,6 +987,15 @@
     transform:rotate(-15deg);
   }
 
+  /* ============ ЭФФЕКТЫ ПОПАДАНИЯ ============ */
+  /* Общие искры — оставим для всех, но с разным цветом через тему */
+  .spark {
+    position:absolute; width:5px; height:5px;
+    border-radius:50%; z-index:12;
+    pointer-events:none;
+  }
+
+  /* Хоррор: взрыв (кровавый) */
   .explosion {
     position:absolute; width:80px; height:80px; border-radius:50%;
     background:radial-gradient(circle, #ffffff 0%, #ffff00 15%, #ff8800 35%, #ff0000 55%, #6a0000 75%, transparent 100%);
@@ -430,75 +1007,168 @@
     60%  { transform:scale(1.6) rotate(180deg); opacity:.9; }
     100% { transform:scale(2.6) rotate(360deg); opacity:0; }
   }
-  .spark {
-    position:absolute; width:5px; height:5px;
-    background:#ffcc00; border-radius:50%; z-index:12;
-    pointer-events:none; box-shadow:0 0 8px #ff4400;
+
+  /* Funny: облачко тыквы + разлетающиеся мини-тыковки */
+  .puff-funny {
+    position:absolute; width:70px; height:70px; border-radius:50%;
+    background:
+      radial-gradient(circle, rgba(255,220,140,.9) 0%, rgba(255,160,60,.7) 30%, rgba(255,120,30,.4) 60%, transparent 85%);
+    z-index:11;
+    animation:puffExplode .5s ease-out forwards;
+    pointer-events:none;
+    filter:blur(2px);
+  }
+  @keyframes puffExplode {
+    0%   { transform:scale(.2); opacity:1; }
+    60%  { transform:scale(1.5); opacity:.9; }
+    100% { transform:scale(2.2); opacity:0; }
   }
 
-  /* КРОВЬ (для анимации атаки) */
-  .blood-splat {
-    position:absolute;
-    width:20px; height:20px;
-    border-radius:50%;
-    background:radial-gradient(circle, #cc0000 0%, #6a0000 60%, transparent 100%);
-    z-index:13;
+  .mini-pumpkin {
+    position:absolute; width:20px; height:20px; border-radius:50%;
+    background:radial-gradient(circle at 35% 35%, #ffcc70, #ff7518);
+    z-index:12;
     pointer-events:none;
-    animation:bloodFly .8s ease-out forwards;
+    box-shadow:0 0 10px rgba(255,150,50,.8);
+    animation:miniPumpkinFly .7s ease-out forwards;
+  }
+  .mini-pumpkin::before, .mini-pumpkin::after {
+    content:''; position:absolute; top:8px;
+    width:3px; height:4px; background:#000;
+    border-radius:50%;
+  }
+  .mini-pumpkin::before { left:5px; }
+  .mini-pumpkin::after  { right:5px; }
+  @keyframes miniPumpkinFly {
+    0%   { transform:scale(.6) rotate(0); opacity:1; }
+    100% { transform:scale(1.3) rotate(360deg) translate(var(--dx), var(--dy)); opacity:0; }
+  }
+
+  /* LOTR: эльфийская вспышка — серебристо-зелёная */
+  .elf-flash {
+    position:absolute; width:80px; height:80px; border-radius:50%;
+    background:
+      radial-gradient(circle, #ffffff 0%, #c8ffa0 20%, #88dd55 45%, #3a8a20 70%, transparent 95%);
+    z-index:11;
+    animation:elfFlash .5s ease-out forwards;
+    pointer-events:none;
+    box-shadow:
+      0 0 40px #88dd55,
+      0 0 80px rgba(140,220,80,.6);
+  }
+  @keyframes elfFlash {
+    0%   { transform:scale(.3); opacity:1; }
+    60%  { transform:scale(1.6); opacity:.9; }
+    100% { transform:scale(2.4); opacity:0; }
+  }
+
+  /* Эльфийский лист — осколок */
+  .elf-leaf {
+    position:absolute; width:14px; height:8px;
+    background:linear-gradient(90deg, #4a8a20 0%, #88dd55 100%);
+    border-radius:50% 0 50% 0;
+    z-index:12;
+    pointer-events:none;
+    box-shadow:0 0 8px rgba(140,220,80,.9);
+    animation:leafFly .8s ease-out forwards;
+  }
+  @keyframes leafFly {
+    0%   { transform:rotate(0) scale(.7); opacity:1; }
+    100% { transform:rotate(720deg) scale(1.1) translate(var(--dx), var(--dy)); opacity:0; }
+  }
+
+  /* Эльфийская искра */
+  .elf-spark {
+    position:absolute; width:5px; height:5px;
+    background:radial-gradient(circle, #ffffff, #aaff66);
+    border-radius:50%;
+    z-index:12;
+    pointer-events:none;
+    box-shadow:0 0 10px #aaff66, 0 0 20px #88dd55;
+    animation:elfSparkFly .7s ease-out forwards;
+  }
+  @keyframes elfSparkFly {
+    0%   { transform:scale(1); opacity:1; }
+    100% { transform:scale(0) translate(var(--dx), var(--dy)); opacity:0; }
+  }
+
+  /* Кровавые брызги (только хоррор) */
+  .blood-splat {
+    position:absolute; width:20px; height:20px;
+    border-radius:50%;
+    background:radial-gradient(circle, #ff0000 0%, #8a0000 40%, #2a0000 70%, transparent 100%);
+    z-index:14; pointer-events:none;
+    animation:bloodFly .9s ease-out forwards;
+    filter:blur(.5px); box-shadow:0 0 8px rgba(255,0,0,.8);
   }
   @keyframes bloodFly {
     0%   { transform:scale(.3); opacity:1; }
-    100% { transform:scale(1.5) translate(var(--dx), var(--dy)); opacity:0; }
+    70%  { opacity:.9; }
+    100% { transform:scale(1.8) translate(var(--dx), var(--dy)); opacity:0; }
+  }
+  .hit-flash {
+    position:absolute; width:40px; height:40px;
+    border-radius:50%;
+    background:radial-gradient(circle, #fff 0%, #ffcc00 30%, #ff0000 70%, transparent 100%);
+    z-index:13; pointer-events:none;
+    animation:hitFlash .3s forwards;
+  }
+  @keyframes hitFlash {
+    0%   { transform:scale(0); opacity:1; }
+    100% { transform:scale(2); opacity:0; }
   }
 
-  /* Экран атаки */
-  #attackFlash {
-    position:absolute; inset:0;
-    background:radial-gradient(circle at 18% 82%, rgba(255,0,0,.9) 0%, rgba(120,0,0,.6) 30%, transparent 60%);
-    opacity:0; pointer-events:none; z-index:45;
-    transition:opacity .08s;
-  }
-
-  /* ГЕРОЙ */
+  /* ============ ГЕРОЙ ============ */
   #hero {
     position:absolute; bottom:55px; left:130px;
-    width:80px; height:150px; z-index:8;
-    filter:drop-shadow(0 0 12px rgba(0,0,0,.9));
+    width:80px; height:150px; z-index:10;
     transition:filter .3s;
   }
-  #hero.hurt {
-    animation:heroHurt .5s;
+  body.theme-horror #hero {
+    filter:
+      drop-shadow(0 0 20px rgba(255,200,100,.8))
+      drop-shadow(0 0 40px rgba(255,150,50,.5))
+      drop-shadow(0 8px 12px rgba(0,0,0,1));
   }
+  body.theme-funny #hero {
+    filter:drop-shadow(0 8px 12px rgba(0,0,0,.4));
+  }
+  body.theme-lotr #hero {
+    filter:
+      drop-shadow(0 0 15px rgba(180,255,140,.4))
+      drop-shadow(0 8px 12px rgba(0,0,0,.8));
+  }
+  #hero.hurt { animation:heroHurt .6s; }
   @keyframes heroHurt {
-    0%   { transform:translateX(0) rotate(0); filter:drop-shadow(0 0 12px rgba(0,0,0,.9)); }
-    20%  { transform:translateX(-25px) rotate(-15deg); filter:drop-shadow(0 0 30px #ff0000) brightness(2); }
-    50%  { transform:translateX(15px) rotate(10deg); filter:drop-shadow(0 0 20px #ff0000) brightness(1.5); }
-    80%  { transform:translateX(-5px) rotate(-3deg); filter:drop-shadow(0 0 15px #ff4444); }
-    100% { transform:translateX(0) rotate(0); filter:drop-shadow(0 0 12px rgba(0,0,0,.9)); }
+    0%   { transform:translateX(0) rotate(0); }
+    20%  { transform:translateX(-30px) rotate(-20deg); filter:brightness(2.5) saturate(2) drop-shadow(0 0 40px #ff0000); }
+    50%  { transform:translateX(20px) rotate(12deg); filter:brightness(1.8) drop-shadow(0 0 30px #ff0000); }
+    80%  { transform:translateX(-8px) rotate(-4deg); }
+    100% { transform:translateX(0) rotate(0); }
   }
 
+  /* Resident Evil */
   .hr-leg { position:absolute; top:108px; width:20px; height:42px;
-    background:linear-gradient(180deg, #1c1c22, #0a0a0e);
+    background:linear-gradient(180deg, #1a1a20, #0a0a0e);
     border-radius:3px; border:1px solid #000; }
   .hr-leg.l { left:16px; } .hr-leg.r { right:16px; }
   .hr-boot { position:absolute; top:142px; width:24px; height:12px;
     background:linear-gradient(180deg, #2a2a2e, #050508);
     border-radius:3px 3px 5px 5px; border:1px solid #000; }
   .hr-boot.l { left:14px; } .hr-boot.r { right:14px; }
-
   .hr-torso { position:absolute; top:52px; left:12px; width:56px; height:64px;
-    background:linear-gradient(90deg, #16161c 0%, #2b2b33 20%, #2b2b33 80%, #16161c 100%);
+    background:linear-gradient(90deg, #16161c 0%, #3b3b45 20%, #3b3b45 80%, #16161c 100%);
     border-radius:8px 8px 6px 6px; border:1px solid #000;
     box-shadow:inset 0 0 8px rgba(0,0,0,.9); }
   .hr-vest { position:absolute; top:60px; left:16px; width:48px; height:44px;
-    background:linear-gradient(180deg, #3a3a42 0%, #1f1f26 100%);
+    background:linear-gradient(180deg, #4a4a52 0%, #2a2a32 100%);
     border-radius:5px; border:1px solid #0a0a0e;
-    box-shadow:inset 0 -6px 8px rgba(0,0,0,.7), inset 0 0 0 1px rgba(80,80,90,.4); }
+    box-shadow:inset 0 -6px 8px rgba(0,0,0,.7), inset 0 0 0 1px rgba(120,120,140,.5); }
   .hr-vest::before { content:''; position:absolute; left:4px; right:4px; top:6px; height:6px;
-    background:repeating-linear-gradient(90deg, #5a5a62 0 3px, #2a2a32 3px 6px);
-    border-radius:2px; opacity:.7; }
+    background:repeating-linear-gradient(90deg, #6a6a72 0 3px, #3a3a42 3px 6px);
+    border-radius:2px; opacity:.8; }
   .hr-belt { position:absolute; top:100px; left:14px; width:52px; height:8px;
-    background:linear-gradient(180deg, #4a3a20, #1a1008);
+    background:linear-gradient(180deg, #6a5a2a, #2a1a08);
     border-radius:2px; border:1px solid #000; }
   .hr-arm { position:absolute; top:62px; width:14px; height:48px;
     background:linear-gradient(180deg, #1c1c22, #0a0a0e);
@@ -506,30 +1176,31 @@
   .hr-arm.l { left:0; transform:rotate(8deg); transform-origin:top center;}
   .hr-arm.r { right:0; transform:rotate(-25deg); transform-origin:top center;}
   .hr-gun { position:absolute; top:96px; right:-10px; width:26px; height:10px;
-    background:linear-gradient(180deg, #3a3a42, #0a0a0e);
+    background:linear-gradient(180deg, #4a4a52, #0a0a0e);
     border-radius:2px; border:1px solid #000; transform:rotate(-10deg); }
   .hr-gun::after { content:''; position:absolute; right:-4px; top:2px;
     width:8px; height:6px; background:#0a0a0e; border-radius:1px; }
   .hr-gun::before { content:''; position:absolute; left:2px; top:3px;
     width:12px; height:3px;
-    background:linear-gradient(90deg, #00ffff, #ffffff);
-    box-shadow:0 0 8px #00ffff; animation:pulse 1.5s infinite; }
-  @keyframes pulse { 0%,100%{opacity:.8} 50%{opacity:1; box-shadow:0 0 14px #00ffff} }
+    background:linear-gradient(90deg, #ff4400, #ffffff);
+    box-shadow:0 0 10px #ff4400; animation:pulse 1.2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:.8} 50%{opacity:1; box-shadow:0 0 20px #ff4400} }
   .hr-head { position:absolute; top:14px; left:18px; width:44px; height:44px;
-    background:radial-gradient(circle at 40% 40%, #5a3a28, #2a1810);
+    background:radial-gradient(circle at 40% 40%, #7a5a38, #3a2010);
     border-radius:50%; border:1px solid #000;
     box-shadow:inset -4px -4px 6px rgba(0,0,0,.6); }
   .hr-cap { position:absolute; top:8px; left:16px; width:48px; height:22px;
-    background:linear-gradient(180deg, #2a2a32, #101014);
-    border-radius:24px 24px 4px 4px; border:1px solid #000; }
+    background:linear-gradient(180deg, #3a3a42, #18181c);
+    border-radius:24px 24px 4px 4px; border:1px solid #000;
+    box-shadow:inset 0 3px 3px rgba(255,255,255,.15); }
   .hr-mask { position:absolute; top:26px; left:22px; width:36px; height:22px;
-    background:linear-gradient(180deg, #1a1a20, #050508);
+    background:linear-gradient(180deg, #2a2a30, #050508);
     border-radius:4px 4px 10px 10px; border:1px solid #000;
     box-shadow:inset 0 0 6px rgba(0,0,0,.9); }
   .hr-mask::before, .hr-mask::after {
     content:''; position:absolute; top:5px; width:8px; height:6px;
-    background:radial-gradient(circle, #66ccff 0%, #003366 100%);
-    border-radius:50%; box-shadow:0 0 8px #66ccff; }
+    background:radial-gradient(circle, #ff5533 0%, #660000 100%);
+    border-radius:50%; box-shadow:0 0 10px #ff2200; }
   .hr-mask::before { left:5px; } .hr-mask::after { right:5px; }
   .hr-filter { position:absolute; top:42px; left:30px; width:12px; height:10px;
     background:#1a1a20; border-radius:2px; border:1px solid #000; }
@@ -593,8 +1264,7 @@
     transform:translateX(-50%);
     width:14px; height:12px;
     background:radial-gradient(circle at 40% 40%, #ffdbaa, #c99a60);
-    border-radius:50%;
-    border:1px solid #000;
+    border-radius:50%; border:1px solid #000;
   }
   .gr-head {
     position:absolute; top:12px; left:18px;
@@ -629,8 +1299,7 @@
     transform:translateX(-50%);
     width:12px; height:12px;
     background:radial-gradient(circle, #e8d060 0%, #a87010 100%);
-    border-radius:50%;
-    border:1px solid #6a4010;
+    border-radius:50%; border:1px solid #6a4010;
   }
   .gr-shawl::before {
     content:''; position:absolute; top:20px; left:50%;
@@ -902,7 +1571,110 @@
     clip-path:polygon(50% 0, 100% 100%, 0 100%);
   }
 
-  /* ОВЕРЛЕИ */
+  /* ============ СКРИМЕР ============ */
+  #screamer {
+    position:absolute; inset:0;
+    z-index:60;
+    display:none;
+    background:#000;
+    justify-content:center;
+    align-items:center;
+    overflow:hidden;
+  }
+  #screamer.show { display:flex; animation:screamerShake .5s; }
+  @keyframes screamerShake {
+    0%,100% { transform:translate(0); }
+    20% { transform:translate(-8px, 6px); }
+    40% { transform:translate(8px, -6px); }
+    60% { transform:translate(-6px, 8px); }
+    80% { transform:translate(6px, -8px); }
+  }
+  #screamer .face {
+    position:relative;
+    width:650px; height:650px;
+    background:radial-gradient(ellipse at 50% 45%,
+      #e8d8b0 0%, #9a8050 25%, #4a2810 60%, #1a0808 100%);
+    border-radius:50% 50% 45% 45% / 55% 55% 45% 45%;
+    box-shadow:
+      inset 0 0 120px rgba(0,0,0,.95),
+      inset 0 -60px 120px rgba(150,0,0,.7),
+      0 0 250px rgba(220,0,0,1),
+      0 0 400px rgba(150,0,0,.7);
+    animation:faceZoom .4s;
+  }
+  @keyframes faceZoom {
+    0% { transform:scale(.2) rotate(-8deg); }
+    100% { transform:scale(1) rotate(0); }
+  }
+  #screamer .face::before,
+  #screamer .face::after {
+    content:''; position:absolute; top:35%;
+    width:90px; height:90px;
+    background:radial-gradient(circle,
+      #ffffff 0%, #ff5522 20%, #ff0000 50%, #8a0000 75%, #000 100%);
+    border-radius:50%;
+    box-shadow:
+      0 0 60px #ff0000,
+      0 0 120px #ff0000,
+      inset 0 0 30px #000;
+    animation:eyeTwitch .08s infinite;
+  }
+  #screamer .face::before { left:20%; }
+  #screamer .face::after  { right:20%; }
+  @keyframes eyeTwitch {
+    0%, 100% { transform:scale(1); }
+    50% { transform:scale(1.12); }
+  }
+  #screamer .mouth {
+    position:absolute; top:62%; left:50%;
+    transform:translateX(-50%);
+    width:320px; height:210px;
+    background:radial-gradient(ellipse at 50% 30%,
+      #000 0%, #3a0000 40%, #000 100%);
+    border-radius:50% 50% 45% 45% / 30% 30% 70% 70%;
+    box-shadow:
+      inset 0 30px 60px rgba(150,0,0,.95),
+      inset 0 -30px 60px rgba(0,0,0,.95),
+      0 0 60px rgba(220,0,0,.8);
+    animation:mouthOpen .5s infinite alternate;
+  }
+  @keyframes mouthOpen {
+    0% { height:210px; }
+    100% { height:260px; }
+  }
+  #screamer .mouth::before {
+    content:''; position:absolute; top:0; left:0; right:0; height:60px;
+    background:repeating-linear-gradient(90deg,
+      #f0e0c0 0 10px, #8a7040 10px 12px, transparent 12px 34px);
+    clip-path:polygon(
+      0 0, 8% 100%, 16% 0, 24% 100%, 32% 0, 40% 100%, 48% 0,
+      56% 100%, 64% 0, 72% 100%, 80% 0, 88% 100%, 96% 0, 100% 100%, 100% 0);
+    filter:drop-shadow(0 6px 10px rgba(0,0,0,.9));
+  }
+  #screamer .mouth::after {
+    content:''; position:absolute; bottom:0; left:0; right:0; height:50px;
+    background:repeating-linear-gradient(90deg,
+      #f0e0c0 0 10px, #8a7040 10px 12px, transparent 12px 34px);
+    clip-path:polygon(
+      0 100%, 8% 0, 16% 100%, 24% 0, 32% 100%, 40% 0, 48% 100%,
+      56% 0, 64% 100%, 72% 0, 80% 100%, 88% 0, 96% 100%, 100% 0, 100% 100%);
+    filter:drop-shadow(0 -6px 10px rgba(0,0,0,.9));
+  }
+  #screamer .static {
+    position:absolute; inset:0;
+    background:
+      repeating-linear-gradient(0deg,
+        rgba(255,255,255,.04) 0 2px, transparent 2px 4px);
+    mix-blend-mode:overlay;
+    pointer-events:none;
+    animation:staticMove .08s infinite;
+  }
+  @keyframes staticMove {
+    0% { transform:translateY(0); }
+    100% { transform:translateY(4px); }
+  }
+
+  /* ============ ОВЕРЛЕИ ============ */
   .overlay {
     position:absolute; inset:0;
     background:rgba(0,0,0,.94);
@@ -916,17 +1688,27 @@
     text-shadow:0 0 20px #8a0000, 0 0 40px #ff2200;
     letter-spacing:3px;
   }
+  body.theme-horror .overlay h1 {
+    color:#cc0000;
+    text-shadow:0 0 20px #ff0000, 0 0 40px #8a0000;
+    animation:titleFlicker 3s infinite;
+  }
+  @keyframes titleFlicker {
+    0%, 90%, 100% { opacity:1; }
+    92% { opacity:.4; }
+    94% { opacity:1; }
+  }
   .overlay h2 { font-size:20px; margin:10px 0 6px; color:#ff8844; letter-spacing:2px; }
+  body.theme-horror .overlay h2 { color:#aa2222; }
   .overlay p { font-size:15px; margin:4px 0; color:#bbbbbb; max-width:840px; }
+  body.theme-horror .overlay p { color:#888; }
   .overlay b { color:#ff8844; }
+  body.theme-horror .overlay b { color:#cc3333; }
 
   #wordInput {
     width:420px; height:170px;
     margin:14px 0;
     padding:14px 18px;
-    background:linear-gradient(180deg, #f5e9c8 0%, #e8d8a8 100%);
-    color:#3a2000;
-    border:3px solid #8a5a20;
     border-radius:8px;
     font-size:24px;
     font-family:'KaiTi','SimSun','Microsoft YaHei',serif;
@@ -934,9 +1716,34 @@
     line-height:1.5;
     text-align:left;
     letter-spacing:4px;
-    box-shadow:inset 0 0 30px rgba(180,140,60,.3), 0 6px 20px rgba(0,0,0,.5);
     font-weight:500;
     transition:all .2s;
+  }
+  body.theme-horror #wordInput {
+    background:linear-gradient(180deg, #1a0a0a 0%, #0a0303 100%);
+    color:#ff6666;
+    border:3px solid #5a0000;
+    box-shadow:
+      inset 0 0 30px rgba(120,0,0,.5),
+      0 6px 20px rgba(0,0,0,.9),
+      0 0 20px rgba(120,0,0,.5);
+    text-shadow:0 0 8px rgba(255,0,0,.6);
+  }
+  body.theme-funny #wordInput {
+    background:linear-gradient(180deg, #f5e9c8 0%, #e8d8a8 100%);
+    color:#3a2000;
+    border:3px solid #8a5a20;
+    box-shadow:
+      inset 0 0 30px rgba(180,140,60,.3),
+      0 6px 20px rgba(0,0,0,.5);
+  }
+  body.theme-lotr #wordInput {
+    background:linear-gradient(180deg, #e8f0d8 0%, #d8e0b8 100%);
+    color:#2a3a10;
+    border:3px solid #6a8a3a;
+    box-shadow:
+      inset 0 0 30px rgba(120,160,60,.3),
+      0 6px 20px rgba(0,0,0,.5);
   }
   #wordInput::placeholder {
     color:rgba(120,80,20,.5);
@@ -944,15 +1751,13 @@
     font-size:16px;
     letter-spacing:1px;
   }
-  #wordInput:focus {
-    border-color:#cc2222;
-    box-shadow:inset 0 0 30px rgba(180,140,60,.4), 0 6px 20px rgba(0,0,0,.5),
-      0 0 30px rgba(200,40,40,.6);
-    transform:translateY(-1px);
-  }
+  body.theme-horror #wordInput::placeholder { color:rgba(180,60,60,.5); }
+  body.theme-lotr #wordInput::placeholder { color:rgba(60,100,20,.5); }
 
   .optGroup { margin:10px 0; }
   .optGroup h3 { font-size:16px; color:#ff8844; margin-bottom:8px; letter-spacing:2px; }
+  body.theme-horror .optGroup h3 { color:#aa2222; }
+  body.theme-lotr .optGroup h3 { color:#a8d878; }
   .optRow { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
   .optBtn {
     padding:10px 22px; font-size:15px;
@@ -961,12 +1766,28 @@
     cursor:pointer; letter-spacing:1px;
     font-family:inherit; transition:all .15s;
   }
+  body.theme-funny .optBtn { background:rgba(255,240,220,.9); color:#6a3a00; border:2px solid #ffaa66; }
+  body.theme-lotr .optBtn { background:rgba(30,50,20,.8); color:#e8f0c8; border:2px solid #6a8a3a; }
   .optBtn:hover { border-color:#cc2222; color:#fff; }
+  body.theme-funny .optBtn:hover { border-color:#ff5500; color:#3a2000; }
+  body.theme-lotr .optBtn:hover { border-color:#a8d878; color:#fff; }
   .optBtn.active {
     background:linear-gradient(180deg, #8a1010, #3a0505);
     border-color:#cc2222; color:#ffffff;
     box-shadow:0 0 20px rgba(200,20,20,.7);
     text-shadow:0 0 8px rgba(255,60,60,.9);
+  }
+  body.theme-funny .optBtn.active {
+    background:linear-gradient(180deg, #ff9944, #cc5510);
+    border-color:#ff5500; color:#fff;
+    box-shadow:0 0 20px rgba(255,150,60,.8);
+    text-shadow:none;
+  }
+  body.theme-lotr .optBtn.active {
+    background:linear-gradient(180deg, #4a7a28, #1a3a08);
+    border-color:#a8d878; color:#fff;
+    box-shadow:0 0 20px rgba(120,200,80,.8);
+    text-shadow:0 0 8px rgba(180,220,140,.9);
   }
 
   .overlay .bigBtn {
@@ -980,10 +1801,19 @@
     transition:all .15s;
     text-shadow:0 0 10px rgba(255,60,60,.8);
   }
-  .overlay .bigBtn:hover {
-    background:linear-gradient(180deg, #cc1818, #5a0808);
-    box-shadow:0 0 40px rgba(255,40,40,.9), inset 0 0 20px rgba(0,0,0,.6);
+  body.theme-funny .overlay .bigBtn {
+    background:linear-gradient(180deg, #ffaa33, #cc6600);
+    border:2px solid #ff8800;
+    box-shadow:0 0 25px rgba(255,180,60,.8);
+    text-shadow:none;
   }
+  body.theme-lotr .overlay .bigBtn {
+    background:linear-gradient(180deg, #5a9a28, #2a5a10);
+    border:2px solid #a8d878;
+    box-shadow:0 0 25px rgba(120,200,80,.8);
+    text-shadow:0 0 8px rgba(180,220,140,.9);
+  }
+  .overlay .bigBtn:hover { filter:brightness(1.15); }
   .overlay .bigBtn:active { transform:translateY(2px); }
 
   .hidden { display:none !important; }
@@ -991,12 +1821,15 @@
   #hint {
     position:absolute; bottom:12px; left:50%;
     transform:translateX(-50%);
-    background:rgba(10,0,0,.8);
     padding:6px 22px; border-radius:20px;
-    font-size:13px; color:#ff8844;
-    border:1px solid #6a1010;
-    letter-spacing:1px; z-index:20;
+    font-size:13px; letter-spacing:1px; z-index:20;
     transition:all .4s;
+  }
+  body.theme-horror #hint {
+    background:rgba(20,0,0,.9); color:#cc4444;
+    border:1px solid #5a0000;
+    box-shadow:0 0 15px rgba(120,0,0,.6);
+    text-shadow:0 0 6px rgba(255,0,0,.6);
   }
   body.theme-funny #hint {
     background:rgba(255,255,255,.9); color:#6a3a00;
@@ -1012,41 +1845,47 @@
 
   #hitFlash {
     position:absolute; inset:0;
-    background:radial-gradient(circle, transparent 40%, rgba(180,0,0,.7) 100%);
-    opacity:0; pointer-events:none; z-index:50;
-    transition:opacity .2s;
+    opacity:0; pointer-events:none; z-index:55;
+    transition:opacity .15s;
+  }
+  body.theme-horror #hitFlash {
+    background:radial-gradient(circle, transparent 20%, rgba(180,0,0,.95) 90%);
+  }
+  body.theme-funny #hitFlash,
+  body.theme-lotr #hitFlash {
+    background:radial-gradient(circle, transparent 40%, rgba(180,0,0,.5) 100%);
+  }
+  #attackFlash {
+    position:absolute; inset:0;
+    opacity:0; pointer-events:none; z-index:56;
+    transition:opacity .05s;
+  }
+  body.theme-horror #attackFlash {
+    background:radial-gradient(circle at 18% 82%, rgba(255,0,0,1) 0%, rgba(120,0,0,.8) 30%, transparent 60%);
+  }
+  body.theme-funny #attackFlash {
+    background:radial-gradient(circle at 18% 82%, rgba(255,150,100,.9) 0%, rgba(200,60,20,.6) 30%, transparent 60%);
+  }
+  body.theme-lotr #attackFlash {
+    background:radial-gradient(circle at 18% 82%, rgba(255,50,50,.9) 0%, rgba(120,0,0,.6) 30%, transparent 60%);
   }
 
-  /* Победа */
-  #winScreen h1 { color:#ffd84a; text-shadow:0 0 20px #ffaa00, 0 0 40px #ff6600; }
-  .confetti {
-    position:absolute;
-    width:8px; height:14px;
-    top:-20px;
-    border-radius:2px;
-    z-index:99;
-    animation:confettiFall linear forwards;
-  }
-  @keyframes confettiFall {
-    0%   { transform:translateY(0) rotate(0); opacity:1; }
-    100% { transform:translateY(700px) rotate(720deg); opacity:0; }
-  }
-
-  /* Кнопка звука */
   #muteBtn {
     position:absolute; top:14px; right:14px;
     padding:6px 12px;
-    background:rgba(10,0,0,.75);
-    border:1px solid #6a1010;
     border-radius:4px;
-    color:#ff8844;
     font-size:14px;
-    cursor:pointer;
-    z-index:21;
+    cursor:pointer; z-index:21;
     font-family:inherit;
     transition:all .15s;
   }
-  #muteBtn:hover { background:rgba(60,10,10,.9); color:#fff; }
+  body.theme-horror #muteBtn {
+    background:rgba(20,0,0,.9);
+    border:1px solid #5a0000;
+    color:#cc4444;
+    box-shadow:0 0 10px rgba(120,0,0,.5);
+  }
+  body.theme-horror #muteBtn:hover { background:rgba(80,0,0,.9); color:#fff; }
   body.theme-funny #muteBtn {
     background:rgba(255,255,255,.9); color:#6a3a00;
     border:2px solid #ff8844;
@@ -1056,24 +1895,44 @@
     border:1px solid #8ab86a;
   }
 
-  /* Начало игры — тоже с небольшой анимацией */
   .intro-banner {
     position:absolute; top:50%; left:50%;
     transform:translate(-50%,-50%);
-    font-size:48px; font-weight:bold;
-    color:#fff;
-    text-shadow:0 0 30px #ff0000, 0 0 60px #ff0000;
+    font-size:60px; font-weight:bold;
     z-index:80;
     pointer-events:none;
-    animation:introAnim 2s ease-out forwards;
-    letter-spacing:4px;
+    animation:introAnim 2.5s ease-out forwards;
+    letter-spacing:6px;
     font-family:'Courier New', monospace;
+  }
+  body.theme-horror .intro-banner {
+    color:#ff0000;
+    text-shadow:0 0 30px #ff0000, 0 0 60px #ff0000, 0 0 90px #8a0000;
+  }
+  body.theme-funny .intro-banner {
+    color:#ff8833;
+    text-shadow:0 0 30px #ffaa44, 0 0 60px #ff6600;
+  }
+  body.theme-lotr .intro-banner {
+    color:#a8ff88;
+    text-shadow:0 0 30px #88ff44, 0 0 60px #44aa22;
   }
   @keyframes introAnim {
     0%   { opacity:0; transform:translate(-50%,-50%) scale(.3); }
-    20%  { opacity:1; transform:translate(-50%,-50%) scale(1.1); }
+    20%  { opacity:1; transform:translate(-50%,-50%) scale(1.15); }
     80%  { opacity:1; transform:translate(-50%,-50%) scale(1); }
-    100% { opacity:0; transform:translate(-50%,-50%) scale(2); }
+    100% { opacity:0; transform:translate(-50%,-50%) scale(2.5); filter:blur(10px); }
+  }
+
+  #winScreen h1 { color:#ffd84a; text-shadow:0 0 20px #ffaa00, 0 0 40px #ff6600; }
+  .confetti {
+    position:absolute; width:8px; height:14px; top:-20px;
+    border-radius:2px; z-index:99;
+    animation:confettiFall linear forwards;
+  }
+  @keyframes confettiFall {
+    0%   { transform:translateY(0) rotate(0); opacity:1; }
+    100% { transform:translateY(700px) rotate(720deg); opacity:0; }
   }
 </style>
 </head>
@@ -1084,7 +1943,11 @@
   <div id="scene"></div>
   <div id="ground"></div>
   <div id="fog"></div>
+  <div id="bloodfog"></div>
+  <div id="bloodDrops"></div>
   <div id="vignette"></div>
+  <div id="flashLightning"></div>
+  <div id="glitch"></div>
 
   <div id="hud">
     <div>💀 击杀: <span class="accent" id="score">0</span></div>
@@ -1098,24 +1961,20 @@
   <div id="hitFlash"></div>
   <div id="attackFlash"></div>
 
+  <div id="screamer">
+    <div class="face">
+      <div class="mouth"></div>
+    </div>
+    <div class="static"></div>
+  </div>
+
   <div class="overlay" id="setupScreen">
-    <h1>🎃 万圣节汉字防御战 🧟</h1>
-    <h2>— 中文版 —</h2>
-    <p>老师，请输入要复习的汉字或词语，<b>每行一个</b>（如 妈妈、服务员、中国人）。</p>
+    <h1>🎃 僵尸来袭 🧟</h1>
+    <h2>— 选择你的世界 —</h2>
+    <p>老师，请输入要复习的汉字或词语，<b>每行一个</b>。</p>
 
     <textarea id="wordInput" spellcheck="false"
-  placeholder="每行一个汉字或词语">南瓜
-僵尸
-鬼
-妖怪
-巫婆
-面具
-糖果
-骷髅
-蝙蝠
-蜘蛛
-墓地
-月亮</textarea>
+      placeholder="每行一个汉字或词语"></textarea>
 
     <div class="optGroup">
       <h3>选择难度</h3>
@@ -1129,9 +1988,9 @@
     <div class="optGroup">
       <h3>选择视觉风格</h3>
       <div class="optRow" id="themeRow">
-        <button class="optBtn active" data-theme="horror">恐怖战士</button>
-        <button class="optBtn" data-theme="funny">搞笑奶奶</button>
-        <button class="optBtn" data-theme="lotr">魔戒弓箭手</button>
+        <button class="optBtn active" data-theme="horror">🧟 恐怖战士</button>
+        <button class="optBtn" data-theme="funny">👵 搞笑奶奶</button>
+        <button class="optBtn" data-theme="lotr">🏹 魔戒弓箭手</button>
       </div>
     </div>
 
@@ -1142,13 +2001,12 @@
     <h1>💀 你死了 💀</h1>
     <h2>— 僵尸突破了防线 —</h2>
     <p>击杀数: <b id="finalScore">0</b></p>
-    <p>到达波次: <b id="finalWave">1</b></p>
     <button class="bigBtn" id="restartBtn">🔄 再玩一次</button>
   </div>
 
   <div class="overlay hidden" id="winScreen">
     <h1>🏆 胜利！ 🏆</h1>
-    <h2>— 全部汉字已击破！ —</h2>
+    <h2>— 全部汉字已击破 —</h2>
     <p>你答对了全部 <b id="winTotal">0</b> 个汉字！</p>
     <p>剩余生命: <b id="winLives">3</b> / 3</p>
     <p style="font-size:20px; margin-top:20px; color:#ffd84a;">🎉 恭喜你，学习小英雄！ 🎉</p>
@@ -1158,32 +2016,29 @@
 
 <script>
 /* =========================================================
-   ЗВУК (Web Audio API, без внешних файлов)
+   ЗВУК (без изменений)
    ========================================================= */
 const Sound = (() => {
   let ctx = null;
   let muted = false;
-  let bgGain = null;
-  let bgSources = [];   // активные узлы фоновой музыки
+  let bgSources = [];
   let bgLoopId = null;
+  let heartbeatId = null;
+  let breathId = null;
 
   function ensure() {
     if (!ctx) {
-      try {
-        ctx = new (window.AudioContext || window.webkitAudioContext)();
-      } catch (e) {
-        console.warn('Web Audio не поддерживается');
-      }
+      try { ctx = new (window.AudioContext || window.webkitAudioContext)(); }
+      catch(e) {}
     }
     if (ctx && ctx.state === 'suspended') ctx.resume();
     return ctx;
   }
 
-  /* ---------- простые генераторы ---------- */
-  function playOsc({ freq=440, dur=0.2, type='sine', vol=0.15, slideTo=null, delay=0, attack=0.005, release=0.05 }) {
+  function playOsc({ freq=440, dur=0.2, type='sine', vol=0.15, slideTo=null,
+                    delay=0, attack=0.005, release=0.05 }) {
     if (muted) return;
-    const c = ensure();
-    if (!c) return;
+    const c = ensure(); if (!c) return;
     const t0 = c.currentTime + delay;
     const osc = c.createOscillator();
     const g = c.createGain();
@@ -1198,10 +2053,10 @@ const Sound = (() => {
     osc.stop(t0 + dur + release + 0.02);
   }
 
-  function playNoise({ dur=0.2, vol=0.15, filterFreq=1000, filterQ=1, filterType='lowpass', delay=0 }) {
+  function playNoise({ dur=0.2, vol=0.15, filterFreq=1000, filterQ=1,
+                       filterType='lowpass', delay=0 }) {
     if (muted) return;
-    const c = ensure();
-    if (!c) return;
+    const c = ensure(); if (!c) return;
     const t0 = c.currentTime + delay;
     const bufferSize = Math.floor(c.sampleRate * dur);
     const buffer = c.createBuffer(1, bufferSize, c.sampleRate);
@@ -1221,61 +2076,120 @@ const Sound = (() => {
     src.stop(t0 + dur + 0.05);
   }
 
-  /* ---------- эффекты ---------- */
-  // выстрел бластера (sci-fi)
-  function blaster() {
-    playOsc({ freq:1600, dur:0.12, type:'sawtooth', vol:0.12, slideTo:200 });
-    playOsc({ freq:800, dur:0.15, type:'square', vol:0.06, slideTo:100, delay:0.02 });
-    playNoise({ dur:0.06, vol:0.05, filterFreq:4000 });
+  function blasterHorror() {
+    playOsc({ freq:1800, dur:0.15, type:'sawtooth', vol:0.22, slideTo:120 });
+    playOsc({ freq:900, dur:0.2, type:'square', vol:0.15, slideTo:80, delay:0.01 });
+    playNoise({ dur:0.12, vol:0.15, filterFreq:5000 });
+    playOsc({ freq:60, dur:0.3, type:'sine', vol:0.18, slideTo:30, delay:0.02 });
   }
-  // стрела Леголаса
-  function arrow() {
-    playNoise({ dur:0.25, vol:0.12, filterFreq:3000, filterType:'bandpass', filterQ:2 });
-    playOsc({ freq:1800, dur:0.18, type:'sine', vol:0.05, slideTo:400 });
+  function hitHorror() {
+    playNoise({ dur:0.4, vol:0.35, filterFreq:800, filterQ:1 });
+    playNoise({ dur:0.15, vol:0.25, filterFreq:2500, filterType:'bandpass', filterQ:3 });
+    playOsc({ freq:150, dur:0.3, type:'sine', vol:0.28, slideTo:45 });
+    playOsc({ freq:320, dur:0.25, type:'sawtooth', vol:0.12, slideTo:60, delay:0.03 });
   }
-  // бросок тыквы
+  function zombieAttackHorror() {
+    playOsc({ freq:140, dur:1.2, type:'sawtooth', vol:0.35, slideTo:60 });
+    playOsc({ freq:200, dur:1.0, type:'square', vol:0.15, slideTo:80, delay:0.05 });
+    playNoise({ dur:0.8, vol:0.28, filterFreq:600, filterType:'lowpass' });
+    playOsc({ freq:800, dur:0.15, type:'sine', vol:0.15, slideTo:200, delay:0.02 });
+  }
+  function zombieSpawnHorror() {
+    playOsc({ freq:110, dur:0.6, type:'sawtooth', vol:0.12, slideTo:70 });
+    playNoise({ dur:0.5, vol:0.1, filterFreq:400 });
+  }
+  function whisper() {
+    playNoise({ dur:1.5, vol:0.05, filterFreq:1200, filterType:'bandpass', filterQ:0.5 });
+  }
+  function scream() {
+    playOsc({ freq:1500, dur:0.7, type:'sawtooth', vol:0.4, slideTo:2400 });
+    playOsc({ freq:1200, dur:0.7, type:'square', vol:0.25, slideTo:2000, delay:0.02 });
+    playOsc({ freq:80, dur:0.9, type:'sawtooth', vol:0.4, slideTo:40 });
+    playNoise({ dur:0.9, vol:0.35, filterFreq:3000, filterType:'highpass' });
+    playNoise({ dur:0.5, vol:0.4, filterFreq:150, delay:0.3 });
+    playOsc({ freq:50, dur:0.6, type:'sine', vol:0.4, slideTo:25, delay:0.3 });
+  }
+  function heartbeat() {
+    playOsc({ freq:60, dur:0.1, type:'sine', vol:0.18, slideTo:40 });
+    setTimeout(() => {
+      if (muted) return;
+      playOsc({ freq:55, dur:0.12, type:'sine', vol:0.14, slideTo:35 });
+    }, 220);
+  }
+  function breath() {
+    playNoise({ dur:0.5, vol:0.05, filterFreq:600, filterType:'bandpass', filterQ:0.8 });
+    setTimeout(() => {
+      if (muted) return;
+      playNoise({ dur:0.4, vol:0.04, filterFreq:800, filterType:'bandpass', filterQ:0.8 });
+    }, 900);
+  }
+  function thunder() {
+    playNoise({ dur:1.8, vol:0.3, filterFreq:400, filterType:'lowpass' });
+    playNoise({ dur:0.4, vol:0.4, filterFreq:6000, filterType:'highpass' });
+    playOsc({ freq:45, dur:1.5, type:'sine', vol:0.3, slideTo:25, delay:0.1 });
+  }
+
   function pumpkinThrow() {
-    playOsc({ freq:280, dur:0.18, type:'triangle', vol:0.15, slideTo:120 });
+    playOsc({ freq:280, dur:0.18, type:'triangle', vol:0.18, slideTo:120 });
     playNoise({ dur:0.15, vol:0.08, filterFreq:800 });
   }
-  // попадание/взрыв
-  function hit() {
-    playNoise({ dur:0.35, vol:0.28, filterFreq:600, filterQ:1 });
-    playOsc({ freq:120, dur:0.35, type:'sine', vol:0.22, slideTo:40 });
-    playOsc({ freq:240, dur:0.2, type:'sawtooth', vol:0.1, slideTo:60, delay:0.02 });
+  function hitFunny() {
+    // Приятный "поп"-звук
+    playOsc({ freq:600, dur:0.15, type:'sine', vol:0.18, slideTo:900 });
+    playOsc({ freq:900, dur:0.1, type:'triangle', vol:0.12, slideTo:1200, delay:0.05 });
+    playNoise({ dur:0.1, vol:0.05, filterFreq:2000, filterType:'highpass' });
   }
-  // атака зомби — жуткий рык
-  function zombieAttack() {
-    playOsc({ freq:90, dur:0.6, type:'sawtooth', vol:0.22, slideTo:45 });
-    playNoise({ dur:0.5, vol:0.18, filterFreq:400, filterType:'lowpass' });
-    playOsc({ freq:220, dur:0.4, type:'triangle', vol:0.1, slideTo:80, delay:0.05 });
+  function zombieAttackFunny() {
+    playOsc({ freq:300, dur:0.3, type:'triangle', vol:0.15, slideTo:150 });
+    playOsc({ freq:180, dur:0.5, type:'sine', vol:0.12, slideTo:90, delay:0.15 });
   }
-  // победа
+  function zombieSpawnFunny() {
+    playOsc({ freq:440, dur:0.15, type:'sine', vol:0.08, slideTo:330 });
+  }
+
+  function arrowShot() {
+    playNoise({ dur:0.25, vol:0.15, filterFreq:3000, filterType:'bandpass', filterQ:2 });
+    playOsc({ freq:1800, dur:0.18, type:'sine', vol:0.08, slideTo:400 });
+  }
+  function hitLOTR() {
+    // Эльфийский колокольчик + мягкий удар
+    playOsc({ freq:900, dur:0.3, type:'sine', vol:0.14, slideTo:1400 });
+    playOsc({ freq:1300, dur:0.25, type:'triangle', vol:0.08, slideTo:1800, delay:0.05 });
+    playNoise({ dur:0.15, vol:0.08, filterFreq:1500, filterType:'bandpass', filterQ:2 });
+  }
+  function zombieAttackLOTR() {
+    playOsc({ freq:200, dur:0.5, type:'sawtooth', vol:0.22, slideTo:80 });
+    playOsc({ freq:140, dur:0.7, type:'triangle', vol:0.18, slideTo:60, delay:0.1 });
+    playNoise({ dur:0.5, vol:0.18, filterFreq:500 });
+  }
+  function zombieSpawnLOTR() {
+    playOsc({ freq:180, dur:0.3, type:'triangle', vol:0.08, slideTo:140 });
+  }
+
   function victory() {
-    const notes = [523.25, 659.25, 783.99, 1046.5]; // C E G C
+    const notes = [523.25, 659.25, 783.99, 1046.5];
     notes.forEach((f, i) => {
       playOsc({ freq:f, dur:0.35, type:'triangle', vol:0.18, delay:i * 0.15 });
       playOsc({ freq:f*2, dur:0.3, type:'sine', vol:0.08, delay:i * 0.15 });
     });
   }
-  // проигрыш
   function defeat() {
-    playOsc({ freq:220, dur:0.4, type:'sawtooth', vol:0.18 });
-    playOsc({ freq:180, dur:0.5, type:'sawtooth', vol:0.18, delay:0.25 });
-    playOsc({ freq:120, dur:0.9, type:'sawtooth', vol:0.22, delay:0.55 });
+    playOsc({ freq:180, dur:0.6, type:'sawtooth', vol:0.25, slideTo:60 });
+    playOsc({ freq:140, dur:0.8, type:'sawtooth', vol:0.25, slideTo:40, delay:0.5 });
+    playOsc({ freq:100, dur:1.5, type:'sawtooth', vol:0.3, slideTo:30, delay:1.2 });
+    playNoise({ dur:2.0, vol:0.15, filterFreq:200, delay:1.5 });
   }
 
-  /* ---------- фоновая музыка ---------- */
   function stopBg() {
     bgSources.forEach(s => { try { s.stop(); } catch(e){} });
     bgSources = [];
     if (bgLoopId) { clearTimeout(bgLoopId); bgLoopId = null; }
+    if (heartbeatId) { clearInterval(heartbeatId); heartbeatId = null; }
+    if (breathId) { clearInterval(breathId); breathId = null; }
   }
 
-  // создаём непрерывный «дрон» (низкая нота)
   function drone(freq, vol, type='sine') {
-    const c = ensure();
-    if (!c) return;
+    const c = ensure(); if (!c) return;
     const osc = c.createOscillator();
     const g = c.createGain();
     osc.type = type;
@@ -1284,35 +2198,42 @@ const Sound = (() => {
     osc.connect(g).connect(c.destination);
     osc.start();
     bgSources.push(osc);
-    return { osc, g };
   }
 
-  function startBg(themeName) {
+  function startBg(theme) {
     if (muted) return;
     stopBg();
-    const c = ensure();
-    if (!c) return;
+    const c = ensure(); if (!c) return;
 
-    if (themeName === 'horror') {
-      // мрачный эмбиент
-      drone(55, 0.05, 'sine');
-      drone(82.4, 0.04, 'triangle');
+    if (theme === 'horror') {
+      drone(40, 0.08, 'sine');
+      drone(55, 0.06, 'triangle');
+      drone(82, 0.04, 'sine');
       drone(110, 0.03, 'sine');
-      // лёгкий «шум ветра»
       const bufferSize = c.sampleRate * 4;
       const buffer = c.createBuffer(1, bufferSize, c.sampleRate);
       const data = buffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) data[i] = (Math.random()*2-1)*0.15;
+      for (let i = 0; i < bufferSize; i++) data[i] = (Math.random()*2-1)*0.12;
       const src = c.createBufferSource();
       src.buffer = buffer; src.loop = true;
       const filter = c.createBiquadFilter();
-      filter.type = 'lowpass'; filter.frequency.value = 250;
-      const g = c.createGain(); g.gain.value = 0.15;
+      filter.type = 'lowpass'; filter.frequency.value = 200;
+      const g = c.createGain(); g.gain.value = 0.2;
       src.connect(filter).connect(g).connect(c.destination);
       src.start();
       bgSources.push(src);
-    } else if (themeName === 'funny') {
-      // весёлая мелодия — короткие ноты по кругу
+
+      function scheduleWhisper() {
+        if (muted) return;
+        whisper();
+        bgLoopId = setTimeout(scheduleWhisper, 8000 + Math.random() * 12000);
+      }
+      scheduleWhisper();
+      heartbeat();
+      heartbeatId = setInterval(heartbeat, 1400);
+      breath();
+      breathId = setInterval(breath, 5000);
+    } else if (theme === 'funny') {
       const melody = [
         [659.25, 0.15], [784.0, 0.15], [880.0, 0.15], [1046.5, 0.15],
         [880.0, 0.15], [784.0, 0.15], [659.25, 0.3],
@@ -1328,14 +2249,11 @@ const Sound = (() => {
         bgLoopId = setTimeout(playNote, dur * 1000 + 80);
       }
       playNote();
-      // лёгкий бас
       drone(130.8, 0.03, 'sine');
-    } else if (themeName === 'lotr') {
-      // эпичный эмбиент с «шантом»
+    } else if (theme === 'lotr') {
       drone(98, 0.05, 'sine');
       drone(146.8, 0.035, 'triangle');
       drone(196, 0.03, 'sine');
-      // далёкие «эльфийские» колокольчики
       const notes = [523.25, 587.33, 659.25, 783.99];
       let i = 0;
       function chime() {
@@ -1348,17 +2266,37 @@ const Sound = (() => {
     }
   }
 
-  function setMuted(v) {
-    muted = v;
-    if (v) stopBg();
-  }
+  function setMuted(v) { muted = v; if (v) stopBg(); }
   function isMuted() { return muted; }
 
-  return { blaster, arrow, pumpkinThrow, hit, zombieAttack, victory, defeat, startBg, stopBg, setMuted, isMuted };
+  return {
+    shoot(theme) {
+      if (theme === 'horror') blasterHorror();
+      else if (theme === 'funny') pumpkinThrow();
+      else arrowShot();
+    },
+    hit(theme) {
+      if (theme === 'horror') hitHorror();
+      else if (theme === 'funny') hitFunny();
+      else hitLOTR();
+    },
+    zombieAttack(theme) {
+      if (theme === 'horror') zombieAttackHorror();
+      else if (theme === 'funny') zombieAttackFunny();
+      else zombieAttackLOTR();
+    },
+    zombieSpawn(theme) {
+      if (theme === 'horror') zombieSpawnHorror();
+      else if (theme === 'funny') zombieSpawnFunny();
+      else zombieSpawnLOTR();
+    },
+    scream, thunder, victory, defeat,
+    startBg, stopBg, setMuted, isMuted
+  };
 })();
 
 /* =========================================================
-   DOM и состояние
+   DOM
    ========================================================= */
 const game       = document.getElementById('game');
 const scoreEl    = document.getElementById('score');
@@ -1368,7 +2306,6 @@ const setupScr   = document.getElementById('setupScreen');
 const loseScr    = document.getElementById('loseScreen');
 const winScr     = document.getElementById('winScreen');
 const finalScr   = document.getElementById('finalScore');
-const finalWv    = document.getElementById('finalWave');
 const winTotal   = document.getElementById('winTotal');
 const winLives   = document.getElementById('winLives');
 const startBtn   = document.getElementById('startBtn');
@@ -1377,23 +2314,34 @@ const winRestartBtn = document.getElementById('winRestartBtn');
 const wordInput  = document.getElementById('wordInput');
 const hitFlash   = document.getElementById('hitFlash');
 const attackFlash= document.getElementById('attackFlash');
+const bloodDropsEl = document.getElementById('bloodDrops');
+const muteBtn    = document.getElementById('muteBtn');
+const screamer   = document.getElementById('screamer');
+const glitchEl   = document.getElementById('glitch');
 const sceneEl    = document.getElementById('scene');
 const starsEl    = document.getElementById('stars');
-const muteBtn    = document.getElementById('muteBtn');
+const lightningEl= document.getElementById('flashLightning');
 
 wordInput.value = `南瓜
 僵尸
+骷髅
 鬼
 妖怪
 巫婆
 面具
 糖果
-骷髅
 蝙蝠
 蜘蛛
 墓地
-月亮`;
-
+棺材
+月亮
+黑暗
+噩梦
+尖叫
+幽灵
+狼人
+吸血鬼
+南瓜灯`;
 
 let difficulty = 'easy';
 let theme = 'horror';
@@ -1420,22 +2368,20 @@ const DIFF = {
   hard:   { startSpeed: 0.85, spawn: 1800, speedStep: 0.18, spawnStep: 320, minSpawn: 700,  minSpeed: 2.4 },
 };
 
-/* --------- состояние игры --------- */
-let WORD_QUEUE = [];     // оставшиеся слова (по одному на каждого будущего зомби)
-let TOTAL_WORDS = 0;     // сколько всего уникальных слов в начале
-let KILLED = 0;          // сколько слов убито
+let WORD_QUEUE = [];
+let TOTAL_WORDS = 0;
+let KILLED = 0;
 let running = false;
-let score = 0, lives = 3, wave = 1;
+let score = 0, lives = 3;
 let zombies = [];
 let spawnTimer = 0;
 let spawnInterval = 3000;
 let zombieSpeed = 0.35;
 let lastTime = 0;
 let rafId = null;
-let slowmo = 0;          // длительность замедления (мс)
 
 /* =========================================================
-   Тема
+   ТЕМА
    ========================================================= */
 function applyTheme() {
   document.body.className = 'theme-' + theme;
@@ -1446,10 +2392,10 @@ function applyTheme() {
 function buildStars() {
   starsEl.innerHTML = '';
   if (theme !== 'horror') return;
-  for (let i = 0; i < 80; i++) {
+  for (let i = 0; i < 100; i++) {
     const s = document.createElement('div');
     s.className = 'star';
-    const size = Math.random() * 2 + 1;
+    const size = Math.random() * 2.5 + 1;
     s.style.width = size + 'px';
     s.style.height = size + 'px';
     s.style.left = Math.random() * 100 + '%';
@@ -1580,7 +2526,124 @@ function buildScene() {
 applyTheme();
 
 /* =========================================================
-   Герой
+   ХОРРОР-ЭФФЕКТЫ
+   ========================================================= */
+function spawnBloodDrop() {
+  if (!running || theme !== 'horror') return;
+  const d = document.createElement('div');
+  d.className = 'blood-drop';
+  d.style.left = (Math.random() * 100) + '%';
+  const h = 20 + Math.random() * 60;
+  d.style.height = h + 'px';
+  d.style.animationDuration = (3 + Math.random() * 4) + 's';
+  bloodDropsEl.appendChild(d);
+  setTimeout(() => d.remove(), 8000);
+}
+setInterval(spawnBloodDrop, 600);
+
+function spawnShadowRunner() {
+  if (!running || theme !== 'horror') return;
+  const s = document.createElement('div');
+  s.className = 'shadow-runner';
+  const fromLeft = Math.random() < 0.5;
+  s.style.left = fromLeft ? '-100px' : 'calc(100% + 100px)';
+  s.style.top = (20 + Math.random() * 60) + '%';
+  game.appendChild(s);
+  s.animate([
+    { transform:'translateX(0)', opacity:0 },
+    { transform:`translateX(${fromLeft ? 100 : -100}px)`, opacity:.9, offset:.3 },
+    { transform:`translateX(${fromLeft ? 300 : -300}px)`, opacity:.7, offset:.6 },
+    { transform:`translateX(${fromLeft ? 1300 : -1300}px)`, opacity:0 }
+  ], { duration: 3500 + Math.random() * 2000, easing:'linear' });
+  setTimeout(() => s.remove(), 6000);
+}
+setInterval(spawnShadowRunner, 3500);
+
+function triggerGlitch() {
+  if (!running || theme !== 'horror') return;
+  glitchEl.classList.add('active');
+  setTimeout(() => glitchEl.classList.remove('active'), 350);
+}
+setInterval(() => {
+  if (running && theme === 'horror' && Math.random() < 0.35) triggerGlitch();
+}, 4500);
+
+function triggerLightning() {
+  if (!running || theme !== 'horror') return;
+  lightningEl.style.opacity = '1';
+  setTimeout(() => {
+    lightningEl.style.transition = 'opacity .4s';
+    lightningEl.style.opacity = '0';
+    setTimeout(() => lightningEl.style.transition = 'opacity 0s', 400);
+  }, 80);
+  setTimeout(() => {
+    if (!running || theme !== 'horror') return;
+    lightningEl.style.opacity = '.8';
+    setTimeout(() => {
+      lightningEl.style.transition = 'opacity .5s';
+      lightningEl.style.opacity = '0';
+      setTimeout(() => lightningEl.style.transition = 'opacity 0s', 500);
+    }, 60);
+  }, 200);
+  setTimeout(() => Sound.thunder(), 300);
+}
+
+function scheduleLightning() {
+  const delay = 8000 + Math.random() * 12000;
+  setTimeout(() => {
+    if (running && theme === 'horror') {
+      triggerLightning();
+      scheduleLightning();
+    }
+  }, delay);
+}
+
+function triggerScreamer() {
+  if (!running || theme !== 'horror') return;
+  Sound.scream();
+  screamer.classList.add('show');
+  game.animate([
+    { transform:'translate(0,0) rotate(0)' },
+    { transform:'translate(-20px,15px) rotate(-3deg)' },
+    { transform:'translate(20px,-15px) rotate(3deg)' },
+    { transform:'translate(-15px,10px) rotate(-2deg)' },
+    { transform:'translate(15px,-10px) rotate(2deg)' },
+    { transform:'translate(-8px,5px) rotate(-1deg)' },
+    { transform:'translate(8px,-5px) rotate(1deg)' },
+    { transform:'translate(0,0) rotate(0)' }
+  ], { duration: 900 });
+  setTimeout(() => screamer.classList.remove('show'), 900);
+}
+
+function scheduleScreamer() {
+  const delay = 10000 + Math.random() * 8000;
+  setTimeout(() => {
+    if (running && theme === 'horror') {
+      triggerScreamer();
+      scheduleScreamer();
+    }
+  }, delay);
+}
+
+function bloodScreenEffect() {
+  if (theme !== 'horror') return;
+  hitFlash.style.opacity = '1';
+  setTimeout(() => hitFlash.style.opacity = '0', 200);
+  for (let i = 0; i < 20; i++) {
+    setTimeout(() => {
+      const d = document.createElement('div');
+      d.className = 'blood-drop';
+      d.style.left = (Math.random() * 100) + '%';
+      d.style.height = (30 + Math.random() * 100) + 'px';
+      d.style.animationDuration = (2 + Math.random() * 2) + 's';
+      bloodDropsEl.appendChild(d);
+      setTimeout(() => d.remove(), 4000);
+    }, i * 50);
+  }
+}
+
+/* =========================================================
+   ГЕРОЙ
    ========================================================= */
 function renderHero() {
   const hero = document.createElement('div');
@@ -1643,9 +2706,6 @@ function heroLOTR() {
   `;
 }
 
-/* =========================================================
-   Враги
-   ========================================================= */
 function heroPos() {
   const h = document.getElementById('hero');
   if (!h) return { x: 170, y: 480 };
@@ -1654,6 +2714,9 @@ function heroPos() {
   return { x: r.left - g.left + r.width / 2, y: r.top - g.top + r.height / 2 };
 }
 
+/* =========================================================
+   ВРАГИ
+   ========================================================= */
 function pickNextWord() {
   if (WORD_QUEUE.length === 0) return null;
   return WORD_QUEUE.shift();
@@ -1666,7 +2729,6 @@ function spawnEnemy() {
 
   const z = document.createElement('div');
   z.className = 'zombie';
-  if (theme === 'lotr') z.classList.add('orc');
 
   const lenClass = word.length <= 1 ? '' :
                    word.length === 2 ? 'len-2' :
@@ -1690,6 +2752,8 @@ function spawnEnemy() {
   z.style.left = startX + 'px';
   z.style.bottom = '50px';
 
+  Sound.zombieSpawn(theme);
+
   zombies.push({
     el: z, word,
     x: startX,
@@ -1700,7 +2764,7 @@ function spawnEnemy() {
 }
 
 /* =========================================================
-   Выстрел
+   ВЫСТРЕЛ
    ========================================================= */
 function shoot(target) {
   if (!target || !target.alive) return;
@@ -1708,7 +2772,6 @@ function shoot(target) {
   const hp = heroPos();
   const zr = target.el.getBoundingClientRect();
   const gr = game.getBoundingClientRect();
-
   const signEl = target.el.querySelector('.sign');
   const sr = signEl ? signEl.getBoundingClientRect() : zr;
   const tx = sr.left - gr.left + sr.width / 2;
@@ -1719,18 +2782,17 @@ function shoot(target) {
   if (theme === 'funny')      { sx = hp.x + 30; sy = hp.y + 10; }
   else if (theme === 'lotr')  { sx = hp.x + 25; sy = hp.y - 10; }
 
-  const dx = tx - sx;
-  const dy = ty - sy;
+  const dx = tx - sx, dy = ty - sy;
   const dist = Math.hypot(dx, dy);
   const angleDeg = Math.atan2(dy, dx) * 180 / Math.PI;
 
-  /* === HORROR: мгновенный лазер === */
+  Sound.shoot(theme);
+
   if (theme === 'horror') {
-    Sound.blaster();
     const laser = document.createElement('div');
     laser.className = 'laser';
     laser.style.left = sx + 'px';
-    laser.style.top  = (sy - 4) + 'px';
+    laser.style.top  = (sy - 5) + 'px';
     laser.style.width = '0px';
     laser.style.transformOrigin = '0 50%';
     laser.style.transform = `rotate(${angleDeg}deg)`;
@@ -1753,9 +2815,7 @@ function shoot(target) {
     return;
   }
 
-  /* === FUNNY: тыковка === */
   if (theme === 'funny') {
-    Sound.pumpkinThrow();
     const proj = document.createElement('div');
     proj.className = 'pumpkin-proj';
     proj.innerHTML = `<div class="pj-stem"></div><div class="pj-mouth"></div>`;
@@ -1780,8 +2840,6 @@ function shoot(target) {
     return;
   }
 
-  /* === LOTR: стрела === */
-  Sound.arrow();
   const proj = document.createElement('div');
   proj.className = 'arrow';
   proj.style.left = sx + 'px';
@@ -1818,61 +2876,153 @@ function recoil() {
   ], { duration:150 });
 }
 
+/* =========================================================
+   УБИЙСТВО — БЕЗ ЗАДЕРЖКИ, МГНОВЕННОЕ УДАЛЕНИЕ
+   ========================================================= */
 function killEnemy(z) {
   if (!z.alive) return;
   z.alive = false;
 
-  // звук попадания
-  Sound.hit();
+  Sound.hit(theme);
 
   const r = z.el.getBoundingClientRect();
   const gr = game.getBoundingClientRect();
   const cx = r.left - gr.left + r.width / 2;
   const cy = r.top  - gr.top  + r.height / 2;
 
-  const ex = document.createElement('div');
-  ex.className = 'explosion';
-  ex.style.left = (cx - 40) + 'px';
-  ex.style.top  = (cy - 40) + 'px';
-  game.appendChild(ex);
-  setTimeout(() => ex.remove(), 600);
+  // === МГНОВЕННОЕ УДАЛЕНИЕ — зомби не задерживается
+  z.el.remove();
 
-  for (let i = 0; i < 10; i++) {
-    const sp = document.createElement('div');
-    sp.className = 'spark';
-    sp.style.left = cx + 'px';
-    sp.style.top  = cy + 'px';
-    const ang = Math.random() * Math.PI * 2;
-    const d = 30 + Math.random() * 50;
-    sp.style.transition = 'transform .5s ease-out, opacity .5s';
-    game.appendChild(sp);
-    requestAnimationFrame(() => {
-      sp.style.transform = `translate(${Math.cos(ang)*d}px, ${Math.sin(ang)*d}px) scale(0)`;
-      sp.style.opacity = '0';
-    });
-    setTimeout(() => sp.remove(), 550);
+  // === Эффекты по теме ===
+  if (theme === 'horror') {
+    // Кровавый взрыв + брызги + вспышка
+    const hf = document.createElement('div');
+    hf.className = 'hit-flash';
+    hf.style.left = (cx - 20) + 'px';
+    hf.style.top  = (cy - 20) + 'px';
+    game.appendChild(hf);
+    setTimeout(() => hf.remove(), 350);
+
+    const ex = document.createElement('div');
+    ex.className = 'explosion';
+    ex.style.left = (cx - 40) + 'px';
+    ex.style.top  = (cy - 40) + 'px';
+    game.appendChild(ex);
+    setTimeout(() => ex.remove(), 600);
+
+    for (let i = 0; i < 20; i++) {
+      const b = document.createElement('div');
+      b.className = 'blood-splat';
+      const angle = Math.random() * Math.PI * 2;
+      const d = 50 + Math.random() * 120;
+      b.style.setProperty('--dx', Math.cos(angle) * d + 'px');
+      b.style.setProperty('--dy', Math.sin(angle) * d + 'px');
+      b.style.left = cx + 'px';
+      b.style.top  = cy + 'px';
+      b.style.width  = (6 + Math.random() * 18) + 'px';
+      b.style.height = (6 + Math.random() * 18) + 'px';
+      b.style.animationDelay = (Math.random() * 0.15) + 's';
+      game.appendChild(b);
+      setTimeout(() => b.remove(), 1000);
+    }
+  }
+  else if (theme === 'funny') {
+    // === Тыквенное облачко + разлетающиеся мини-тыковки ===
+    const puff = document.createElement('div');
+    puff.className = 'puff-funny';
+    puff.style.left = (cx - 35) + 'px';
+    puff.style.top  = (cy - 35) + 'px';
+    game.appendChild(puff);
+    setTimeout(() => puff.remove(), 550);
+
+    // Разлетающиеся мини-тыковки
+    for (let i = 0; i < 12; i++) {
+      const mp = document.createElement('div');
+      mp.className = 'mini-pumpkin';
+      const angle = Math.random() * Math.PI * 2;
+      const d = 50 + Math.random() * 100;
+      mp.style.setProperty('--dx', Math.cos(angle) * d + 'px');
+      mp.style.setProperty('--dy', Math.sin(angle) * d + 'px');
+      mp.style.left = (cx - 10) + 'px';
+      mp.style.top  = (cy - 10) + 'px';
+      mp.style.animationDelay = (Math.random() * 0.1) + 's';
+      game.appendChild(mp);
+      setTimeout(() => mp.remove(), 800);
+    }
+
+    // Немного оранжевых искр
+    for (let i = 0; i < 8; i++) {
+      const sp = document.createElement('div');
+      sp.className = 'spark';
+      sp.style.background = ['#ffcc00','#ff8844','#ffee88'][Math.floor(Math.random()*3)];
+      sp.style.boxShadow = '0 0 10px #ff8844';
+      sp.style.left = cx + 'px';
+      sp.style.top  = cy + 'px';
+      const ang = Math.random() * Math.PI * 2;
+      const d = 40 + Math.random() * 60;
+      sp.style.transition = 'transform .5s ease-out, opacity .5s';
+      game.appendChild(sp);
+      requestAnimationFrame(() => {
+        sp.style.transform = `translate(${Math.cos(ang)*d}px, ${Math.sin(ang)*d}px) scale(0)`;
+        sp.style.opacity = '0';
+      });
+      setTimeout(() => sp.remove(), 550);
+    }
+  }
+  else {
+    // === LOTR: эльфийская вспышка + листья + зелёные искры ===
+    const ef = document.createElement('div');
+    ef.className = 'elf-flash';
+    ef.style.left = (cx - 40) + 'px';
+    ef.style.top  = (cy - 40) + 'px';
+    game.appendChild(ef);
+    setTimeout(() => ef.remove(), 550);
+
+    // Разлетающиеся листья
+    for (let i = 0; i < 8; i++) {
+      const leaf = document.createElement('div');
+      leaf.className = 'elf-leaf';
+      const angle = Math.random() * Math.PI * 2;
+      const d = 60 + Math.random() * 110;
+      leaf.style.setProperty('--dx', Math.cos(angle) * d + 'px');
+      leaf.style.setProperty('--dy', Math.sin(angle) * d + 'px');
+      leaf.style.left = (cx - 7) + 'px';
+      leaf.style.top  = (cy - 4) + 'px';
+      leaf.style.animationDelay = (Math.random() * 0.1) + 's';
+      game.appendChild(leaf);
+      setTimeout(() => leaf.remove(), 850);
+    }
+
+    // Светящиеся эльфийские искры
+    for (let i = 0; i < 12; i++) {
+      const sp = document.createElement('div');
+      sp.className = 'elf-spark';
+      const angle = Math.random() * Math.PI * 2;
+      const d = 40 + Math.random() * 90;
+      sp.style.setProperty('--dx', Math.cos(angle) * d + 'px');
+      sp.style.setProperty('--dy', Math.sin(angle) * d + 'px');
+      sp.style.left = cx + 'px';
+      sp.style.top  = cy + 'px';
+      sp.style.animationDelay = (Math.random() * 0.1) + 's';
+      game.appendChild(sp);
+      setTimeout(() => sp.remove(), 800);
+    }
   }
 
-  z.el.classList.add('dying');
-  setTimeout(() => z.el.remove(), 550);
-
+  // === Счётчики ===
   score++;
   KILLED++;
   scoreEl.textContent = score;
-
-  // Обновляем счётчик оставшихся
   updateRemaining();
 
   if (score % 4 === 0) {
-    wave++;
     const d = DIFF[difficulty];
     spawnInterval = Math.max(d.minSpawn, spawnInterval - d.spawnStep);
     zombieSpeed = Math.min(d.minSpeed, zombieSpeed + d.speedStep);
   }
 
-  // Победа?
   if (KILLED >= TOTAL_WORDS) {
-    setTimeout(winGame, 600);
+    setTimeout(winGame, 800);
   }
 }
 
@@ -1882,70 +3032,99 @@ function updateRemaining() {
 }
 
 /* =========================================================
-   АТАКА ЗОМБИ (зрелищная)
+   АТАКА
    ========================================================= */
 function hurtHero() {
-  // звук рыка
-  Sound.zombieAttack();
+  Sound.zombieAttack(theme);
 
   lives--;
   livesEl.textContent = lives;
 
-  // 1. Красная вспышка
   attackFlash.style.transition = 'opacity .05s';
   attackFlash.style.opacity = '1';
   setTimeout(() => {
-    attackFlash.style.transition = 'opacity .4s';
+    attackFlash.style.transition = 'opacity .5s';
     attackFlash.style.opacity = '0';
-  }, 90);
+  }, 100);
 
-  // 2. Тряска экрана
   game.animate([
     { transform:'translate(0,0) rotate(0)' },
-    { transform:'translate(-12px,8px) rotate(-1.5deg)' },
-    { transform:'translate(10px,-6px) rotate(1.5deg)' },
-    { transform:'translate(-8px,4px) rotate(-1deg)' },
-    { transform:'translate(6px,-3px) rotate(.5deg)' },
-    { transform:'translate(-3px,2px) rotate(0)' },
+    { transform:'translate(-20px,15px) rotate(-3deg)' },
+    { transform:'translate(18px,-12px) rotate(3deg)' },
+    { transform:'translate(-14px,8px) rotate(-2deg)' },
+    { transform:'translate(10px,-5px) rotate(1.5deg)' },
+    { transform:'translate(-5px,3px) rotate(0)' },
     { transform:'translate(0,0) rotate(0)' }
-  ], { duration:500, easing:'ease-out' });
+  ], { duration:650, easing:'ease-out' });
 
-  // 3. Кровавые брызги у героя
   const hp = heroPos();
-  for (let i = 0; i < 12; i++) {
-    const b = document.createElement('div');
-    b.className = 'blood-splat';
-    const angle = Math.random() * Math.PI * 2;
-    const dist = 40 + Math.random() * 80;
-    b.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
-    b.style.setProperty('--dy', Math.sin(angle) * dist + 'px');
-    b.style.left = hp.x + 'px';
-    b.style.top  = hp.y + 'px';
-    b.style.width  = (8 + Math.random() * 16) + 'px';
-    b.style.height = (8 + Math.random() * 16) + 'px';
-    game.appendChild(b);
-    setTimeout(() => b.remove(), 850);
+
+  // Брызги по теме
+  if (theme === 'horror') {
+    for (let i = 0; i < 25; i++) {
+      const b = document.createElement('div');
+      b.className = 'blood-splat';
+      const angle = Math.random() * Math.PI * 2;
+      const d = 50 + Math.random() * 120;
+      b.style.setProperty('--dx', Math.cos(angle) * d + 'px');
+      b.style.setProperty('--dy', Math.sin(angle) * d + 'px');
+      b.style.left = hp.x + 'px';
+      b.style.top  = hp.y + 'px';
+      b.style.width  = (8 + Math.random() * 22) + 'px';
+      b.style.height = (8 + Math.random() * 22) + 'px';
+      game.appendChild(b);
+      setTimeout(() => b.remove(), 1000);
+    }
+    bloodScreenEffect();
+    triggerGlitch();
+    if (Math.random() < 0.5) triggerLightning();
+  }
+  else if (theme === 'funny') {
+    // Разлетающиеся тыковки
+    for (let i = 0; i < 15; i++) {
+      const mp = document.createElement('div');
+      mp.className = 'mini-pumpkin';
+      const angle = Math.random() * Math.PI * 2;
+      const d = 50 + Math.random() * 100;
+      mp.style.setProperty('--dx', Math.cos(angle) * d + 'px');
+      mp.style.setProperty('--dy', Math.sin(angle) * d + 'px');
+      mp.style.left = (hp.x - 10) + 'px';
+      mp.style.top  = (hp.y - 10) + 'px';
+      game.appendChild(mp);
+      setTimeout(() => mp.remove(), 800);
+    }
+  }
+  else {
+    // LOTR: зелёные листья
+    for (let i = 0; i < 15; i++) {
+      const leaf = document.createElement('div');
+      leaf.className = 'elf-leaf';
+      const angle = Math.random() * Math.PI * 2;
+      const d = 50 + Math.random() * 120;
+      leaf.style.setProperty('--dx', Math.cos(angle) * d + 'px');
+      leaf.style.setProperty('--dy', Math.sin(angle) * d + 'px');
+      leaf.style.left = (hp.x - 7) + 'px';
+      leaf.style.top  = (hp.y - 4) + 'px';
+      game.appendChild(leaf);
+      setTimeout(() => leaf.remove(), 850);
+    }
   }
 
-  // 4. Анимация героя (отбрасывание)
   const hero = document.getElementById('hero');
   if (hero) {
     hero.classList.remove('hurt');
     void hero.offsetWidth;
     hero.classList.add('hurt');
-    setTimeout(() => hero.classList.remove('hurt'), 600);
+    setTimeout(() => hero.classList.remove('hurt'), 700);
   }
 
-   // 5. Пометка о недавней атаке (используется только для визуальных эффектов)
-  slowmo = 350;
-
   if (lives <= 0) {
-    setTimeout(() => gameOver(), 700);
+    setTimeout(() => gameOver(), 900);
   }
 }
 
 /* =========================================================
-   Очередь и игра
+   ИГРОВОЙ ЦИКЛ
    ========================================================= */
 function fireAtClosest() {
   if (!running || zombies.length === 0) return;
@@ -1964,17 +3143,9 @@ document.addEventListener('keydown', (e) => {
 function loop(t) {
   if (!running) return;
   if (!lastTime) lastTime = t;
-  const rawDt = Math.min(50, t - lastTime);
+  const dt = Math.min(50, t - lastTime);
   lastTime = t;
 
-  // Замедление НЕ влияет на движение зомби — только на визуальные эффекты
-  let dt = rawDt;
-  if (slowmo > 0) {
-    slowmo -= rawDt;
-    if (slowmo < 0) slowmo = 0;
-  }
-
-  // Спавн
   if (WORD_QUEUE.length > 0) {
     spawnTimer += dt;
     if (spawnTimer >= spawnInterval) {
@@ -1983,7 +3154,6 @@ function loop(t) {
     }
   }
 
-  // Движение зомби — всегда на полной скорости
   for (const z of zombies) {
     if (!z.alive) continue;
     z.x -= z.speed * dt * 0.06 * 60 / 16;
@@ -2002,10 +3172,9 @@ function loop(t) {
 }
 
 /* =========================================================
-   Старт / финал
+   СТАРТ / ФИНАЛ
    ========================================================= */
 function startGame() {
-  // Собираем слова (уникальные, каждая строка = 1 слово)
   const raw = wordInput.value
     .split('\n')
     .map(l => l.trim())
@@ -2016,11 +3185,7 @@ function startGame() {
     return;
   }
 
-  // Уникальные слова
   const unique = [...new Set(raw)];
-  WORDS = unique;
-
-  // Очередь слов — перемешиваем
   WORD_QUEUE = [...unique].sort(() => Math.random() - 0.5);
   TOTAL_WORDS = unique.length;
   KILLED = 0;
@@ -2034,9 +3199,8 @@ function startGame() {
   zombieSpeed = d.startSpeed;
   spawnInterval = d.spawn;
 
-  score = 0; lives = 3; wave = 1;
+  score = 0; lives = 3;
   spawnTimer = 0; lastTime = 0;
-  slowmo = 0;
   scoreEl.textContent = '0';
   livesEl.textContent = '3';
   updateRemaining();
@@ -2045,20 +3209,30 @@ function startGame() {
   loseScr.classList.add('hidden');
   winScr.classList.add('hidden');
 
-  // Музыка по теме
   Sound.startBg(theme);
 
-  // Интро-баннер
   const intro = document.createElement('div');
   intro.className = 'intro-banner';
-  intro.textContent = '准备！';
+  intro.textContent = theme === 'horror' ? '准备受死' :
+                      theme === 'funny'  ? '奶奶出击！' :
+                                            '为了中土！';
   game.appendChild(intro);
-  setTimeout(() => intro.remove(), 2000);
+  setTimeout(() => intro.remove(), 2500);
 
   running = true;
   setTimeout(() => {
     if (running) spawnEnemy();
-  }, 500);
+  }, 600);
+
+  if (theme === 'horror') {
+    setTimeout(() => {
+      if (running) {
+        triggerScreamer();
+        scheduleScreamer();
+        scheduleLightning();
+      }
+    }, 7000);
+  }
 
   rafId = requestAnimationFrame(loop);
 }
@@ -2070,7 +3244,6 @@ function gameOver() {
   Sound.defeat();
 
   finalScr.textContent = score;
-  finalWv.textContent = wave;
   loseScr.classList.remove('hidden');
   document.querySelectorAll('.zombie').forEach(z => z.remove());
   zombies = [];
@@ -2082,7 +3255,6 @@ function winGame() {
   Sound.stopBg();
   Sound.victory();
 
-  // Конфетти
   const colors = ['#ff4466', '#ffaa33', '#44cc44', '#4488ff', '#cc44ff', '#ffd84a'];
   for (let i = 0; i < 80; i++) {
     const c = document.createElement('div');
@@ -2120,7 +3292,6 @@ winRestartBtn.addEventListener('click', () => {
   if (rafId) cancelAnimationFrame(rafId);
 });
 
-/* Кнопка звука */
 muteBtn.addEventListener('click', () => {
   const m = !Sound.isMuted();
   Sound.setMuted(m);
