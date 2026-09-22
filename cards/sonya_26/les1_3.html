@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Карточки · Уроки 1–3</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+      background: #f1f5f9;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      touch-action: pan-y;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 500px;
+      background: white;
+      border-radius: 32px;
+      box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.2);
+      padding: 24px 20px 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #0f172a;
+      letter-spacing: -0.01em;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background: #e2e8f0;
+      border-radius: 999px;
+      margin: 12px 0 8px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: #3b82f6;
+      border-radius: 999px;
+      transition: width 0.25s ease;
+    }
+
+    .stats {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      font-size: 0.85rem;
+      color: #64748b;
+      font-weight: 500;
+      margin-bottom: 16px;
+    }
+
+    .stats span {
+      background: #f8fafc;
+      padding: 4px 12px;
+      border-radius: 40px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .card-container {
+      position: relative;
+      width: 100%;
+      height: 440px;
+      margin: 8px 0 16px;
+      perspective: 1200px;
+    }
+
+    .card {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      cursor: grab;
+      user-select: none;
+      will-change: transform;
+      transition: transform 0.15s ease, opacity 0.2s ease;
+      transform-style: preserve-3d;
+    }
+
+    .card:active { cursor: grabbing; }
+
+    .card-inner {
+      position: relative;
+      width: 100%; height: 100%;
+      transition: transform 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
+      transform-style: preserve-3d;
+    }
+
+    .card.flipped .card-inner { transform: rotateY(180deg); }
+
+    .card-face {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: white;
+      border-radius: 28px;
+      box-shadow: 0 12px 30px -8px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.02);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 20px;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+
+    .card-back {
+      transform: rotateY(180deg);
+      background: #fefce8;
+      border: 1px solid #fde68a;
+      justify-content: flex-start;
+      padding-top: 28px;
+      overflow-y: auto;
+    }
+
+    .card-word {
+      font-size: 5.5rem;
+      font-weight: 700;
+      line-height: 1.2;
+      color: #0f172a;
+      text-align: center;
+      word-break: break-word;
+    }
+
+    .card-pinyin {
+      font-size: 1.8rem;
+      color: #3b82f6;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      margin-bottom: 14px;
+      text-align: center;
+    }
+
+    .card-translation {
+      font-size: 1.35rem;
+      color: #334155;
+      font-weight: 500;
+      text-align: center;
+      border-top: 2px dashed #cbd5e1;
+      padding-top: 14px;
+      width: 90%;
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+
+    .examples-title {
+      font-size: 0.8rem;
+      color: #a16207;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 8px;
+    }
+
+    .examples {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    .example {
+      background: #fffbeb;
+      border-radius: 14px;
+      padding: 10px 14px;
+      text-align: left;
+      border: 1px solid #fde68a;
+    }
+
+    .example-zh {
+      font-size: 1.1rem;
+      color: #0f172a;
+      font-weight: 500;
+      line-height: 1.5;
+    }
+
+    .example-zh .highlight {
+      color: #dc2626;
+      font-weight: 700;
+      background: #fee2e2;
+      padding: 0 4px;
+      border-radius: 4px;
+    }
+
+    .example-ru {
+      font-size: 0.9rem;
+      color: #78716c;
+      margin-top: 4px;
+    }
+
+    .card-back-hint {
+      margin-top: 12px;
+      margin-bottom: 4px;
+      font-size: 0.8rem;
+      color: #a16207;
+      font-weight: 500;
+      background: #fef9c3;
+      padding: 6px 14px;
+      border-radius: 999px;
+      border: 1px solid #fde68a;
+      text-align: center;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 20px;
+      width: 100%;
+      margin-top: 20px;
+      justify-content: center;
+    }
+
+    .btn {
+      flex: 1;
+      max-width: 160px;
+      padding: 16px 8px;
+      border: none;
+      border-radius: 60px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      background: #f1f5f9;
+      color: #1e293b;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.02);
+      border: 1px solid #e2e8f0;
+    }
+
+    .btn:active { transform: scale(0.97); }
+
+    .btn-forget {
+      background: #fee2e2;
+      color: #b91c1c;
+      border-color: #fecaca;
+    }
+
+    .btn-remember {
+      background: #dcfce7;
+      color: #166534;
+      border-color: #bbf7d0;
+    }
+
+    .keyboard-hint {
+      margin-top: 16px;
+      font-size: 0.8rem;
+      color: #94a3b8;
+      text-align: center;
+    }
+
+    .keyboard-hint kbd {
+      display: inline-block;
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-bottom-width: 2px;
+      border-radius: 6px;
+      padding: 2px 8px;
+      font-family: inherit;
+      font-size: 0.85rem;
+      color: #475569;
+      margin: 0 2px;
+    }
+
+    .finish-message {
+      text-align: center;
+      padding: 24px 12px;
+    }
+
+    .finish-message h2 {
+      font-size: 2rem;
+      color: #0f172a;
+      margin-bottom: 12px;
+    }
+
+    .finish-message p {
+      color: #475569;
+      font-size: 1.1rem;
+      margin-bottom: 28px;
+    }
+
+    .stats-total {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .stats-total .stat-pill {
+      background: #f0f9ff;
+      border: 1px solid #bae6fd;
+      color: #0369a1;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+<div class="app" id="app">
+  <h1>🀄 Уроки 1–3</h1>
+  <div class="progress-bar">
+    <div class="progress-fill" id="progressFill"></div>
+  </div>
+  <div class="stats">
+    <span id="roundLabel">Раунд 1</span>
+    <span id="counterLabel">0 / 0</span>
+  </div>
+
+  <div class="card-container" id="cardContainer">
+    <div class="card" id="card">
+      <div class="card-inner" id="cardInner">
+        <div class="card-face card-front">
+          <div class="card-word" id="cardWord">就是</div>
+        </div>
+        <div class="card-face card-back">
+          <div class="card-pinyin" id="cardPinyin">jiù shì</div>
+          <div class="card-translation" id="cardTranslation">именно, как раз</div>
+          <div class="examples-title">Примеры</div>
+          <div class="examples" id="examplesContainer"></div>
+          <div class="card-back-hint">Нажмите ← чтобы отправить на повторение</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="buttons" id="buttons">
+    <button class="btn btn-forget" id="btnForget" aria-label="Не помню">← Не помню</button>
+    <button class="btn btn-remember" id="btnRemember" aria-label="Помню">Помню →</button>
+  </div>
+
+  <div class="keyboard-hint" id="keyboardHint">
+    <kbd>←</kbd> не помню · <kbd>→</kbd> помню
+  </div>
+
+  <div id="finishScreen" class="finish-message hidden">
+    <h2 id="finishTitle">🎉 Отлично!</h2>
+    <div class="stats-total" id="statsTotal"></div>
+    <p id="finishText">Все слова пройдены!</p>
+    <button class="btn" id="restartBtn" style="max-width: 260px; margin: 0 auto; background: #3b82f6; color: white; border: none;">Продолжить →</button>
+  </div>
+</div>
+
+<script>
+  // ========== СЛОВАРЬ (Уроки 1–3) ==========
+  const WORDS = [
+    // ===== УРОК 1 =====
+    { word: "就是", pinyin: "jiù shì", translation: "именно, как раз", examples: [
+      { zh: "他就是我的老师。", ru: "Он и есть мой учитель." },
+      { zh: "这就是我要的书。", ru: "Это как раз та книга, которая мне нужна." }
+    ]},
+    { word: "给", pinyin: "gěi", translation: "давать; для", examples: [
+      { zh: "请给我一杯水。", ru: "Дайте мне стакан воды." },
+      { zh: "我给你打电话。", ru: "Я тебе позвоню." }
+    ]},
+    { word: "让", pinyin: "ràng", translation: "позволять, заставлять", examples: [
+      { zh: "让我想一想。", ru: "Дай мне подумать." },
+      { zh: "妈妈让我去买东西。", ru: "Мама попросила меня сходить за покупками." }
+    ]},
+    { word: "接", pinyin: "jiē", translation: "встречать; принимать", examples: [
+      { zh: "我去机场接朋友。", ru: "Я еду в аэропорт встречать друга." },
+      { zh: "他在接电话。", ru: "Он отвечает на звонок." }
+    ]},
+    { word: "次", pinyin: "cì", translation: "раз (счётное слово)", examples: [
+      { zh: "我去过两次中国。", ru: "Я был в Китае два раза." },
+      { zh: "下次见。", ru: "До следующего раза." }
+    ]},
+    { word: "旅游", pinyin: "lǚyóu", translation: "путешествовать, туризм", examples: [
+      { zh: "我喜欢旅游。", ru: "Я люблю путешествовать." },
+      { zh: "暑假我们去旅游吧。", ru: "На летних каникулах поедем путешествовать." }
+    ]},
+    { word: "帮忙", pinyin: "bāngmáng", translation: "помогать", examples: [
+      { zh: "你能帮忙吗？", ru: "Ты можешь помочь?" },
+      { zh: "谢谢你的帮忙。", ru: "Спасибо за твою помощь." }
+    ]},
+    { word: "不好意思", pinyin: "bù hǎoyìsi", translation: "неловко, извините", examples: [
+      { zh: "不好意思，我来晚了。", ru: "Извините, я опоздал." },
+      { zh: "不好意思，请问银行在哪儿？", ru: "Извините, где банк?" }
+    ]},
+    { word: "已经", pinyin: "yǐjīng", translation: "уже", examples: [
+      { zh: "他已经走了。", ru: "Он уже ушёл." },
+      { zh: "我已经吃饭了。", ru: "Я уже поел." }
+    ]},
+    { word: "那", pinyin: "nà", translation: "тот, то", examples: [
+      { zh: "那是我的书。", ru: "То — моя книга." },
+      { zh: "那个人是谁？", ru: "Кто тот человек?" }
+    ]},
+    { word: "介绍", pinyin: "jièshào", translation: "знакомить; представлять", examples: [
+      { zh: "请介绍一下自己。", ru: "Представьтесь, пожалуйста." },
+      { zh: "我给你介绍一个朋友。", ru: "Я познакомлю тебя с другом." }
+    ]},
+    { word: "有时", pinyin: "yǒushí", translation: "иногда", examples: [
+      { zh: "我有时喝茶。", ru: "Иногда я пью чай." },
+      { zh: "他有时来我家。", ru: "Иногда он приходит ко мне домой." }
+    ]},
+    { word: "懂", pinyin: "dǒng", translation: "понимать", examples: [
+      { zh: "我懂你的意思。", ru: "Я понимаю, что ты имеешь в виду." },
+      { zh: "这个字我不懂。", ru: "Этот иероглиф я не понимаю." }
+    ]},
+    { word: "意思", pinyin: "yìsi", translation: "значение, смысл", examples: [
+      { zh: "这个词是什么意思？", ru: "Что означает это слово?" },
+      { zh: "我不明白你的意思。", ru: "Я не понимаю, что ты имеешь в виду." }
+    ]},
+
+    // ===== УРОК 2 =====
+    { word: "票", pinyin: "piào", translation: "билет", examples: [
+      { zh: "我买了两张票。", ru: "Я купил два билета." },
+      { zh: "票在桌子上。", ru: "Билет на столе." }
+    ]},
+    { word: "教室", pinyin: "jiàoshì", translation: "аудитория, класс", examples: [
+      { zh: "我们的教室在三楼。", ru: "Наша аудитория на третьем этаже." },
+      { zh: "教室里有很多学生。", ru: "В аудитории много студентов." }
+    ]},
+    { word: "打车", pinyin: "dǎ chē", translation: "брать такси", examples: [
+      { zh: "我们打车去吧。", ru: "Давай поедем на такси." },
+      { zh: "打车很贵。", ru: "Такси дорого." }
+    ]},
+    { word: "公交车", pinyin: "gōngjiāochē", translation: "автобус", examples: [
+      { zh: "我坐公交车去学校。", ru: "Я еду в школу на автобусе." },
+      { zh: "公交车站在哪儿？", ru: "Где автобусная остановка?" }
+    ]},
+    { word: "车站", pinyin: "chēzhàn", translation: "остановка, вокзал", examples: [
+      { zh: "车站在哪儿？", ru: "Где остановка?" },
+      { zh: "我在车站等你。", ru: "Я жду тебя на остановке." }
+    ]},
+    { word: "远", pinyin: "yuǎn", translation: "далёкий", examples: [
+      { zh: "学校离我家很远。", ru: "Школа далеко от моего дома." },
+      { zh: "机场远不远？", ru: "Аэропорт далеко?" }
+    ]},
+    { word: "还是", pinyin: "háishì", translation: "лучше, всё-таки; или", examples: [
+      { zh: "还是坐火车吧。", ru: "Давай всё-таки поедем на поезде." },
+      { zh: "你喝茶还是咖啡？", ru: "Ты пьёшь чай или кофе?" }
+    ]},
+    { word: "啊", pinyin: "a", translation: "ах, о (восклицание)", examples: [
+      { zh: "啊，是你！", ru: "Ах, это ты!" },
+      { zh: "这个菜真好吃啊！", ru: "Это блюдо такое вкусное!" }
+    ]},
+    { word: "万", pinyin: "wàn", translation: "10 000, десять тысяч", examples: [
+      { zh: "这个手机一万块。", ru: "Этот телефон стоит десять тысяч юаней." },
+      { zh: "中国有十四亿人。", ru: "В Китае 1,4 миллиарда человек." }
+    ]},
+    { word: "名", pinyin: "míng", translation: "счётное слово для людей; имя", examples: [
+      { zh: "我们班有二十名学生。", ru: "В нашем классе двадцать учеников." },
+      { zh: "他是第一名。", ru: "Он первый (по списку)." }
+    ]},
+    { word: "网上", pinyin: "wǎngshang", translation: "в интернете", examples: [
+      { zh: "网上有很多信息。", ru: "В интернете много информации." },
+      { zh: "我在网上买东西。", ru: "Я покупаю вещи в интернете." }
+    ]},
+    { word: "外国", pinyin: "wàiguó", translation: "заграница, иностранное государство", examples: [
+      { zh: "他是外国人。", ru: "Он иностранец." },
+      { zh: "我想去外国学习。", ru: "Я хочу учиться за границей." }
+    ]},
+    { word: "间", pinyin: "jiān", translation: "счётное слово для комнат", examples: [
+      { zh: "我家有三间房间。", ru: "У меня в доме три комнаты." },
+      { zh: "这间教室很大。", ru: "Эта аудитория большая." }
+    ]},
+    { word: "别", pinyin: "bié", translation: "не надо; другой", examples: [
+      { zh: "别忘了。", ru: "Не забудь." },
+      { zh: "别说话。", ru: "Не разговаривай." }
+    ]},
+    { word: "过来", pinyin: "guòlái", translation: "подходить (к говорящему)", examples: [
+      { zh: "请你过来一下。", ru: "Подойди сюда, пожалуйста." },
+      { zh: "他走过来了。", ru: "Он подошёл." }
+    ]},
+
+    // ===== УРОК 3 =====
+    { word: "回来", pinyin: "huílái", translation: "вернуться (к говорящему)", examples: [
+      { zh: "他回来了。", ru: "Он вернулся." },
+      { zh: "你什么时候回来？", ru: "Когда ты вернёшься?" }
+    ]},
+    { word: "回去", pinyin: "huíqù", translation: "вернуться (от говорящего)", examples: [
+      { zh: "我要回去了。", ru: "Мне пора возвращаться." },
+      { zh: "他回去了。", ru: "Он вернулся (туда)." }
+    ]},
+    { word: "这么", pinyin: "zhème", translation: "так, настолько", examples: [
+      { zh: "今天这么冷！", ru: "Сегодня так холодно!" },
+      { zh: "你怎么这么晚才来？", ru: "Почему ты пришёл так поздно?" }
+    ]},
+    { word: "完", pinyin: "wán", translation: "закончить, завершить", examples: [
+      { zh: "我吃完饭了。", ru: "Я закончил есть." },
+      { zh: "作业写完了吗？", ru: "Ты закончил домашнюю работу?" }
+    ]},
+    { word: "一起", pinyin: "yìqǐ", translation: "вместе", examples: [
+      { zh: "我们一起去吧。", ru: "Пойдём вместе." },
+      { zh: "我们一起学习。", ru: "Мы учимся вместе." }
+    ]},
+    { word: "出去", pinyin: "chūqù", translation: "выходить (наружу)", examples: [
+      { zh: "我要出去一下。", ru: "Я выйду на минутку." },
+      { zh: "他出去了。", ru: "Он вышел." }
+    ]},
+    { word: "洗", pinyin: "xǐ", translation: "мыть, стирать", examples: [
+      { zh: "请洗手。", ru: "Помойте руки." },
+      { zh: "我在洗衣服。", ru: "Я стираю одежду." }
+    ]},
+    { word: "自己", pinyin: "zìjǐ", translation: "сам, себя", examples: [
+      { zh: "我自己做。", ru: "Я сам сделаю." },
+      { zh: "你要相信自己。", ru: "Ты должен верить в себя." }
+    ]},
+    { word: "拿", pinyin: "ná", translation: "держать, брать", examples: [
+      { zh: "请拿一下我的书。", ru: "Возьми мою книгу, пожалуйста." },
+      { zh: "他手里拿着一杯水。", ru: "Он держит в руке стакан воды." }
+    ]},
+    { word: "手", pinyin: "shǒu", translation: "рука", examples: [
+      { zh: "请洗手。", ru: "Помойте руки." },
+      { zh: "他手里拿着书。", ru: "Он держит в руке книгу." }
+    ]},
+    { word: "为什么", pinyin: "wèi shénme", translation: "почему", examples: [
+      { zh: "你为什么不来？", ru: "Почему ты не пришёл?" },
+      { zh: "为什么这么贵？", ru: "Почему так дорого?" }
+    ]},
+    { word: "不错", pinyin: "búcuò", translation: "неплохо, хорошо", examples: [
+      { zh: "这个菜不错。", ru: "Это блюдо неплохое." },
+      { zh: "你的汉语说得不错。", ru: "Ты неплохо говоришь по-китайски." }
+    ]},
+    { word: "送", pinyin: "sòng", translation: "дарить; провожать", examples: [
+      { zh: "我送你回家。", ru: "Я провожу тебя домой." },
+      { zh: "他送了我一本书。", ru: "Он подарил мне книгу." }
+    ]},
+    { word: "每", pinyin: "měi", translation: "каждый", examples: [
+      { zh: "我每天学习汉语。", ru: "Я каждый день учу китайский." },
+      { zh: "每个学生都来了。", ru: "Каждый ученик пришёл." }
+    ]},
+    { word: "累", pinyin: "lèi", translation: "уставать, уставший", examples: [
+      { zh: "我很累。", ru: "Я очень устал." },
+      { zh: "今天工作太累了。", ru: "Сегодня работа была очень утомительной." }
+    ]}
+  ];
+
+  // ========== СОСТОЯНИЕ ==========
+  let currentRoundCards = [];
+  let forgottenCards = [];
+  let round = 1;
+  let totalCardsInRound = 0;
+  let processedCount = 0;
+  let isFlipped = false;
+  let awaitingForgetConfirm = false;
+
+  // ========== DOM ==========
+  const card = document.getElementById('card');
+  const cardInner = document.getElementById('cardInner');
+  const cardWord = document.getElementById('cardWord');
+  const cardPinyin = document.getElementById('cardPinyin');
+  const cardTranslation = document.getElementById('cardTranslation');
+  const examplesContainer = document.getElementById('examplesContainer');
+  const progressFill = document.getElementById('progressFill');
+  const roundLabel = document.getElementById('roundLabel');
+  const counterLabel = document.getElementById('counterLabel');
+  const btnForget = document.getElementById('btnForget');
+  const btnRemember = document.getElementById('btnRemember');
+  const finishScreen = document.getElementById('finishScreen');
+  const finishTitle = document.getElementById('finishTitle');
+  const finishText = document.getElementById('finishText');
+  const statsTotal = document.getElementById('statsTotal');
+  const restartBtn = document.getElementById('restartBtn');
+  const cardContainer = document.getElementById('cardContainer');
+  const keyboardHint = document.getElementById('keyboardHint');
+
+  // ========== СВАЙП ==========
+  let startX = 0;
+  let currentX = 0;
+  let isDragging = false;
+  const swipeThreshold = 80;
+  let animationInProgress = false;
+
+  // ========== УТИЛИТЫ ==========
+  function shuffleArray(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function escapeHtml(str) {
+    return str.replace(/[&<>"']/g, (m) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[m]));
+  }
+
+  function highlightWord(text, word) {
+    const escaped = escapeHtml(text);
+    const escapedWord = escapeHtml(word);
+    return escaped.split(escapedWord).join(
+      `<span class="highlight">${escapedWord}</span>`
+    );
+  }
+
+  function updateUI() {
+    const total = totalCardsInRound;
+    const current = processedCount;
+    const percent = total > 0 ? (current / total) * 100 : 0;
+    progressFill.style.width = percent + '%';
+    counterLabel.textContent = `${current} / ${total}`;
+    roundLabel.textContent = `Раунд ${round}`;
+  }
+
+  function fillCardContent(item) {
+    cardWord.textContent = item.word;
+    cardPinyin.textContent = item.pinyin;
+    cardTranslation.textContent = item.translation;
+
+    examplesContainer.innerHTML = '';
+    if (item.examples && item.examples.length) {
+      const shown = item.examples.slice(0, 2);
+      for (const ex of shown) {
+        const div = document.createElement('div');
+        div.className = 'example';
+        div.innerHTML = `
+          <div class="example-zh">${highlightWord(ex.zh, item.word)}</div>
+          <div class="example-ru">${escapeHtml(ex.ru)}</div>
+        `;
+        examplesContainer.appendChild(div);
+      }
+    }
+  }
+
+  function renderCurrentCard() {
+    if (currentRoundCards.length === 0) {
+      showFinishScreen();
+      return;
+    }
+
+    cardInner.style.transition = 'none';
+    card.classList.remove('flipped');
+    isFlipped = false;
+    awaitingForgetConfirm = false;
+    void cardInner.offsetWidth;
+    cardInner.style.transition = '';
+
+    fillCardContent(currentRoundCards[0]);
+
+    card.style.transition = 'none';
+    card.style.transform = 'translateX(0) rotate(0deg)';
+    card.style.opacity = '1';
+    void card.offsetWidth;
+    card.style.transition = 'transform 0.15s ease, opacity 0.2s ease';
+
+    updateUI();
+  }
+
+  function resetCardStyle() {
+    card.style.transition = 'transform 0.15s ease, opacity 0.2s ease';
+    card.style.transform = 'translateX(0) rotate(0deg)';
+    card.style.opacity = '1';
+  }
+
+  function flipCard() {
+    if (isFlipped) return;
+    isFlipped = true;
+    card.classList.add('flipped');
+  }
+
+  function animateSwipe(direction) {
+    if (animationInProgress || currentRoundCards.length === 0) return;
+    animationInProgress = true;
+    const cardData = currentRoundCards[0];
+
+    if (direction === 'left') {
+      forgottenCards.push(cardData);
+    }
+
+    card.style.transition = 'transform 0.28s ease, opacity 0.28s ease';
+    if (direction === 'left') {
+      card.style.transform = 'translateX(-150%) rotate(-20deg)';
+    } else {
+      card.style.transform = 'translateX(150%) rotate(20deg)';
+    }
+    card.style.opacity = '0';
+
+    setTimeout(() => {
+      currentRoundCards.shift();
+      processedCount++;
+
+      card.style.transition = 'none';
+      card.style.opacity = '0';
+      void card.offsetWidth;
+
+      if (currentRoundCards.length === 0) {
+        cardInner.style.transition = 'none';
+        card.classList.remove('flipped');
+        void cardInner.offsetWidth;
+        cardInner.style.transition = '';
+        isFlipped = false;
+        awaitingForgetConfirm = false;
+        updateUI();
+        showFinishScreen();
+        animationInProgress = false;
+        return;
+      }
+
+      fillCardContent(currentRoundCards[0]);
+
+      cardInner.style.transition = 'none';
+      card.classList.remove('flipped');
+      isFlipped = false;
+      awaitingForgetConfirm = false;
+      void cardInner.offsetWidth;
+      cardInner.style.transition = '';
+
+      card.style.transition = 'none';
+      card.style.transform = 'translateX(0) rotate(0deg)';
+      void card.offsetWidth;
+
+      card.style.transition = 'opacity 0.15s ease';
+      card.style.opacity = '1';
+
+      updateUI();
+
+      setTimeout(() => {
+        card.style.transition = 'transform 0.15s ease, opacity 0.2s ease';
+        animationInProgress = false;
+      }, 150);
+    }, 280);
+  }
+
+  function snapBack() {
+    card.style.transition = 'transform 0.2s ease, opacity 0.2s ease';
+    card.style.transform = 'translateX(0) rotate(0deg)';
+    card.style.opacity = '1';
+  }
+
+  function handleForget() {
+    if (animationInProgress || currentRoundCards.length === 0) return;
+    if (awaitingForgetConfirm) {
+      animateSwipe('left');
+      return;
+    }
+    flipCard();
+    awaitingForgetConfirm = true;
+  }
+
+  function handleRemember() {
+    if (animationInProgress || currentRoundCards.length === 0) return;
+    if (awaitingForgetConfirm) {
+      animateSwipe('left');
+      return;
+    }
+    animateSwipe('right');
+  }
+
+  function showFinishScreen() {
+    cardContainer.classList.add('hidden');
+    document.getElementById('buttons').classList.add('hidden');
+    keyboardHint.classList.add('hidden');
+    finishScreen.classList.remove('hidden');
+
+    const uniqueForgotten = [...new Set(forgottenCards.map(c => c.word))];
+    const forgottenCount = uniqueForgotten.length;
+    const totalWords = WORDS.length;
+
+    statsTotal.innerHTML = `<span class="stat-pill">Всего слов: ${totalWords}</span>`;
+
+    if (forgottenCount > 0) {
+      finishTitle.textContent = '💪 Закрепление';
+      finishText.innerHTML = `Забыто слов: <strong>${forgottenCount}</strong><br>Сейчас повторим их ещё раз.`;
+      restartBtn.textContent = 'Повторить забытые →';
+      restartBtn.onclick = () => {
+        round++;
+        const wordsMap = new Map(WORDS.map(w => [w.word, w]));
+        const cardsForNextRound = uniqueForgotten.map(w => wordsMap.get(w)).filter(Boolean);
+        startRoundWithCards(cardsForNextRound);
+      };
+    } else {
+      finishTitle.textContent = '🏆 Поздравляем!';
+      finishText.innerHTML = `Вы прошли все <strong>${totalWords}</strong> слов!<br>Отличная работа!`;
+      restartBtn.textContent = 'Начать заново';
+      restartBtn.onclick = () => {
+        initGame();
+      };
+    }
+  }
+
+  function startRoundWithCards(cards) {
+    finishScreen.classList.add('hidden');
+    cardContainer.classList.remove('hidden');
+    document.getElementById('buttons').classList.remove('hidden');
+    keyboardHint.classList.remove('hidden');
+
+    currentRoundCards = shuffleArray(cards);
+
+    totalCardsInRound = currentRoundCards.length;
+    processedCount = 0;
+    forgottenCards = [];
+    animationInProgress = false;
+    isFlipped = false;
+    awaitingForgetConfirm = false;
+
+    card.classList.remove('flipped');
+    resetCardStyle();
+    renderCurrentCard();
+    updateUI();
+  }
+
+  function initGame() {
+    round = 1;
+    forgottenCards = [];
+    startRoundWithCards([...WORDS]);
+  }
+
+  // ========== СОБЫТИЯ УКАЗАТЕЛЯ ==========
+  function onPointerDown(e) {
+    if (animationInProgress || currentRoundCards.length === 0) return;
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    e.preventDefault();
+    startX = e.clientX;
+    currentX = startX;
+    isDragging = true;
+    card.style.transition = 'none';
+    card.setPointerCapture(e.pointerId);
+  }
+
+  function onPointerMove(e) {
+    if (!isDragging || animationInProgress || currentRoundCards.length === 0) return;
+    e.preventDefault();
+    const dx = e.clientX - startX;
+    currentX = e.clientX;
+    const rotate = dx * 0.05;
+    card.style.transform = `translateX(${dx}px) rotate(${rotate}deg)`;
+    const opacity = 1 - Math.min(Math.abs(dx) / 600, 0.3);
+    card.style.opacity = opacity;
+  }
+
+  function onPointerUp(e) {
+    if (!isDragging || animationInProgress || currentRoundCards.length === 0) return;
+    isDragging = false;
+    e.preventDefault();
+    const dx = currentX - startX;
+
+    if (dx > swipeThreshold) {
+      if (awaitingForgetConfirm) {
+        animateSwipe('left');
+      } else {
+        animateSwipe('right');
+      }
+    } else if (dx < -swipeThreshold) {
+      if (!awaitingForgetConfirm) {
+        flipCard();
+        awaitingForgetConfirm = true;
+        snapBack();
+      } else {
+        animateSwipe('left');
+      }
+    } else {
+      snapBack();
+    }
+    if (card.hasPointerCapture(e.pointerId)) {
+      card.releasePointerCapture(e.pointerId);
+    }
+  }
+
+  function onPointerCancel(e) {
+    if (isDragging) {
+      isDragging = false;
+      snapBack();
+      if (card.hasPointerCapture(e.pointerId)) {
+        card.releasePointerCapture(e.pointerId);
+      }
+    }
+  }
+
+  card.addEventListener('pointerdown', onPointerDown);
+  card.addEventListener('pointermove', onPointerMove);
+  card.addEventListener('pointerup', onPointerUp);
+  card.addEventListener('pointercancel', onPointerCancel);
+
+  // ========== КЛАВИАТУРА ==========
+  document.addEventListener('keydown', (e) => {
+    if (!finishScreen.classList.contains('hidden')) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        restartBtn.click();
+      }
+      return;
+    }
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      handleForget();
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      handleRemember();
+    }
+  });
+
+  // ========== КНОПКИ ==========
+  btnForget.addEventListener('click', handleForget);
+  btnRemember.addEventListener('click', handleRemember);
+  card.addEventListener('dragstart', (e) => e.preventDefault());
+
+  initGame();
+</script>
+</body>
+</html>
