@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Карточки · Чэнъюй</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+      background: #f1f5f9;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      touch-action: pan-y;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 540px;
+      background: white;
+      border-radius: 32px;
+      box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.2);
+      padding: 24px 20px 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      font-weight: 600;
+      color: #0f172a;
+      letter-spacing: -0.01em;
+      margin-bottom: 8px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background: #e2e8f0;
+      border-radius: 999px;
+      margin: 12px 0 8px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: #3b82f6;
+      border-radius: 999px;
+      transition: width 0.25s ease;
+    }
+
+    .stats {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      font-size: 0.85rem;
+      color: #64748b;
+      font-weight: 500;
+      margin-bottom: 16px;
+    }
+
+    .stats span {
+      background: #f8fafc;
+      padding: 4px 12px;
+      border-radius: 40px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .card-container {
+      position: relative;
+      width: 100%;
+      height: 440px;
+      margin: 8px 0 16px;
+      perspective: 1200px;
+    }
+
+    .card {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      cursor: grab;
+      user-select: none;
+      will-change: transform;
+      transition: transform 0.15s ease, opacity 0.2s ease;
+      transform-style: preserve-3d;
+      touch-action: none;
+    }
+
+    .card:active { cursor: grabbing; }
+
+    .card-inner {
+      position: relative;
+      width: 100%; height: 100%;
+      transition: transform 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
+      transform-style: preserve-3d;
+    }
+
+    .card.flipped .card-inner { transform: rotateY(180deg); }
+
+    .card-face {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: white;
+      border-radius: 28px;
+      box-shadow: 0 12px 30px -8px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.02);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 20px;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      overflow: hidden;
+    }
+
+    .card-back {
+      transform: rotateY(180deg);
+      background: #fefce8;
+      border: 1px solid #fde68a;
+      gap: 12px;
+      justify-content: flex-start;
+      padding-top: 20px;
+      overflow-y: auto;
+    }
+
+    .card-word {
+      font-size: 3.6rem;
+      font-weight: 700;
+      line-height: 1.25;
+      color: #0f172a;
+      text-align: center;
+      word-break: break-word;
+      letter-spacing: 0.05em;
+      padding: 0 8px;
+    }
+
+    .card-pinyin {
+      font-size: 1.6rem;
+      color: #3b82f6;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      text-align: center;
+      word-break: break-word;
+    }
+
+    .card-translation {
+      font-size: 1.25rem;
+      color: #334155;
+      font-weight: 500;
+      text-align: center;
+      word-break: break-word;
+    }
+
+    .card-section {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.7);
+      border-radius: 16px;
+      padding: 10px 12px;
+      border: 1px solid #fde68a;
+    }
+
+    .card-section-title {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #a16207;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .card-examples {
+      font-size: 0.9rem;
+      color: #334155;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+
+    .card-examples div + div { margin-top: 4px; }
+
+    .card-explanation {
+      font-size: 0.88rem;
+      color: #1e293b;
+      line-height: 1.45;
+      word-break: break-word;
+      text-align: left;
+    }
+
+    .card-back-hint {
+      margin-top: auto;
+      font-size: 0.78rem;
+      color: #a16207;
+      font-weight: 500;
+      background: #fef9c3;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid #fde68a;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 12px;
+      width: 100%;
+      margin-top: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      flex: 1;
+      min-width: 120px;
+      padding: 14px 8px;
+      border: none;
+      border-radius: 60px;
+      font-size: 1rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      background: #f1f5f9;
+      color: #1e293b;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.02);
+      border: 1px solid #e2e8f0;
+    }
+
+    .btn:active { transform: scale(0.97); }
+
+    .btn-forget {
+      background: #fee2e2;
+      color: #b91c1c;
+      border-color: #fecaca;
+    }
+
+    .btn-remember {
+      background: #dcfce7;
+      color: #166534;
+      border-color: #bbf7d0;
+    }
+
+    .btn-add {
+      background: #e0f2fe;
+      color: #0369a1;
+      border-color: #bae6fd;
+      flex: 0 0 auto;
+      min-width: auto;
+      padding: 14px 18px;
+      font-size: 1.1rem;
+    }
+
+    .btn-primary {
+      background: #3b82f6;
+      color: white;
+      border: none;
+    }
+
+    .keyboard-hint {
+      margin-top: 14px;
+      font-size: 0.8rem;
+      color: #94a3b8;
+      text-align: center;
+    }
+
+    .keyboard-hint kbd {
+      display: inline-block;
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-bottom-width: 2px;
+      border-radius: 6px;
+      padding: 2px 8px;
+      font-family: inherit;
+      font-size: 0.85rem;
+      color: #475569;
+      margin: 0 2px;
+    }
+
+    .finish-message {
+      text-align: center;
+      padding: 24px 12px;
+      width: 100%;
+    }
+
+    .finish-message h2 {
+      font-size: 2rem;
+      color: #0f172a;
+      margin-bottom: 12px;
+    }
+
+    .finish-message p {
+      color: #475569;
+      font-size: 1.05rem;
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+
+    .finish-message .btn {
+      max-width: 300px;
+      margin: 0 auto;
+      flex: none;
+    }
+
+    .hidden { display: none !important; }
+
+    /* ---------- Форма добавления ---------- */
+    .form-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 100;
+      overflow-y: auto;
+    }
+
+    .form-card {
+      background: white;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 480px;
+      padding: 22px 20px 20px;
+      box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.3);
+      max-height: 92vh;
+      overflow-y: auto;
+    }
+
+    .form-card h2 {
+      font-size: 1.3rem;
+      margin-bottom: 14px;
+      color: #0f172a;
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #475569;
+      margin-bottom: 4px;
+    }
+
+    .form-group label .optional {
+      color: #94a3b8;
+      font-weight: 400;
+    }
+
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid #cbd5e1;
+      font-size: 0.95rem;
+      font-family: inherit;
+      background: #f8fafc;
+      color: #0f172a;
+      resize: vertical;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+      outline: 2px solid #3b82f6;
+      outline-offset: 1px;
+      background: white;
+    }
+
+    .form-group textarea { min-height: 60px; }
+
+    .form-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .form-actions .btn { font-size: 0.95rem; padding: 12px 10px; }
+
+    .form-error {
+      color: #b91c1c;
+      font-size: 0.85rem;
+      margin-top: 6px;
+      min-height: 1.1em;
+    }
+
+    @media (max-width: 480px) {
+      .app { padding: 18px 14px 24px; border-radius: 24px; }
+      h1 { font-size: 1.3rem; }
+      .card-container { height: 400px; }
+      .card-word { font-size: 2.8rem; }
+      .card-pinyin { font-size: 1.35rem; }
+      .card-translation { font-size: 1.1rem; }
+      .btn { font-size: 0.92rem; padding: 12px 6px; }
+      .btn-add { padding: 12px 14px; }
+    }
+  </style>
+</head>
+<body>
+<div class="app" id="app">
+  <h1>🀄 Чэнъюй-карточки</h1>
+  <div class="progress-bar">
+    <div class="progress-fill" id="progressFill"></div>
+  </div>
+  <div class="stats">
+    <span id="roundLabel">Раунд 1</span>
+    <span id="counterLabel">0 / 0</span>
+  </div>
+
+  <div class="card-container" id="cardContainer">
+    <div class="card" id="card">
+      <div class="card-inner" id="cardInner">
+        <div class="card-face card-front">
+          <div class="card-word" id="cardWord">筋疲力尽</div>
+        </div>
+        <div class="card-face card-back">
+          <div class="card-pinyin" id="cardPinyin">jīn pí lì jìn</div>
+          <div class="card-translation" id="cardTranslation">вымотаться, обессилеть</div>
+          <div class="card-section" id="examplesSection">
+            <div class="card-section-title">Примеры</div>
+            <div class="card-examples" id="cardExamples"></div>
+          </div>
+          <div class="card-section" id="explanationSection">
+            <div class="card-section-title">Почему так говорят</div>
+            <div class="card-explanation" id="cardExplanation"></div>
+          </div>
+          <div class="card-back-hint">Смахните влево, чтобы повторить</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="buttons" id="buttons">
+    <button class="btn btn-forget" id="btnForget" aria-label="Не помню">← Не помню</button>
+    <button class="btn btn-add" id="btnAdd" aria-label="Добавить выражение">➕</button>
+    <button class="btn btn-remember" id="btnRemember" aria-label="Помню">Помню →</button>
+  </div>
+
+  <div class="keyboard-hint" id="keyboardHint">
+    <kbd>←</kbd> не помню · <kbd>→</kbd> помню
+  </div>
+
+  <div id="finishScreen" class="finish-message hidden">
+    <h2 id="finishTitle">🎉 Отлично!</h2>
+    <p id="finishText">Все выражения пройдены!</p>
+    <button class="btn btn-primary" id="restartBtn">Продолжить</button>
+  </div>
+</div>
+
+<!-- Форма добавления -->
+<div class="form-overlay hidden" id="formOverlay">
+  <div class="form-card">
+    <h2>➕ Новое выражение</h2>
+    <form id="addForm">
+      <div class="form-group">
+        <label for="fWord">Иероглифы *</label>
+        <input type="text" id="fWord" required placeholder="например, 一帆风顺" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label for="fPinyin">Пиньинь *</label>
+        <input type="text" id="fPinyin" required placeholder="yī fān fēng shùn" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label for="fTranslation">Перевод *</label>
+        <input type="text" id="fTranslation" required placeholder="попутного ветра; всё гладко" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label for="fExamples">Примеры употребления <span class="optional">(1–2, необязательно)</span></label>
+        <textarea id="fExamples" placeholder="Каждый пример с новой строки"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="fExplanation">Пояснение <span class="optional">(необязательно)</span></label>
+        <textarea id="fExplanation" placeholder="Почему иероглифы вместе дают такой смысл"></textarea>
+      </div>
+      <div class="form-error" id="formError"></div>
+      <div class="form-actions">
+        <button type="button" class="btn" id="btnCancelForm">Отмена</button>
+        <button type="submit" class="btn btn-primary">Сохранить</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  // ========== СТАРТОВЫЙ СЛОВАРЬ ЧЭНЪЮЕВ ==========
+  const DEFAULT_WORDS = [
+    {
+      word: "筋疲力尽",
+      pinyin: "jīn pí lì jìn",
+      translation: "вымотаться, обессилеть",
+      examples: [
+        "跑完马拉松，他筋疲力尽。 — После марафона он совсем выбился из сил.",
+        "工作了一整天，我筋疲力尽。 — Проработав весь день, я вымотался."
+      ],
+      explanation: "筋 — сухожилия, 疲 — устать, 力 — силы, 尽 — исчерпать. Буквально: «сухожилия устали, силы исчерпаны» — предельная усталость."
+    },
+    {
+      word: "笨鸟先飞",
+      pinyin: "bèn niǎo xiān fēi",
+      translation: "неумелая птица раньше вылетает; кто медлителен — начинает раньше",
+      examples: [
+        "我基础差，所以要笨鸟先飞。 — У меня слабая база, поэтому мне нужно начинать раньше других.",
+        "笨鸟先飞，勤能补拙。 — Неумелая птица вылетает раньше; старание восполняет недостаток таланта."
+      ],
+      explanation: "笨 — глупый, неуклюжий, 鸟 — птица, 先 — раньше, 飞 — лететь. Образ: менее способный должен начать раньше, чтобы не отстать."
+    },
+    {
+      word: "顺其自然",
+      pinyin: "shùn qí zì rán",
+      translation: "пусть всё идёт своим чередом; положиться на естественный ход вещей",
+      examples: [
+        "别太勉强，顺其自然吧。 — Не насилуй себя, пусть всё идёт своим чередом.",
+        "感情的事要顺其自然。 — В делах чувств нужно довериться естественному ходу."
+      ],
+      explanation: "顺 — следовать, 其 — его, 自然 — природа, естественность. Вместе: «следовать естественному порядку вещей», не форсировать события."
+    },
+    {
+      word: "吃闭门羹",
+      pinyin: "chī bì mén gēng",
+      translation: "получить от ворот поворот; наткнуться на закрытую дверь",
+      examples: [
+        "我去找他，结果吃了闭门羹。 — Я пошёл к нему, но получил от ворот поворот.",
+        "谈判代表吃了闭门羹。 — Представитель переговоров наткнулся на отказ."
+      ],
+      explanation: "吃 — есть, 闭门 — закрытая дверь, 羹 — густой суп. Образ: гостю вместо угощения достаётся лишь закрытая дверь — вежливый отказ принять."
+    },
+    {
+      word: "恋恋不舍",
+      pinyin: "liàn liàn bù shě",
+      translation: "не желать расставаться; с трудом покидать",
+      examples: [
+        "毕业时大家恋恋不舍。 — При выпуске все не хотели расставаться.",
+        "她恋恋不舍地离开了家乡。 — Она с трудом покидала родные места."
+      ],
+      explanation: "恋恋 — с привязанностью, 不舍 — не отпускать. Удвоение 恋 усиливает чувство привязанности; вместе — «всем сердцем не хочется расставаться»."
+    },
+    {
+      word: "擦肩而过",
+      pinyin: "cā jiān ér guò",
+      translation: "пройти мимо, едва не задев плечом; разминуться",
+      examples: [
+        "我们在街上擦肩而过。 — Мы разминулись на улице.",
+        "机会擦肩而过，真可惜。 — Возможность прошла мимо, как жаль."
+      ],
+      explanation: "擦 — тереться, задевать, 肩 — плечо, 而 — и, 过 — проходить. Буквально: «пройти, задев плечо» — мимолётная встреча или упущенный шанс."
+    },
+    {
+      word: "满怀希望",
+      pinyin: "mǎn huái xī wàng",
+      translation: "преисполниться надежды; полный надежд",
+      examples: [
+        "他满怀希望地开始了新工作。 — Он с надеждой начал новую работу.",
+        "我们满怀希望迎接未来。 — Мы с надеждой встречаем будущее."
+      ],
+      explanation: "满 — полный, 怀 — грудь, душа, 希望 — надежда. Образ: «вся грудь полна надежды» — состояние окрылённого ожидания."
+    },
+    {
+      word: "功夫不负有心人",
+      pinyin: "gōng fu bù fù yǒu xīn rén",
+      translation: "упорный труд вознаграждается; кто старается, тот добивается",
+      examples: [
+        "功夫不负有心人，他终于成功了。 — Упорный труд вознаграждается — он наконец добился успеха.",
+        "只要坚持，功夫不负有心人。 — Если настойчиво идти к цели, труд будет вознаграждён."
+      ],
+      explanation: "功夫 — усилие, труд, 不负 — не обманет, 有心人 — целеустремлённый человек. Вместе: «труд не обманет того, кто вкладывает душу»."
+    },
+    {
+      word: "有色眼镜",
+      pinyin: "yǒu sè yǎn jìng",
+      translation: "предвзятый взгляд; смотреть через цветные очки",
+      examples: [
+        "不要戴有色眼镜看人。 — Не смотри на людей через цветные очки.",
+        "他的意见带着有色眼镜。 — Его мнение предвзято."
+      ],
+      explanation: "有色 — цветной, 眼镜 — очки. Метафора: цветные очки искажают восприятие, как предубеждение искажает оценку человека."
+    },
+    {
+      word: "无可奈何",
+      pinyin: "wú kě nài hé",
+      translation: "ничего не поделаешь; вынужденно смириться",
+      examples: [
+        "事已至此，我无可奈何。 — Дело зашло так далеко, что я ничего не могу поделать.",
+        "他无可奈何地笑了笑。 — Он беспомощно улыбнулся."
+      ],
+      explanation: "无 — нет, 可 — можно, 奈何 — что делать. Буквально: «нет способа что-либо сделать» — состояние вынужденного смирения."
+    },
+    {
+      word: "不言而喻",
+      pinyin: "bù yán ér yù",
+      translation: "само собой разумеется; понятно без слов",
+      examples: [
+        "这个道理不言而喻。 — Эта истина понятна без слов.",
+        "他的努力不言而喻。 — Его старания очевидны без слов."
+      ],
+      explanation: "不 — не, 言 — говорить, 而 — и, 喻 — понимать. Вместе: «не говоря, уже понятно» — очевидность, не требующая объяснений."
+    },
+    {
+      word: "目光短浅",
+      pinyin: "mù guāng duǎn qiǎn",
+      translation: "близорукий, недальновидный",
+      examples: [
+        "只顾眼前利益是目光短浅。 — Думать только о сиюминутной выгоде — близоруко.",
+        "我们不能目光短浅。 — Мы не должны быть недальновидными."
+      ],
+      explanation: "目光 — взгляд, 短 — короткий, 浅 — мелкий. Образ: взгляд не идёт дальше ближнего — неспособность видеть перспективу."
+    },
+    {
+      word: "高瞻远瞩",
+      pinyin: "gāo zhān yuǎn zhǔ",
+      translation: "смотреть далеко вперёд; дальновидность",
+      examples: [
+        "领导者要有高瞻远瞩的眼光。 — Лидеру нужна дальновидность.",
+        "他的计划高瞻远瞩。 — Его план рассчитан далеко вперёд."
+      ],
+      explanation: "高 — высоко, 瞻 — смотреть, 远 — далеко, 瞩 — вглядываться. Вместе: «с высокой точки зрения смотреть вдаль» — стратегическое мышление."
+    },
+    {
+      word: "玩物丧志",
+      pinyin: "wán wù sàng zhì",
+      translation: "увлекаясь пустяками, терять волю к цели",
+      examples: [
+        "整天玩游戏会玩物丧志。 — Целыми днями играть — значит губить в себе волю.",
+        "他因玩物丧志而荒废学业。 — Из-за увлечений он запустил учёбу."
+      ],
+      explanation: "玩 — развлекаться, 物 — вещь, 丧 — терять, 志 — воля, стремление. Образ: погоня за удовольствиями губит высокие устремления."
+    },
+    {
+      word: "逃避责任",
+      pinyin: "táo bì zé rèn",
+      translation: "уходить от ответственности; увиливать",
+      examples: [
+        "出了事不能逃避责任。 — Когда что-то случилось, нельзя уходить от ответственности.",
+        "他总想逃避责任。 — Он всегда норовит увильнуть от ответственности."
+      ],
+      explanation: "逃避 — убегать, избегать, 责任 — ответственность. Вместе — прямое значение: «уклоняться от возложенной ответственности»."
+    },
+    {
+      word: "家丑不可外扬",
+      pinyin: "jiā chǒu bù kě wài yáng",
+      translation: "сор из избы не выносят",
+      examples: [
+        "家丑不可外扬，这事别对外人说。 — Сор из избы не выносят, не рассказывай посторонним.",
+        "她认为家丑不可外扬。 — Она считает, что семейные неурядицы не стоит выносить на люди."
+      ],
+      explanation: "家 — семья, 丑 — позорное, 不可 — нельзя, 外扬 — разглашать вовне. Буквально: «семейный позор нельзя выносить наружу»."
+    },
+    {
+      word: "男孩穷养，女孩富养",
+      pinyin: "nán hái qióng yǎng, nǚ hái fù yǎng",
+      translation: "мальчиков воспитывают в строгости, девочек — в достатке",
+      examples: [
+        "中国有句老话：男孩穷养，女孩富养。 — В Китае есть поговорка: мальчиков растить в бедности, девочек — в богатстве.",
+        "男孩穷养，女孩富养，各有道理。 — В этом подходе есть смысл."
+      ],
+      explanation: "穷养 — воспитывать в ограничениях, 富养 — воспитывать в достатке. Смысл: мальчика закаляют трудностями, девочку окружают заботой, чтобы она знала цену себе."
+    },
+    {
+      word: "情不自禁",
+      pinyin: "qíng bù zì jīn",
+      translation: "не сдержаться, невольно поддаться чувству",
+      examples: [
+        "听到这个消息，她情不自禁地哭了。 — Услышав эту новость, она невольно заплакала.",
+        "看到美景，他情不自禁地拿出相机。 — Увидев прекрасный пейзаж, он невольно достал фотоаппарат."
+      ],
+      explanation: "情 — чувство, 不 — не, 自 — сам, 禁 — сдерживать. Буквально: «чувство не даёт себя сдержать» — эмоция прорывается сама собой, вопреки воле."
+    },
+    {
+      word: "旗开得胜",
+      pinyin: "qí kāi dé shèng",
+      translation: "одержать победу с самого начала; удачно начать",
+      examples: [
+        "比赛一开始我们就旗开得胜。 — С самого начала соревнования мы одержали победу.",
+        "祝你旗开得胜，马到成功。 — Желаю тебе победного начала и успеха."
+      ],
+      explanation: "旗 — знамя, 开 — развернуть, 得 — получить, 胜 — победу. Образ: едва развернув знамя, сразу победить — успех с первых шагов."
+    },
+    {
+      word: "百思不解",
+      pinyin: "bǎi sī bù jiě",
+      translation: "как ни думай — не понять; уму непостижимо",
+      examples: [
+        "这道题我百思不解。 — Над этой задачей я бьюсь и не могу понять.",
+        "他的行为让人百思不解。 — Его поступок уму непостижим."
+      ],
+      explanation: "百 — сто, множество, 思 — думать, 不 — не, 解 — понимать. Буквально: «сто раз подумал — не понял» — загадка, не поддающаяся разгадке."
+    },
+    {
+      word: "调虎离山",
+      pinyin: "diào hǔ lí shān",
+      translation: "выманить тигра с горы; хитростью выманить противника с выгодной позиции",
+      examples: [
+        "这是调虎离山之计。 — Это стратагема «выманить тигра с горы».",
+        "他用了调虎离山的办法。 — Он применил приём «выманить тигра с горы»."
+      ],
+      explanation: "调 — выманивать, 虎 — тигр, 离 — покинуть, 山 — гора. Тигр силён в родных горах; выманив его оттуда, лишают преимущества. Одна из 36 стратагем."
+    },
+    {
+      word: "保驾护航",
+      pinyin: "bǎo jià hù háng",
+      translation: "охранять и сопровождать; обеспечивать поддержку и защиту",
+      examples: [
+        "警察为考生保驾护航。 — Полиция обеспечивает охрану и поддержку экзаменуемым.",
+        "这项政策为经济发展保驾护航。 — Эта политика защищает и поддерживает экономическое развитие."
+      ],
+      explanation: "保 — охранять, 驾 — экипаж, 护 — защищать, 航 — плыть, курс. Образ: конвой, охраняющий судно в плавании — надёжное сопровождение и защита."
+    },
+    {
+      word: "千锤百炼",
+      pinyin: "qiān chuí bǎi liàn",
+      translation: "тысячи ударов и сотни плавок; закалённый, многократно испытанный",
+      examples: [
+        "他的意志经过千锤百炼。 — Его воля закалена многими испытаниями.",
+        "这篇文章是千锤百炼的成果。 — Эта статья — результат многократной шлифовки."
+      ],
+      explanation: "千 — тысяча, 锤 — молот, 百 — сто, 炼 — плавить, закалять. Метафора кузнечной обработки: только после множества ударов и переплавок получается прочное изделие."
+    },
+    {
+      word: "善意的谎言",
+      pinyin: "shàn yì de huǎng yán",
+      translation: "ложь во благо; невинная ложь",
+      examples: [
+        "这是善意的谎言，别怪他。 — Это ложь во благо, не вини его.",
+        "有时候善意的谎言是必要的。 — Иногда ложь во спасение необходима."
+      ],
+      explanation: "善意 — доброе намерение, 的 — притяжательная частица, 谎言 — ложь. Вместе: «ложь с добрым умыслом» — неправда, произнесённая ради чьего-то блага."
+    },
+    {
+      word: "心仪已久",
+      pinyin: "xīn yí yǐ jiǔ",
+      translation: "давно приглянувшийся; давно по душе",
+      examples: [
+        "这件衣服她心仪已久。 — Эта одежда ей давно приглянулась.",
+        "心仪已久的大学终于录取了他。 — Университет, о котором он давно мечтал, наконец принял его."
+      ],
+      explanation: "心 — сердце, 仪 — влечься, стремиться, 已久 — уже давно. Буквально: «сердце стремится к этому уже давно» — предмет давнего тайного желания."
+    },
+    {
+      word: "谈天说地",
+      pinyin: "tán tiān shuō dì",
+      translation: "говорить обо всём на свете; вести непринуждённую беседу",
+      examples: [
+        "他们坐下来谈天说地。 — Они сели и разговорились обо всём на свете.",
+        "老朋友见面，谈天说地很惬意。 — Старые друзья при встрече приятно болтают обо всём."
+      ],
+      explanation: "谈 — говорить, 天 — небо, 说 — рассказывать, 地 — земля. Образ: разговор охватывает небо и землю — беседа обо всём без стеснения."
+    },
+    {
+      word: "闹别扭",
+      pinyin: "nào biè niu",
+      translation: "ссориться по пустякам; дуться друг на друга",
+      examples: [
+        "他们俩又闹别扭了。 — Эти двое опять поссорились.",
+        "别为这点小事闹别扭。 — Не ссорьтесь из-за такого пустяка."
+      ],
+      explanation: "闹 — затевать, 别扭 — неловкий, неладно. Вместе: «затевать нелады» — мелкие обиды и взаимное недовольство, обычно между близкими."
+    },
+    {
+      word: "如愿以偿",
+      pinyin: "rú yuàn yǐ cháng",
+      translation: "добиться желаемого; мечта сбылась",
+      examples: [
+        "他终于如愿以偿地考上了大学。 — Он наконец осуществил мечту и поступил в университет.",
+        "祝你早日如愿以偿。 — Желаю тебе поскорее добиться желаемого."
+      ],
+      explanation: "如 — согласно, 愿 — желание, 以 — чтобы, 偿 — возместить, исполнить. Буквально: «желание получило исполнение» — заветное сбылось."
+    },
+    {
+      word: "梦寐以求",
+      pinyin: "mèng mèi yǐ qiú",
+      translation: "страстно желать; мечтать во сне и наяву",
+      examples: [
+        "这是她梦寐以求的工作。 — Это работа, о которой она мечтала.",
+        "他梦寐以求的机会终于来了。 — Наконец пришёл шанс, о котором он страстно мечтал."
+      ],
+      explanation: "梦 — сон, 寐 — спать, 以 — чтобы, 求 — искать, добиваться. Буквально: «искать даже во сне» — настолько сильное стремление, что оно преследует и в сновидениях."
+    },
+    {
+      word: "雪中送炭",
+      pinyin: "xuě zhōng sòng tàn",
+      translation: "приносить уголь в снегопад; помочь в самый трудный момент",
+      examples: [
+        "你的帮助真是雪中送炭。 — Твоя помощь — как уголь в снегопад.",
+        "他在我困难时雪中送炭。 — Он поддержал меня в самый трудный момент."
+      ],
+      explanation: "雪 — снег, 中 — среди, 送 — дарить, 炭 — уголь. Образ: в лютый мороз подарить уголь для печи — бесценная своевременная помощь."
+    },
+    {
+      word: "锦上添花",
+      pinyin: "jǐn shàng tiān huā",
+      translation: "добавить цветы на парчу; сделать хорошее ещё лучше",
+      examples: [
+        "你的到来真是锦上添花。 — Твой приход — как цветы на парче.",
+        "这次成功不过是锦上添花。 — Этот успех — лишь украшение к уже хорошему."
+      ],
+      explanation: "锦 — узорчатая парча, 上 — на, 添 — добавлять, 花 — цветы. Образ: украшать и без того роскошную ткань — приумножать уже имеющееся благо."
+    },
+    {
+      word: "锦绣前程",
+      pinyin: "jǐn xiù qián chéng",
+      translation: "блестящее будущее; светлая перспектива",
+      examples: [
+        "年轻人有着锦绣前程。 — У молодого человека блестящее будущее.",
+        "祝你锦绣前程，一帆风顺。 — Желаю тебе светлого будущего и попутного ветра."
+      ],
+      explanation: "锦 — парча, 绣 — вышивка, 前程 — путь впереди, будущее. Образ: будущее, расшитое золотом и шёлком — прекрасная жизненная дорога."
+    },
+    {
+      word: "锦绣山河",
+      pinyin: "jǐn xiù shān hé",
+      translation: "прекрасная страна; цветущая родина",
+      examples: [
+        "祖国锦绣山河令人自豪。 — Прекрасные просторы родины вызывают гордость.",
+        "他写诗赞美锦绣山河。 — Он пишет стихи, воспевая цветущую родину."
+      ],
+      explanation: "锦绣 — парча и вышивка, 山河 — горы и реки, то есть страна. Образ: родная земля прекрасна, как вышитый шёлк — поэтическое именование родины."
+    },
+    {
+      word: "鼓起勇气",
+      pinyin: "gǔ qǐ yǒng qì",
+      translation: "набраться смелости; собраться с духом",
+      examples: [
+        "他鼓起勇气向她表白。 — Он набрался смелости и признался ей.",
+        "鼓起勇气，别放弃。 — Соберись с духом, не сдавайся."
+      ],
+      explanation: "鼓 — раздувать, поднимать, 起 — вверх, 勇气 — смелость. Образ: «раздуть в себе смелость», как мехами разжигают огонь — собрать волю в кулак."
+    }
+  ];
+
+  // ========== НАСТРОЙКИ РАУНДОВ ==========
+  const ROUND_SIZE = 10;
+
+  // ========== СОСТОЯНИЕ ==========
+  let allWords = [];
+  let roundSets = [];          // массив массивов: раунды по ROUND_SIZE
+  let currentRoundIndex = 0;   // индекс текущего раунда в roundSets
+  let currentRoundCards = [];  // очередь карточек текущего прохода
+  let forgottenCards = [];     // забытые в текущем проходе
+  let totalCardsInRound = 0;
+  let processedCount = 0;
+  let isFlipped = false;
+  let awaitingForgetConfirm = false;
+  let isRepeatPass = false;    // true, если это повтор забытых в текущем раунде
+
+  const STORAGE_KEY = 'chengyu_cards_v1';
+
+  // ========== DOM ==========
+  const card = document.getElementById('card');
+  const cardInner = document.getElementById('cardInner');
+  const cardWord = document.getElementById('cardWord');
+  const cardPinyin = document.getElementById('cardPinyin');
+  const cardTranslation = document.getElementById('cardTranslation');
+  const cardExamples = document.getElementById('cardExamples');
+  const cardExplanation = document.getElementById('cardExplanation');
+  const examplesSection = document.getElementById('examplesSection');
+  const explanationSection = document.getElementById('explanationSection');
+  const progressFill = document.getElementById('progressFill');
+  const roundLabel = document.getElementById('roundLabel');
+  const counterLabel = document.getElementById('counterLabel');
+  const btnForget = document.getElementById('btnForget');
+  const btnRemember = document.getElementById('btnRemember');
+  const btnAdd = document.getElementById('btnAdd');
+  const finishScreen = document.getElementById('finishScreen');
+  const finishTitle = document.getElementById('finishTitle');
+  const finishText = document.getElementById('finishText');
+  const restartBtn = document.getElementById('restartBtn');
+  const cardContainer = document.getElementById('cardContainer');
+  const keyboardHint = document.getElementById('keyboardHint');
+
+  const formOverlay = document.getElementById('formOverlay');
+  const addForm = document.getElementById('addForm');
+  const btnCancelForm = document.getElementById('btnCancelForm');
+  const formError = document.getElementById('formError');
+
+  // ========== СВАЙП ==========
+  let startX = 0;
+  let currentX = 0;
+  let isDragging = false;
+  const swipeThreshold = 70;
+  let animationInProgress = false;
+
+  // ========== УТИЛИТЫ ==========
+  function shuffleArray(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function loadWords() {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) { /* ignore */ }
+    return [...DEFAULT_WORDS];
+  }
+
+  function saveWords() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(allWords));
+    } catch (e) { /* ignore */ }
+  }
+
+  function normalizeWord(item) {
+    return {
+      word: String(item.word || '').trim(),
+      pinyin: String(item.pinyin || '').trim(),
+      translation: String(item.translation || '').trim(),
+      examples: Array.isArray(item.examples) ? item.examples.filter(Boolean) : [],
+      explanation: String(item.explanation || '').trim()
+    };
+  }
+
+  // Разбить перемешанный список на раунды по ROUND_SIZE
+  function buildRoundSets(words) {
+    const shuffled = shuffleArray(words);
+    const sets = [];
+    for (let i = 0; i < shuffled.length; i += ROUND_SIZE) {
+      sets.push(shuffled.slice(i, i + ROUND_SIZE));
+    }
+    return sets;
+  }
+
+  function updateUI() {
+    const total = totalCardsInRound;
+    const current = processedCount;
+    const percent = total > 0 ? (current / total) * 100 : 0;
+    progressFill.style.width = percent + '%';
+    counterLabel.textContent = `${current} / ${total}`;
+
+    if (isRepeatPass) {
+      roundLabel.textContent = `Раунд ${currentRoundIndex + 1} · повтор`;
+    } else {
+      roundLabel.textContent = `Раунд ${currentRoundIndex + 1} / ${roundSets.length}`;
+    }
+  }
+
+  function fillCardContent(item) {
+    cardWord.textContent = item.word;
+    cardPinyin.textContent = item.pinyin;
+    cardTranslation.textContent = item.translation;
+
+    const examples = Array.isArray(item.examples) ? item.examples.filter(Boolean) : [];
+    if (examples.length > 0) {
+      examplesSection.classList.remove('hidden');
+      cardExamples.innerHTML = examples.map(ex => `<div>${escapeHtml(ex)}</div>`).join('');
+    } else {
+      examplesSection.classList.add('hidden');
+      cardExamples.innerHTML = '';
+    }
+
+    const explanation = String(item.explanation || '').trim();
+    if (explanation) {
+      explanationSection.classList.remove('hidden');
+      cardExplanation.textContent = explanation;
+    } else {
+      explanationSection.classList.add('hidden');
+      cardExplanation.textContent = '';
+    }
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function renderCurrentCard() {
+    if (currentRoundCards.length === 0) {
+      showFinishScreen();
+      return;
+    }
+
+    cardInner.style.transition = 'none';
+    card.classList.remove('flipped');
+    isFlipped = false;
+    awaitingForgetConfirm = false;
+    void cardInner.offsetWidth;
+    cardInner.style.transition = '';
+
+    fillCardContent(currentRoundCards[0]);
+
+    card.style.transition = 'none';
+    card.style.transform = 'translateX(0) rotate(0deg)';
+    card.style.opacity = '1';
+    void card.offsetWidth;
+    card.style.transition = 'transform 0.15s ease, opacity 0.2s ease';
+
+    updateUI();
+  }
+
+  function resetCardStyle() {
+    card.style.transition = 'transform 0.15s ease, opacity 0.2s ease';
+    card.style.transform = 'translateX(0) rotate(0deg)';
+    card.style.opacity = '1';
+  }
+
+  function flipCard() {
+    if (isFlipped) return;
+    isFlipped = true;
+    card.classList.add('flipped');
+  }
+
+  function animateSwipe(direction) {
+    if (animationInProgress || currentRoundCards.length === 0) return;
+    animationInProgress = true;
+    const cardData = currentRoundCards[0];
+
+    if (direction === 'left') {
+      forgottenCards.push(cardData);
+    }
+
+    card.style.transition = 'transform 0.28s ease, opacity 0.28s ease';
+    if (direction === 'left') {
+      card.style.transform = 'translateX(-150%) rotate(-20deg)';
+    } else {
+      card.style.transform = 'translateX(150%) rotate(20deg)';
+    }
+    card.style.opacity = '0';
+
+    setTimeout(() => {
+      currentRoundCards.shift();
+      processedCount++;
+
+      card.style.transition = 'none';
+      card.style.opacity = '0';
+      void card.offsetWidth;
+
+      if (currentRoundCards.length === 0) {
+        cardInner.style.transition = 'none';
+        card.classList.remove('flipped');
+        void cardInner.offsetWidth;
+        cardInner.style.transition = '';
+        isFlipped = false;
+        awaitingForgetConfirm = false;
+        updateUI();
+        showFinishScreen();
+        animationInProgress = false;
+        return;
+      }
+
+      fillCardContent(currentRoundCards[0]);
+
+      cardInner.style.transition = 'none';
+      card.classList.remove('flipped');
+      isFlipped = false;
+      awaitingForgetConfirm = false;
+      void cardInner.offsetWidth;
+      cardInner.style.transition = '';
+
+      card.style.transition = 'none';
+      card.style.transform = 'translateX(0) rotate(0deg)';
+      void card.offsetWidth;
+
+      card.style.transition = 'opacity 0.15s ease';
+      card.style.opacity = '1';
+
+      updateUI();
+
+      setTimeout(() => {
+        card.style.transition = 'transform 0.15s ease, opacity 0.2s ease';
+        animationInProgress = false;
+      }, 150);
+    }, 280);
+  }
+
+  function snapBack() {
+    card.style.transition = 'transform 0.2s ease, opacity 0.2s ease';
+    card.style.transform = 'translateX(0) rotate(0deg)';
+    card.style.opacity = '1';
+  }
+
+  function handleForget() {
+    if (animationInProgress || currentRoundCards.length === 0) return;
+    if (awaitingForgetConfirm) {
+      animateSwipe('left');
+      return;
+    }
+    flipCard();
+    awaitingForgetConfirm = true;
+  }
+
+  function handleRemember() {
+    if (animationInProgress || currentRoundCards.length === 0) return;
+    if (awaitingForgetConfirm) {
+      animateSwipe('left');
+      return;
+    }
+    animateSwipe('right');
+  }
+
+  function showFinishScreen() {
+    cardContainer.classList.add('hidden');
+    document.getElementById('buttons').classList.add('hidden');
+    keyboardHint.classList.add('hidden');
+    finishScreen.classList.remove('hidden');
+
+    const uniqueForgotten = [...new Set(forgottenCards.map(c => c.word))];
+    const forgottenCount = uniqueForgotten.length;
+
+    if (forgottenCount > 0) {
+      // Внутри раунда: сначала повтор забытых
+      finishTitle.textContent = '💪 Закрепление';
+      finishText.innerHTML = `Забыто выражений: <strong>${forgottenCount}</strong><br>Повторим их ещё раз, прежде чем идти дальше.`;
+      restartBtn.textContent = 'Повторить забытые →';
+      restartBtn.onclick = () => {
+        const wordsMap = new Map(allWords.map(w => [w.word, w]));
+        const cardsForNextPass = uniqueForgotten.map(w => wordsMap.get(w)).filter(Boolean);
+        startPass(cardsForNextPass, true);
+      };
+    } else if (currentRoundIndex < roundSets.length - 1) {
+      // Раунд пройден, есть ещё раунды
+      const nextRoundNumber = currentRoundIndex + 2;
+      finishTitle.textContent = `✅ Раунд ${currentRoundIndex + 1} пройден`;
+      finishText.innerHTML = `Осталось раундов: <strong>${roundSets.length - currentRoundIndex - 1}</strong><br>Дальше — раунд ${nextRoundNumber}.`;
+      restartBtn.textContent = 'Следующий раунд →';
+      restartBtn.onclick = () => {
+        currentRoundIndex++;
+        isRepeatPass = false;
+        startPass(shuffleArray(roundSets[currentRoundIndex]), false);
+      };
+    } else {
+      // Всё пройдено
+      finishTitle.textContent = '🏆 Поздравляем!';
+      finishText.innerHTML = `Вы прошли все <strong>${allWords.length}</strong> выражений в <strong>${roundSets.length}</strong> раундах!<br>Отличная работа!`;
+      restartBtn.textContent = 'Начать заново';
+      restartBtn.onclick = () => {
+        initGame();
+      };
+    }
+  }
+
+  // Запуск одного прохода: либо нового раунда, либо повтора забытых
+  function startPass(cards, repeat) {
+    finishScreen.classList.add('hidden');
+    cardContainer.classList.remove('hidden');
+    document.getElementById('buttons').classList.remove('hidden');
+    keyboardHint.classList.remove('hidden');
+
+    isRepeatPass = !!repeat;
+    currentRoundCards = shuffleArray(cards);
+
+    totalCardsInRound = currentRoundCards.length;
+    processedCount = 0;
+    forgottenCards = [];
+    animationInProgress = false;
+    isFlipped = false;
+    awaitingForgetConfirm = false;
+
+    card.classList.remove('flipped');
+    resetCardStyle();
+    renderCurrentCard();
+    updateUI();
+  }
+
+  function initGame() {
+    allWords = loadWords();
+    roundSets = buildRoundSets(allWords);
+    currentRoundIndex = 0;
+    isRepeatPass = false;
+    forgottenCards = [];
+
+    if (roundSets.length === 0) {
+      // На всякий случай — если список пуст
+      finishTitle.textContent = 'Пусто';
+      finishText.textContent = 'Нет ни одного выражения.';
+      return;
+    }
+
+    startPass(shuffleArray(roundSets[0]), false);
+  }
+
+  // ========== СОБЫТИЯ УКАЗАТЕЛЯ (мышь + палец) ==========
+  function onPointerDown(e) {
+    if (animationInProgress || currentRoundCards.length === 0) return;
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    startX = e.clientX;
+    currentX = startX;
+    isDragging = true;
+    card.style.transition = 'none';
+    try { card.setPointerCapture(e.pointerId); } catch (err) {}
+  }
+
+  function onPointerMove(e) {
+    if (!isDragging || animationInProgress || currentRoundCards.length === 0) return;
+    e.preventDefault();
+    const dx = e.clientX - startX;
+    currentX = e.clientX;
+    const rotate = dx * 0.05;
+    card.style.transform = `translateX(${dx}px) rotate(${rotate}deg)`;
+    const opacity = 1 - Math.min(Math.abs(dx) / 600, 0.3);
+    card.style.opacity = opacity;
+  }
+
+  function onPointerUp(e) {
+    if (!isDragging || animationInProgress || currentRoundCards.length === 0) return;
+    isDragging = false;
+    const dx = currentX - startX;
+
+    if (dx > swipeThreshold) {
+      if (awaitingForgetConfirm) {
+        animateSwipe('left');
+      } else {
+        animateSwipe('right');
+      }
+    } else if (dx < -swipeThreshold) {
+      if (!awaitingForgetConfirm) {
+        flipCard();
+        awaitingForgetConfirm = true;
+        snapBack();
+      } else {
+        animateSwipe('left');
+      }
+    } else {
+      snapBack();
+    }
+    try { card.releasePointerCapture(e.pointerId); } catch (err) {}
+  }
+
+  function onPointerCancel(e) {
+    if (isDragging) {
+      isDragging = false;
+      snapBack();
+      try { card.releasePointerCapture(e.pointerId); } catch (err) {}
+    }
+  }
+
+  card.addEventListener('pointerdown', onPointerDown);
+  card.addEventListener('pointermove', onPointerMove);
+  card.addEventListener('pointerup', onPointerUp);
+  card.addEventListener('pointercancel', onPointerCancel);
+  card.addEventListener('dragstart', (e) => e.preventDefault());
+
+  // ========== КЛАВИАТУРА ==========
+  document.addEventListener('keydown', (e) => {
+    if (!formOverlay.classList.contains('hidden')) return;
+    if (!finishScreen.classList.contains('hidden')) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        restartBtn.click();
+      }
+      return;
+    }
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      handleForget();
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      handleRemember();
+    }
+  });
+
+  // ========== КНОПКИ ==========
+  btnForget.addEventListener('click', handleForget);
+  btnRemember.addEventListener('click', handleRemember);
+
+  // ========== ДОБАВЛЕНИЕ НОВЫХ ВЫРАЖЕНИЙ ==========
+  btnAdd.addEventListener('click', () => {
+    formOverlay.classList.remove('hidden');
+    formError.textContent = '';
+    addForm.reset();
+    document.getElementById('fWord').focus();
+  });
+
+  btnCancelForm.addEventListener('click', () => {
+    formOverlay.classList.add('hidden');
+  });
+
+  formOverlay.addEventListener('click', (e) => {
+    if (e.target === formOverlay) {
+      formOverlay.classList.add('hidden');
+    }
+  });
+
+  addForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    formError.textContent = '';
+
+    const word = document.getElementById('fWord').value.trim();
+    const pinyin = document.getElementById('fPinyin').value.trim();
+    const translation = document.getElementById('fTranslation').value.trim();
+    const examplesRaw = document.getElementById('fExamples').value.trim();
+    const explanation = document.getElementById('fExplanation').value.trim();
+
+    if (!word) { formError.textContent = 'Введите иероглифы.'; return; }
+    if (!pinyin) { formError.textContent = 'Введите пиньинь.'; return; }
+    if (!translation) { formError.textContent = 'Введите перевод.'; return; }
+
+    const examples = examplesRaw
+      ? examplesRaw.split('\n').map(s => s.trim()).filter(Boolean).slice(0, 2)
+      : [];
+
+    const newItem = normalizeWord({ word, pinyin, translation, examples, explanation });
+
+    if (allWords.some(w => w.word === newItem.word)) {
+      formError.textContent = 'Такое выражение уже есть в списке.';
+      return;
+    }
+
+    allWords.push(newItem);
+    saveWords();
+
+    // Пересобираем раунды, чтобы новое слово попало в игру
+    roundSets = buildRoundSets(allWords);
+    currentRoundIndex = 0;
+    isRepeatPass = false;
+    forgottenCards = [];
+
+    formOverlay.classList.add('hidden');
+
+    // Начинаем заново с обновлённой колодой
+    startPass(shuffleArray(roundSets[0]), false);
+  });
+
+  // ========== СТАРТ ==========
+  initGame();
+</script>
+</body>
+</html>
