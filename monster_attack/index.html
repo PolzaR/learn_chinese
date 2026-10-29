@@ -20,12 +20,7 @@
     transition:background .5s;
   }
 
-  /* ============ ФОН ============ */
-  body.theme-horror #game {
-    background:
-      radial-gradient(ellipse at 50% 120%, #5a0808 0%, #2a0303 30%, #0a0000 60%, #000 100%);
-    box-shadow:0 0 100px rgba(150,0,0,.9), inset 0 0 250px rgba(0,0,0,1);
-  }
+  /* ============ ФОНЫ ============ */
   body.theme-funny #game {
     background:linear-gradient(180deg, #87ceeb 0%, #b0e0e6 40%, #ffd9a8 80%, #d9c890 100%);
     box-shadow:0 0 60px rgba(255,200,100,.5), inset 0 0 120px rgba(255,220,150,.3);
@@ -34,6 +29,17 @@
     background:linear-gradient(180deg,
       #7cb4d8 0%, #a8d4e8 25%, #d8e8c8 50%, #8ab86a 78%, #5a8a3a 100%);
     box-shadow:0 0 60px rgba(120,180,80,.5), inset 0 0 120px rgba(200,230,180,.2);
+  }
+  /* РЕАЛИСТИЧНЫЙ (Леон) */
+  body.theme-realistic #game {
+    background:
+      linear-gradient(180deg,
+        #0a0d14 0%,
+        #141820 30%,
+        #1a1e26 55%,
+        #0a0d10 80%,
+        #050608 100%);
+    box-shadow:0 0 100px rgba(60,80,120,.4), inset 0 0 250px rgba(0,0,0,1);
   }
 
   /* ============ СЛОИ ============ */
@@ -45,20 +51,16 @@
   @keyframes twinkle { 0%,100%{opacity:.15} 50%{opacity:.9} }
 
   #moon { z-index:2; }
-  body.theme-horror #moon::after {
+  /* Обычная белая луна для реалистичного */
+  body.theme-realistic #moon::after {
     content:'';
-    position:absolute; top:25px; right:25px;
-    width:100px; height:100px; border-radius:50%;
-    background:radial-gradient(circle at 40% 35%, #ffe8a0 0%, #cc6622 35%, #8a1a08 90%);
+    position:absolute; top:35px; right:80px;
+    width:80px; height:80px; border-radius:50%;
+    background:radial-gradient(circle at 40% 35%, #f8f8f0 0%, #c8c8b8 60%, #8a8a78 100%);
     box-shadow:
-      0 0 80px rgba(220,60,20,1),
-      0 0 160px rgba(150,20,0,.9),
-      0 0 260px rgba(100,0,0,.6);
-    animation:moonPulse 3s infinite alternate;
-  }
-  @keyframes moonPulse {
-    0% { box-shadow:0 0 80px rgba(220,60,20,1), 0 0 160px rgba(150,20,0,.9); }
-    100% { box-shadow:0 0 120px rgba(255,80,40,1), 0 0 240px rgba(220,30,0,1), 0 0 340px rgba(140,0,0,.8); }
+      0 0 50px rgba(220,220,200,.7),
+      0 0 100px rgba(180,180,150,.5),
+      0 0 180px rgba(120,120,100,.3);
   }
 
   #flashLightning {
@@ -66,7 +68,7 @@
     background:radial-gradient(ellipse at 70% 20%, rgba(255,255,255,1), rgba(200,200,255,.6) 30%, transparent 70%);
     display:none;
   }
-  body.theme-horror #flashLightning { display:block; }
+  body.theme-realistic #flashLightning { display:block; }
 
   #bloodfog {
     left:0; right:0; bottom:0; top:auto; height:220px;
@@ -75,28 +77,17 @@
     animation:fogPulse 5s infinite alternate;
     transition:opacity .6s;
   }
-  body.theme-horror #bloodfog { opacity:1; }
+  /* Реалистичный: холодный сине-серый туман */
+  body.theme-realistic #bloodfog {
+    background:linear-gradient(0deg, rgba(40,50,70,.8) 0%, rgba(30,35,45,.5) 40%, transparent 100%);
+    opacity:1;
+    animation:fogPulse 6s infinite alternate;
+  }
   @keyframes fogPulse { 0% { opacity:.7; transform:translateY(0); } 100% { opacity:1; transform:translateY(-8px); } }
 
   #ground {
     top:auto; bottom:0; left:0; right:0; height:100px; z-index:4;
     transition:background .5s;
-  }
-  body.theme-horror #ground {
-    background:
-      radial-gradient(ellipse at 50% 0%, #4a0a0a 0%, #1a0202 60%, #000 100%),
-      linear-gradient(180deg, transparent 0%, #000 100%);
-    border-top:2px solid #6a0000;
-  }
-  body.theme-horror #ground::before {
-    content:''; position:absolute; inset:0;
-    background:
-      radial-gradient(circle at 15% 40%, rgba(150,0,0,.8) 8px, transparent 20px),
-      radial-gradient(circle at 38% 60%, rgba(180,0,0,.7) 12px, transparent 26px),
-      radial-gradient(circle at 62% 35%, rgba(120,0,0,.8) 10px, transparent 22px),
-      radial-gradient(circle at 85% 55%, rgba(160,0,0,.7) 14px, transparent 30px);
-    background-size:200px 100px;
-    filter:blur(2px);
   }
   body.theme-funny #ground {
     background:radial-gradient(ellipse at 20% 0%, #a8d878 0%, #78b048 40%, #4a7a28 100%);
@@ -106,25 +97,75 @@
     background:radial-gradient(ellipse at 30% 0%, #9ac87a 0%, #6a9a4a 40%, #3a6a2a 100%);
     border-top:2px solid rgba(80,120,60,.5);
   }
+  /* РЕАЛИСТИЧНОЕ: мокрый асфальт */
+  body.theme-realistic #ground {
+    background:
+      linear-gradient(180deg,
+        rgba(30,30,40,.9) 0%,
+        rgba(15,15,20,.95) 40%,
+        #050505 100%);
+    border-top:1px solid rgba(80,90,110,.4);
+  }
+  body.theme-realistic #ground::before {
+    content:''; position:absolute; inset:0;
+    background:
+      radial-gradient(ellipse at 20% 60%, rgba(100,120,160,.15) 20px, transparent 40px),
+      radial-gradient(ellipse at 55% 40%, rgba(80,100,140,.12) 30px, transparent 50px),
+      radial-gradient(ellipse at 85% 70%, rgba(120,140,180,.1) 25px, transparent 45px),
+      repeating-linear-gradient(90deg, transparent 0 40px, rgba(60,70,90,.15) 40px 42px);
+    filter:blur(1px);
+  }
+  /* Мокрые отражения */
+  body.theme-realistic #ground::after {
+    content:''; position:absolute; top:0; left:0; right:0; height:40px;
+    background:linear-gradient(180deg, rgba(120,140,180,.08) 0%, transparent 100%);
+    pointer-events:none;
+  }
 
   #fog {
     z-index:3; opacity:0; transition:opacity .6s;
-    background:
-      radial-gradient(circle at 20% 80%, rgba(180,20,20,.25), transparent 45%),
-      radial-gradient(circle at 80% 70%, rgba(120,10,10,.25), transparent 45%),
-      radial-gradient(circle at 50% 50%, rgba(60,0,0,.3), transparent 60%);
-    animation:fogMove 12s infinite alternate;
   }
-  body.theme-horror #fog { opacity:1; }
+  body.theme-realistic #fog {
+    opacity:.9;
+    background:
+      radial-gradient(circle at 15% 75%, rgba(40,50,70,.4), transparent 50%),
+      radial-gradient(circle at 85% 65%, rgba(30,40,60,.4), transparent 50%),
+      radial-gradient(circle at 50% 85%, rgba(20,25,40,.5), transparent 60%);
+    animation:fogMove 15s infinite alternate;
+  }
   @keyframes fogMove {
     0% { transform:translateX(0) scale(1); }
     100% { transform:translateX(-60px) scale(1.1); }
   }
 
+  /* Дождь для реалистичного режима */
+  #rain {
+    position:absolute; inset:0;
+    z-index:5; pointer-events:none;
+    overflow:hidden;
+    display:none;
+  }
+  body.theme-realistic #rain { display:block; }
+  .raindrop {
+    position:absolute;
+    width:1px;
+    background:linear-gradient(180deg, transparent 0%, rgba(180,200,220,.6) 50%, rgba(180,200,220,.9) 100%);
+    animation:rainFall linear infinite;
+  }
+  @keyframes rainFall {
+    0%   { transform:translateY(-100px) translateX(0); }
+    100% { transform:translateY(700px) translateX(-30px); }
+  }
+
+  /* Молнии для реалистичного */
+  body.theme-realistic #flashLightning {
+    background:radial-gradient(ellipse at 60% 15%, rgba(255,255,255,1), rgba(180,200,255,.6) 40%, transparent 75%);
+  }
+
   #bloodDrops {
     z-index:6; overflow:hidden; display:none;
   }
-  body.theme-horror #bloodDrops { display:block; }
+  body.theme-realistic #bloodDrops { display:block; }
   .blood-drop {
     position:absolute; top:-30px; width:4px;
     background:linear-gradient(180deg, #cc0000, #5a0000);
@@ -145,16 +186,9 @@
   }
 
   #vignette { z-index:15; transition:background .5s; }
-  body.theme-horror #vignette {
+  body.theme-realistic #vignette {
     background:radial-gradient(ellipse at 50% 55%,
-      transparent 15%,
-      rgba(40,0,0,.5) 45%,
-      rgba(0,0,0,.95) 85%);
-    animation:vignettePulse 2.5s infinite alternate;
-  }
-  @keyframes vignettePulse {
-    0% { opacity:.9; }
-    100% { opacity:1; }
+      transparent 20%, rgba(0,0,0,.4) 50%, rgba(0,0,0,.92) 90%);
   }
 
   .shadow-runner {
@@ -162,22 +196,6 @@
     background:radial-gradient(ellipse at 50% 50%, #000 0%, transparent 70%);
     opacity:.9; z-index:5; filter:blur(4px);
     pointer-events:none;
-  }
-
-  #glitch {
-    z-index:16; opacity:0;
-    background:linear-gradient(90deg, transparent 0%, rgba(255,0,0,.4) 48%, transparent 50%, rgba(255,0,0,.4) 52%, transparent 100%);
-    mix-blend-mode:screen; display:none;
-  }
-  body.theme-horror #glitch { display:block; }
-  #glitch.active { animation:glitchFlash .3s; }
-  @keyframes glitchFlash {
-    0%   { opacity:0; transform:translate(0); }
-    20%  { opacity:1; transform:translate(-8px, 4px); }
-    40%  { opacity:0; transform:translate(6px, -3px); }
-    60%  { opacity:1; transform:translate(-4px, 2px); }
-    80%  { opacity:0; transform:translate(2px, -1px); }
-    100% { opacity:0; transform:translate(0); }
   }
 
   #scene { z-index:2; overflow:hidden; }
@@ -271,9 +289,18 @@
     box-shadow:0 0 15px rgba(120,180,80,.5);
     text-shadow:0 0 8px rgba(180,220,140,.6);
   }
+  body.theme-realistic #hud div {
+    background:rgba(10,15,25,.9);
+    color:#c8d8e8;
+    border:1px solid #5a7a9a;
+    box-shadow:0 0 15px rgba(80,140,200,.5), inset 0 0 10px rgba(20,40,60,.5);
+    text-shadow:0 0 8px rgba(150,200,255,.7);
+    font-family:'Courier New', monospace;
+  }
   #hud .accent { color:#ff2222; text-shadow:0 0 15px #ff0000; font-weight:bold; }
   body.theme-funny #hud .accent { color:#d95400; text-shadow:none; }
   body.theme-lotr #hud .accent { color:#d8e88a; text-shadow:0 0 8px rgba(180,220,140,.6); }
+  body.theme-realistic #hud .accent { color:#88c8ff; text-shadow:0 0 12px #4488dd; }
 
   /* ============ ВРАГИ ============ */
   .zombie {
@@ -281,236 +308,33 @@
     transition:filter .15s;
   }
 
-  body.theme-horror .zombie {
-    filter:
-      drop-shadow(0 12px 20px rgba(0,0,0,1))
-      drop-shadow(0 0 20px rgba(180,10,10,.8))
-      contrast(1.15) saturate(1.2);
+  /* ============ FUNNY МОНСТРЫ ============ */
+  body.theme-funny .zombie {
+    filter:drop-shadow(0 8px 12px rgba(0,0,0,.5));
     animation:zombieSway 2.4s infinite alternate;
   }
   @keyframes zombieSway {
     0% { transform:rotate(-3deg) translateY(0);}
     100% { transform:rotate(3deg) translateY(-3px);}
   }
-  body.theme-horror .zombie.charging {
+  body.theme-funny .zombie.charging {
     animation:chargeAttack .8s ease-in forwards !important;
-    filter:drop-shadow(0 0 60px #ff0000) brightness(1.8) saturate(2.5);
+    filter:drop-shadow(0 0 30px #ff8844) brightness(1.3);
+  }
+  body.theme-realistic .zombie.charging {
+    animation:chargeAttackReal .8s ease-in forwards !important;
+    filter:drop-shadow(0 0 30px #cc0000) brightness(1.4);
   }
   @keyframes chargeAttack {
     0% { transform:translateX(0) scale(1) rotate(0); }
     40% { transform:translateX(-90px) scale(1.4) rotate(-12deg); }
     100% { transform:translateX(-170px) scale(0.3) rotate(-45deg); opacity:.1; }
   }
-
-  body.theme-horror .z-torso {
-    position:absolute; top:55px; left:15px;
-    width:55px; height:70px;
-    background:
-      radial-gradient(ellipse at 30% 40%, #7a4a28 0%, #3a1a10 50%, #0a0200 100%),
-      linear-gradient(180deg, #8a3a18 0%, #2a0808 100%);
-    border-radius:8px 8px 5px 5px;
-    border:1px solid #000;
-    box-shadow:
-      inset 0 0 20px rgba(0,0,0,1),
-      inset 8px 10px 12px rgba(180,10,10,.85),
-      inset -6px -6px 10px rgba(0,0,0,.95),
-      0 0 25px rgba(180,0,0,.5);
-    overflow:hidden;
-  }
-  body.theme-horror .z-torso::before {
-    content:''; position:absolute;
-    top:15px; left:8px;
-    width:34px; height:26px;
-    background:
-      radial-gradient(ellipse at 30% 30%,
-        #f0d8b0 0%, #c01818 30%, #8a0a0a 60%, #2a0000 90%, transparent 100%);
-    border-radius:50%;
-    transform:rotate(-15deg);
-    box-shadow:0 0 14px rgba(0,0,0,.9), inset 0 0 10px rgba(180,0,0,.9);
-    filter:blur(.4px);
-  }
-  body.theme-horror .z-torso::after {
-    content:''; position:absolute;
-    bottom:0; left:20px;
-    width:16px; height:40px;
-    background:linear-gradient(180deg, #b80a0a 0%, #6a0000 60%, #1a0000 100%);
-    border-radius:0 0 40% 40%;
-    box-shadow:inset 2px 0 6px rgba(0,0,0,.9), 0 0 8px rgba(180,0,0,.6);
-    transform:rotate(8deg);
-    filter:blur(.3px);
+  @keyframes chargeAttackReal {
+    0% { transform:translateX(0) scale(1) rotate(0); }
+    100% { transform:translateX(-140px) scale(0.2) rotate(-25deg); opacity:0; }
   }
 
-  body.theme-horror .z-arm {
-    position:absolute; top:60px;
-    width:52px; height:14px;
-    background:linear-gradient(180deg, #6a4028 0%, #4a2010 40%, #1a0800 100%);
-    border-radius:6px;
-    border:1px solid #000;
-    box-shadow:
-      inset -4px 0 10px rgba(0,0,0,.95),
-      0 0 12px rgba(180,0,0,.7);
-  }
-  body.theme-horror .z-arm.l { left:-40px; transform:rotate(-10deg); transform-origin:right center; }
-  body.theme-horror .z-arm.r { right:-40px; transform:rotate(10deg); transform-origin:left center; }
-  body.theme-horror .z-arm::after {
-    content:''; position:absolute; top:50%;
-    transform:translateY(-50%);
-    width:16px; height:16px;
-    background:radial-gradient(circle at 40% 40%, #ff2222 0%, #a80000 50%, #2a0000 100%);
-    border-radius:50%;
-    box-shadow:0 0 15px #ff0000, 0 0 30px #ff0000, inset 0 0 8px rgba(0,0,0,.9);
-  }
-  body.theme-horror .z-arm.l::after { left:-8px; }
-  body.theme-horror .z-arm.r::after { right:-8px; }
-  body.theme-horror .z-arm::before {
-    content:''; position:absolute;
-    top:50%; transform:translateY(-50%);
-    width:8px; height:20px;
-    background:linear-gradient(180deg, #f0e0b8, #8a7040);
-    clip-path:polygon(50% 0, 100% 100%, 0 100%);
-    filter:drop-shadow(0 0 4px rgba(0,0,0,.9));
-  }
-  body.theme-horror .z-arm.l::before { left:-6px; }
-  body.theme-horror .z-arm.r::before { right:-6px; transform:translateY(-50%) rotate(180deg); }
-
-  body.theme-horror .z-head {
-    position:absolute; top:5px; left:14px;
-    width:55px; height:60px;
-    background:
-      radial-gradient(circle at 35% 35%,
-        #b8a878 0%,
-        #7a5a38 40%,
-        #3a2010 80%,
-        #0a0400 100%);
-    border-radius:50% 50% 45% 45% / 55% 55% 45% 45%;
-    border:1px solid #000;
-    box-shadow:
-      inset -6px -6px 14px rgba(0,0,0,.95),
-      inset 6px 6px 10px rgba(200,160,80,.2),
-      0 0 30px rgba(180,0,0,.7);
-    animation:headTwitch 2.5s infinite;
-  }
-  @keyframes headTwitch {
-    0%, 88%, 100% { transform:rotate(0); }
-    90% { transform:rotate(6deg); }
-    92% { transform:rotate(-8deg); }
-    94% { transform:rotate(4deg); }
-  }
-  body.theme-horror .z-head::before {
-    content:''; position:absolute;
-    top:-10px; left:8px;
-    width:40px; height:24px;
-    background:
-      radial-gradient(ellipse at 50% 80%,
-        #2a0000 0%, #8a0a0a 30%, #d8a0a0 55%, transparent 85%);
-    border-radius:50% 50% 0 0;
-    box-shadow:
-      inset 0 -6px 12px rgba(0,0,0,.95),
-      0 0 18px rgba(180,0,0,.9);
-    filter:blur(.4px);
-  }
-  body.theme-horror .z-head::after {
-    content:''; position:absolute;
-    top:-2px; left:4px; right:4px;
-    height:14px;
-    background:
-      radial-gradient(circle at 15% 50%, #1a0e0a 0 3px, transparent 4px),
-      radial-gradient(circle at 32% 30%, #1a0e0a 0 3px, transparent 4px),
-      radial-gradient(circle at 52% 60%, #1a0e0a 0 3px, transparent 4px),
-      radial-gradient(circle at 72% 40%, #1a0e0a 0 3px, transparent 4px),
-      radial-gradient(circle at 88% 55%, #1a0e0a 0 3px, transparent 4px);
-    border-radius:50%;
-    filter:drop-shadow(0 0 3px rgba(0,0,0,.95));
-  }
-
-  body.theme-horror .z-eye {
-    position:absolute;
-    width:14px; height:14px;
-    background:radial-gradient(circle,
-      #fff 0%,
-      #ff5500 20%,
-      #ff0000 45%,
-      #5a0000 75%,
-      #000 100%);
-    border-radius:50%;
-    box-shadow:
-      0 0 20px #ff2200,
-      0 0 40px #ff0000,
-      0 0 70px rgba(255,0,0,.9),
-      0 0 100px rgba(255,0,0,.6),
-      inset 0 0 10px #000;
-    animation:eyeGlow 0.9s infinite alternate;
-    z-index:2;
-  }
-  body.theme-horror .z-eye.l { top:22px; left:8px; }
-  body.theme-horror .z-eye.r { top:20px; right:6px; }
-  @keyframes eyeGlow {
-    0% { box-shadow:0 0 15px #ff2200, 0 0 30px #ff0000, 0 0 50px rgba(255,0,0,.7); }
-    100% { box-shadow:0 0 25px #ff5500, 0 0 55px #ff0000, 0 0 100px rgba(255,0,0,1); }
-  }
-
-  body.theme-horror .z-mouth {
-    position:absolute; top:42px; left:50%;
-    transform:translateX(-50%);
-    width:32px; height:18px;
-    background:radial-gradient(ellipse at 50% 20%,
-        #000 0%, #2a0000 40%, #8a0000 100%);
-    border-radius:0 0 50% 50% / 0 0 90% 90%;
-    border-top:2px solid #1a0000;
-    box-shadow:
-      inset 0 6px 12px rgba(180,0,0,.9),
-      0 0 15px rgba(180,0,0,.8);
-    z-index:2;
-  }
-  body.theme-horror .z-mouth::before {
-    content:''; position:absolute;
-    top:0; left:2px; right:2px; height:7px;
-    background:repeating-linear-gradient(90deg,
-        #f0e0b8 0 3px, #8a7040 3px 4px, transparent 4px 6px);
-    clip-path:polygon(
-      0 0, 15% 100%, 30% 0, 45% 100%, 60% 0, 75% 100%, 90% 0, 100% 100%, 100% 0);
-    filter:drop-shadow(0 1px 2px #000);
-  }
-  body.theme-horror .z-mouth::after {
-    content:''; position:absolute;
-    top:100%; left:50%;
-    transform:translateX(-50%);
-    width:4px; height:22px;
-    background:linear-gradient(180deg, #b80a0a, #3a0000, transparent);
-    border-radius:0 0 50% 50%;
-    filter:blur(.3px);
-    box-shadow:0 0 6px rgba(180,0,0,.9);
-  }
-
-  body.theme-horror .z-leg {
-    position:absolute; top:118px;
-    width:20px; height:45px;
-    background:linear-gradient(180deg, #4a2818 0%, #2a1008 70%, #0a0200 100%);
-    border-radius:4px;
-    border:1px solid #000;
-    box-shadow:inset -4px 0 8px rgba(0,0,0,.95);
-  }
-  body.theme-horror .z-leg.l { left:18px; transform:rotate(-8deg); transform-origin:top center; }
-  body.theme-horror .z-leg.r { right:18px; transform:rotate(10deg); transform-origin:top center; }
-
-  body.theme-horror .z-shadow {
-    position:absolute; bottom:-8px; left:50%;
-    transform:translateX(-50%);
-    width:90px; height:16px;
-    background:radial-gradient(ellipse, rgba(180,0,0,.9) 0%, rgba(0,0,0,.9) 40%, transparent 80%);
-    border-radius:50%;
-    filter:blur(3px);
-  }
-
-  /* ============ FUNNY: МОНСТРЫ ============ */
-  body.theme-funny .zombie {
-    filter:drop-shadow(0 8px 12px rgba(0,0,0,.5));
-    animation:zombieSway 2.4s infinite alternate;
-  }
-  body.theme-funny .zombie.charging {
-    animation:chargeAttack .8s ease-in forwards !important;
-    filter:drop-shadow(0 0 30px #ff8844) brightness(1.3);
-  }
   body.theme-funny .zombie .z-head {
     position:absolute; top:5px; left:14px;
     width:55px; height:60px;
@@ -521,15 +345,13 @@
   }
   body.theme-funny .zombie .z-head::before {
     content:''; position:absolute;
-    top:-4px; left:8px;
-    width:38px; height:16px;
+    top:-4px; left:8px; width:38px; height:16px;
     background:radial-gradient(ellipse, #ff4477 0%, #aa2255 80%, transparent);
     border-radius:50% 50% 0 0;
   }
   body.theme-funny .zombie .z-head::after {
     content:''; position:absolute;
-    top:-2px; left:4px; right:4px;
-    height:10px;
+    top:-2px; left:4px; right:4px; height:10px;
     background:
       radial-gradient(circle at 20% 50%, #3a5a1a 0 3px, transparent 4px),
       radial-gradient(circle at 45% 30%, #3a5a1a 0 3px, transparent 4px),
@@ -562,18 +384,15 @@
   }
   body.theme-funny .zombie .z-torso::before {
     content:''; position:absolute;
-    top:15px; left:12px;
-    width:30px; height:24px;
+    top:15px; left:12px; width:30px; height:24px;
     background:radial-gradient(ellipse, #ff2266 0%, #aa0044 70%, transparent 100%);
     border-radius:50%;
     filter:blur(.5px);
   }
   body.theme-funny .zombie .z-arm {
-    position:absolute; top:60px;
-    width:44px; height:12px;
+    position:absolute; top:60px; width:44px; height:12px;
     background:linear-gradient(180deg, #d87040, #a84820);
-    border-radius:6px;
-    border:1px solid #000;
+    border-radius:6px; border:1px solid #000;
     box-shadow:inset -4px 0 6px rgba(0,0,0,.4);
   }
   body.theme-funny .zombie .z-arm.l { left:-32px; transform:rotate(-8deg); transform-origin:right center; }
@@ -591,8 +410,7 @@
     position:absolute; top:118px;
     width:20px; height:45px;
     background:linear-gradient(180deg, #a84820, #6a2808);
-    border-radius:4px;
-    border:1px solid #000;
+    border-radius:4px; border:1px solid #000;
   }
   body.theme-funny .zombie .z-leg.l { left:18px; }
   body.theme-funny .zombie .z-leg.r { right:18px; }
@@ -616,7 +434,6 @@
     animation:chargeAttack .8s ease-in forwards !important;
     filter:drop-shadow(0 0 40px #ffaa00) brightness(1.5) saturate(2);
   }
-
   body.theme-lotr .z-torso {
     position:absolute; top:55px; left:12px;
     width:60px; height:68px;
@@ -633,33 +450,27 @@
   }
   body.theme-lotr .z-torso::before {
     content:''; position:absolute;
-    top:8px; left:4px; right:4px;
-    height:50px;
+    top:8px; left:4px; right:4px; height:50px;
     background:
       repeating-linear-gradient(0deg,
-        rgba(120,120,120,.35) 0 2px,
-        transparent 2px 6px),
+        rgba(120,120,120,.35) 0 2px, transparent 2px 6px),
       linear-gradient(180deg, rgba(80,80,80,.4) 0%, transparent 100%);
     border-radius:3px;
     box-shadow:inset 0 0 8px rgba(0,0,0,.9);
   }
   body.theme-lotr .z-torso::after {
     content:''; position:absolute;
-    top:-6px; left:8px;
-    width:0; height:0;
+    top:-6px; left:8px; width:0; height:0;
     border-left:6px solid transparent;
     border-right:6px solid transparent;
     border-bottom:12px solid #3a3a3a;
     filter:drop-shadow(0 0 2px rgba(0,0,0,.9));
     box-shadow:22px 2px 0 -2px #3a3a3a;
   }
-
   body.theme-lotr .z-arm {
-    position:absolute; top:60px;
-    width:52px; height:14px;
+    position:absolute; top:60px; width:52px; height:14px;
     background:linear-gradient(180deg, #5a4a2a 0%, #3a2010 40%, #0a0500 100%);
-    border-radius:6px;
-    border:1px solid #000;
+    border-radius:6px; border:1px solid #000;
     box-shadow:inset -4px 0 8px rgba(0,0,0,.9);
   }
   body.theme-lotr .z-arm.l { left:-38px; transform:rotate(-12deg); transform-origin:right center; }
@@ -668,8 +479,7 @@
     content:''; position:absolute; top:50%;
     transform:translateY(-50%);
     width:16px; height:16px;
-    background:
-      radial-gradient(circle at 35% 35%, #6a5a3a 0%, #3a2010 60%, #0a0500 100%);
+    background:radial-gradient(circle at 35% 35%, #6a5a3a 0%, #3a2010 60%, #0a0500 100%);
     border-radius:50%;
     box-shadow:inset -3px -3px 6px rgba(0,0,0,.9);
   }
@@ -679,28 +489,16 @@
     content:''; position:absolute;
     right:-30px; top:-40px;
     width:6px; height:52px;
-    background:
-      linear-gradient(180deg,
-        #b8b8b8 0%,
-        #8a8a8a 40%,
-        #4a4a4a 60%,
-        #2a2a2a 100%);
+    background:linear-gradient(180deg, #b8b8b8 0%, #8a8a8a 40%, #4a4a4a 60%, #2a2a2a 100%);
     transform:rotate(20deg);
     border-radius:2px;
-    box-shadow:
-      0 0 8px rgba(180,180,180,.6),
-      inset -1px 0 2px rgba(0,0,0,.7);
+    box-shadow:0 0 8px rgba(180,180,180,.6), inset -1px 0 2px rgba(0,0,0,.7);
   }
-
   body.theme-lotr .z-head {
     position:absolute; top:2px; left:10px;
     width:64px; height:58px;
-    background:
-      radial-gradient(ellipse at 40% 45%,
-        #7a7a5a 0%,
-        #4a4a28 35%,
-        #2a2a10 70%,
-        #0a0a02 100%);
+    background:radial-gradient(ellipse at 40% 45%,
+        #7a7a5a 0%, #4a4a28 35%, #2a2a10 70%, #0a0a02 100%);
     border-radius:45% 55% 42% 58% / 50% 50% 45% 55%;
     border:1px solid #000;
     box-shadow:
@@ -718,52 +516,39 @@
   }
   body.theme-lotr .z-head::before {
     content:''; position:absolute;
-    top:16px; left:6px;
-    width:50px; height:3px;
+    top:16px; left:6px; width:50px; height:3px;
     background:linear-gradient(90deg,
-      transparent 0%,
-      #8a0000 20%,
-      #4a0000 50%,
-      #8a0000 80%,
-      transparent 100%);
+      transparent 0%, #8a0000 20%, #4a0000 50%, #8a0000 80%, transparent 100%);
     transform:rotate(-15deg);
     filter:blur(.5px);
     box-shadow:0 0 6px rgba(120,0,0,.7);
   }
   body.theme-lotr .z-head::after {
     content:''; position:absolute;
-    top:-8px; left:-2px; right:-2px;
-    height:20px;
-    background:
-      linear-gradient(180deg, #4a4a4a 0%, #2a2a2a 50%, #0a0a0a 100%);
+    top:-8px; left:-2px; right:-2px; height:20px;
+    background:linear-gradient(180deg, #4a4a4a 0%, #2a2a2a 50%, #0a0a0a 100%);
     border-radius:50% 50% 0 0 / 100% 100% 0 0;
     border:1px solid #000;
-    box-shadow:
-      inset 0 3px 4px rgba(200,200,200,.3),
-      inset 0 -4px 6px rgba(0,0,0,.9);
+    box-shadow:inset 0 3px 4px rgba(200,200,200,.3), inset 0 -4px 6px rgba(0,0,0,.9);
   }
-
   body.theme-lotr .z-eye {
     position:absolute;
     width:13px; height:13px;
     background:radial-gradient(circle,
-      #ffff00 0%,
-      #ffcc00 30%,
-      #aa5500 60%,
-      #4a1a00 85%,
-      #000 100%);
+      #ffff00 0%, #ffcc00 30%, #aa5500 60%, #4a1a00 85%, #000 100%);
     border-radius:50%;
     box-shadow:
-      0 0 15px #ffcc00,
-      0 0 30px #ff8800,
-      0 0 50px rgba(255,100,0,.8);
+      0 0 15px #ffcc00, 0 0 30px #ff8800, 0 0 50px rgba(255,100,0,.8);
     animation:eyeGlow 1.4s infinite alternate;
     z-index:2;
     border:1px solid #1a0a00;
   }
   body.theme-lotr .z-eye.l { top:22px; left:14px; }
   body.theme-lotr .z-eye.r { top:20px; right:12px; }
-
+  @keyframes eyeGlow {
+    0% { box-shadow:0 0 12px #ffcc00, 0 0 24px #ff8800; }
+    100% { box-shadow:0 0 20px #ffee00, 0 0 40px #ff8800, 0 0 60px rgba(255,100,0,.9); }
+  }
   body.theme-lotr .z-mouth {
     position:absolute; top:38px; left:50%;
     transform:translateX(-50%);
@@ -772,55 +557,42 @@
       #000 0%, #2a0500 40%, #6a1000 100%);
     border-radius:0 0 50% 50% / 0 0 95% 95%;
     border-top:2px solid #1a0000;
-    box-shadow:
-      inset 0 4px 10px rgba(120,0,0,.9),
-      0 0 10px rgba(120,0,0,.7);
+    box-shadow:inset 0 4px 10px rgba(120,0,0,.9), 0 0 10px rgba(120,0,0,.7);
     z-index:2;
   }
   body.theme-lotr .z-mouth::before {
     content:''; position:absolute;
-    top:-2px; left:2px;
-    width:8px; height:14px;
+    top:-2px; left:2px; width:8px; height:14px;
     background:linear-gradient(180deg, #f0e0b8 0%, #a89050 100%);
     clip-path:polygon(50% 0, 100% 100%, 0 100%);
     filter:drop-shadow(0 1px 2px #000);
-    box-shadow:
-      12px 2px 0 -1px #f0e0b8,
-      24px -1px 0 -1px #f0e0b8;
+    box-shadow:12px 2px 0 -1px #f0e0b8, 24px -1px 0 -1px #f0e0b8;
   }
   body.theme-lotr .z-mouth::after {
     content:''; position:absolute;
-    bottom:-2px; left:8px;
-    width:6px; height:10px;
+    bottom:-2px; left:8px; width:6px; height:10px;
     background:linear-gradient(180deg, #a89050 0%, #f0e0b8 100%);
     clip-path:polygon(0 0, 100% 0, 50% 100%);
     filter:drop-shadow(0 -1px 2px #000);
-    box-shadow:
-      10px 0 0 -1px #a89050;
+    box-shadow:10px 0 0 -1px #a89050;
   }
-
   body.theme-lotr .z-leg {
     position:absolute; top:116px;
     width:22px; height:48px;
     background:linear-gradient(180deg, #3a2810 0%, #1a0a00 70%, #050200 100%);
-    border-radius:4px;
-    border:1px solid #000;
-    box-shadow:
-      inset -4px 0 8px rgba(0,0,0,.95),
-      inset 2px 2px 4px rgba(120,80,20,.3);
+    border-radius:4px; border:1px solid #000;
+    box-shadow:inset -4px 0 8px rgba(0,0,0,.95), inset 2px 2px 4px rgba(120,80,20,.3);
   }
   body.theme-lotr .z-leg.l { left:16px; transform:rotate(-5deg); transform-origin:top center; }
   body.theme-lotr .z-leg.r { right:16px; transform:rotate(7deg); transform-origin:top center; }
   body.theme-lotr .z-leg::after {
     content:''; position:absolute;
-    bottom:-2px; left:-3px; right:-3px;
-    height:10px;
+    bottom:-2px; left:-3px; right:-3px; height:10px;
     background:linear-gradient(180deg, #2a1a08, #0a0500);
     border-radius:3px 3px 5px 5px;
     border:1px solid #000;
     box-shadow:inset 0 2px 3px rgba(120,80,20,.3);
   }
-
   body.theme-lotr .z-shadow {
     position:absolute; bottom:-8px; left:50%;
     transform:translateX(-50%);
@@ -828,6 +600,336 @@
     background:radial-gradient(ellipse, rgba(0,0,0,.9) 0%, transparent 80%);
     border-radius:50%;
     filter:blur(2px);
+  }
+
+  /* =========================================================
+     РЕАЛИСТИЧНЫЙ ЗОМБИ — максимально похож на человека
+     ========================================================= */
+  body.theme-realistic .zombie {
+    filter:
+      drop-shadow(0 15px 25px rgba(0,0,0,.95))
+      drop-shadow(0 0 12px rgba(60,20,20,.5))
+      contrast(1.1) saturate(.85);
+    animation:zombieShamble 3s infinite alternate;
+  }
+  @keyframes zombieShamble {
+    0% { transform:rotate(-2deg) translateY(0); }
+    100% { transform:rotate(3deg) translateY(-2px); }
+  }
+
+  /* Голова — реалистичная: гниющая кожа, раны, впадины */
+  body.theme-realistic .z-head {
+    position:absolute; top:6px; left:16px;
+    width:50px; height:56px;
+    background:
+      radial-gradient(ellipse at 40% 35%,
+        #8a7a62 0%,
+        #6a5a42 20%,
+        #4a3a28 50%,
+        #2a1e10 80%,
+        #0a0500 100%),
+      radial-gradient(circle at 30% 60%, rgba(90,20,20,.4) 5px, transparent 8px),
+      radial-gradient(circle at 70% 40%, rgba(60,15,15,.4) 4px, transparent 7px);
+    border-radius:48% 52% 50% 50% / 52% 52% 48% 48%;
+    box-shadow:
+      inset -8px -6px 14px rgba(0,0,0,.9),
+      inset 6px 5px 10px rgba(180,160,120,.15),
+      inset 0 -8px 12px rgba(60,20,20,.6),
+      0 4px 8px rgba(0,0,0,.7);
+    animation:realHeadTwitch 4s infinite;
+  }
+  @keyframes realHeadTwitch {
+    0%, 92%, 100% { transform:rotate(0); }
+    94% { transform:rotate(5deg); }
+    96% { transform:rotate(-4deg); }
+  }
+  /* Рваная рана на голове — видно мясо */
+  body.theme-realistic .z-head::before {
+    content:''; position:absolute;
+    top:4px; right:2px;
+    width:26px; height:16px;
+    background:
+      radial-gradient(ellipse at 40% 50%,
+        #5a0808 0%,
+        #8a1010 25%,
+        #3a0505 60%,
+        transparent 90%);
+    border-radius:50%;
+    transform:rotate(-25deg);
+    box-shadow:
+      inset 0 0 6px rgba(0,0,0,.9),
+      0 0 8px rgba(60,0,0,.7);
+    filter:blur(.5px);
+  }
+  /* Волосы — грязные, свалявшиеся клочья */
+  body.theme-realistic .z-head::after {
+    content:''; position:absolute;
+    top:-6px; left:2px; right:2px; height:18px;
+    background:
+      radial-gradient(ellipse at 20% 80%, #1a1008 0 5px, transparent 6px),
+      radial-gradient(ellipse at 40% 60%, #2a1a08 0 6px, transparent 7px),
+      radial-gradient(ellipse at 60% 80%, #1a1008 0 5px, transparent 6px),
+      radial-gradient(ellipse at 80% 55%, #2a1a08 0 6px, transparent 7px),
+      radial-gradient(ellipse at 50% 40%, #1a1008 0 4px, transparent 5px);
+    border-radius:50% 50% 30% 30%;
+    filter:blur(.5px);
+    opacity:.95;
+  }
+
+  /* Глаза — мутные, впалые, с красными прожилками */
+  body.theme-realistic .z-eye {
+    position:absolute;
+    width:12px; height:12px;
+    background:
+      radial-gradient(circle at 50% 50%,
+        #ffffff 0%,
+        #d8d8c8 25%,
+        #8a2020 45%,
+        #5a0808 65%,
+        #1a0000 100%);
+    border-radius:50%;
+    box-shadow:
+      0 0 6px rgba(120,20,20,.6),
+      inset 0 -2px 4px rgba(0,0,0,.8),
+      inset 2px 2px 2px rgba(255,255,255,.1);
+    z-index:2;
+    border:1px solid #1a0a05;
+    animation:realEyeTwitch 5s infinite;
+  }
+  @keyframes realEyeTwitch {
+    0%, 90%, 100% { transform:scale(1); }
+    92% { transform:scale(1.15); }
+    94% { transform:scale(.95); }
+  }
+  body.theme-realistic .z-eye.l { top:20px; left:10px; }
+  body.theme-realistic .z-eye.r { top:18px; right:8px; }
+  /* Красные прожилки */
+  body.theme-realistic .z-eye::before {
+    content:''; position:absolute; inset:1px;
+    background:
+      radial-gradient(circle at 30% 30%, rgba(180,20,20,.6) 1px, transparent 2px),
+      radial-gradient(circle at 70% 60%, rgba(150,10,10,.5) 1px, transparent 2px),
+      radial-gradient(circle at 50% 80%, rgba(180,20,20,.4) 1px, transparent 2px);
+    border-radius:50%;
+    pointer-events:none;
+  }
+
+  /* Торс — рваная, грязная одежда, видны внутренности */
+  body.theme-realistic .z-torso {
+    position:absolute; top:58px; left:14px;
+    width:56px; height:68px;
+    background:
+      radial-gradient(ellipse at 40% 30%,
+        #3a3228 0%,
+        #2a2218 40%,
+        #1a1408 70%,
+        #050302 100%),
+      linear-gradient(180deg, #2a2418 0%, #0a0804 100%);
+    border-radius:6px 6px 4px 4px;
+    border:1px solid #000;
+    box-shadow:
+      inset 0 0 15px rgba(0,0,0,1),
+      inset 6px 8px 12px rgba(0,0,0,.9),
+      inset -6px -6px 10px rgba(0,0,0,.95);
+    overflow:hidden;
+  }
+  /* Рваная рана на груди — видно рёбра и мясо */
+  body.theme-realistic .z-torso::before {
+    content:''; position:absolute;
+    top:12px; left:8px;
+    width:36px; height:32px;
+    background:
+      radial-gradient(ellipse at 40% 45%,
+        #6a0a0a 0%,
+        #5a0808 20%,
+        #d8c8a8 35%,
+        #8a1010 55%,
+        #2a0000 85%,
+        transparent 100%);
+    border-radius:50%;
+    transform:rotate(-8deg);
+    box-shadow:
+      inset 0 0 8px rgba(0,0,0,.95),
+      inset 0 0 14px rgba(120,0,0,.8),
+      0 0 10px rgba(0,0,0,.8);
+    filter:blur(.4px);
+  }
+  /* Кишки, свисающие из раны */
+  body.theme-realistic .z-torso::after {
+    content:''; position:absolute;
+    bottom:0; left:22px;
+    width:14px; height:44px;
+    background:
+      linear-gradient(180deg,
+        #6a0808 0%,
+        #4a0505 30%,
+        #5a0808 50%,
+        #3a0404 80%,
+        #1a0202 100%);
+    border-radius:0 0 40% 40%;
+    box-shadow:
+      inset 2px 0 6px rgba(0,0,0,.9),
+      inset -2px 0 4px rgba(120,20,20,.6),
+      0 0 8px rgba(0,0,0,.6);
+    transform:rotate(6deg);
+    filter:blur(.3px);
+  }
+
+  /* Руки — с ободранной кожей, с кровью */
+  body.theme-realistic .z-arm {
+    position:absolute; top:62px;
+    width:48px; height:13px;
+    background:
+      linear-gradient(180deg,
+        #7a6a52 0%,
+        #5a4a34 30%,
+        #3a2a1a 60%,
+        #1a0e08 100%);
+    border-radius:6px;
+    border:1px solid #000;
+    box-shadow:
+      inset -4px 0 8px rgba(0,0,0,.9),
+      inset 2px 0 4px rgba(150,130,90,.15),
+      0 2px 6px rgba(0,0,0,.7);
+  }
+  body.theme-realistic .z-arm.l { left:-36px; transform:rotate(-10deg); transform-origin:right center; }
+  body.theme-realistic .z-arm.r { right:-36px; transform:rotate(12deg); transform-origin:left center; }
+  /* Кисть руки — с пальцами */
+  body.theme-realistic .z-arm::after {
+    content:''; position:absolute; top:50%;
+    transform:translateY(-50%);
+    width:14px; height:16px;
+    background:
+      radial-gradient(ellipse at 40% 40%,
+        #8a7a62 0%,
+        #5a4a34 50%,
+        #3a2a1a 100%);
+    border-radius:40% 60% 60% 40%;
+    box-shadow:
+      inset -3px -3px 5px rgba(0,0,0,.8),
+      0 2px 4px rgba(0,0,0,.7);
+  }
+  body.theme-realistic .z-arm.l::after { left:-8px; }
+  body.theme-realistic .z-arm.r::after { right:-8px; }
+  /* Пальцы/когти */
+  body.theme-realistic .z-arm::before {
+    content:''; position:absolute;
+    top:50%; transform:translateY(-50%);
+    width:4px; height:14px;
+    background:linear-gradient(180deg, #b8a888 0%, #6a5a42 100%);
+    clip-path:polygon(50% 0, 100% 100%, 0 100%);
+    filter:drop-shadow(0 1px 2px rgba(0,0,0,.9));
+    box-shadow:
+      6px 0 0 -1px rgba(180,168,136,.6),
+      12px 0 0 -2px rgba(180,168,136,.4);
+  }
+  body.theme-realistic .z-arm.l::before { left:-4px; }
+  body.theme-realistic .z-arm.r::before { right:-4px; transform:translateY(-50%) rotate(180deg); }
+
+  /* Рот — приоткрыт, зубы, кровь, гниющая плоть */
+  body.theme-realistic .z-mouth {
+    position:absolute; top:40px; left:50%;
+    transform:translateX(-50%);
+    width:26px; height:16px;
+    background:
+      radial-gradient(ellipse at 50% 30%,
+        #1a0505 0%,
+        #2a0808 40%,
+        #3a0a0a 100%);
+    border-radius:0 0 45% 45% / 0 0 85% 85%;
+    border-top:1px solid #0a0303;
+    box-shadow:
+      inset 0 5px 8px rgba(0,0,0,.95),
+      inset 0 -2px 4px rgba(80,10,10,.6),
+      0 0 6px rgba(0,0,0,.6);
+    z-index:2;
+  }
+  /* Зубы — неровные, грязные */
+  body.theme-realistic .z-mouth::before {
+    content:''; position:absolute;
+    top:0; left:2px; right:2px; height:6px;
+    background:
+      repeating-linear-gradient(90deg,
+        #d8c8a8 0 3px,
+        #8a7a5a 3px 4px,
+        #4a3a20 4px 5px,
+        transparent 5px 7px);
+    clip-path:polygon(
+      0 0, 12% 100%, 25% 0, 37% 100%, 50% 0, 62% 100%, 75% 0, 87% 100%, 100% 0);
+    filter:drop-shadow(0 1px 1px rgba(0,0,0,.9));
+  }
+  /* Кровь изо рта */
+  body.theme-realistic .z-mouth::after {
+    content:''; position:absolute;
+    top:100%; left:50%;
+    transform:translateX(-50%);
+    width:3px; height:18px;
+    background:linear-gradient(180deg,
+      #5a0808 0%,
+      #3a0404 50%,
+      transparent 100%);
+    border-radius:0 0 50% 50%;
+    filter:blur(.3px);
+    box-shadow:0 0 4px rgba(60,0,0,.6);
+  }
+
+  /* Ноги — грязные джинсы/брюки, порванные */
+  body.theme-realistic .z-leg {
+    position:absolute; top:120px;
+    width:20px; height:44px;
+    background:
+      linear-gradient(180deg,
+        #1a1a1a 0%,
+        #0a0a0a 60%,
+        #050505 100%);
+    border-radius:3px;
+    border:1px solid #000;
+    box-shadow:
+      inset -4px 0 6px rgba(0,0,0,.95),
+      inset 3px 0 4px rgba(60,60,60,.2);
+  }
+  body.theme-realistic .z-leg.l { left:18px; transform:rotate(-6deg); transform-origin:top center; }
+  body.theme-realistic .z-leg.r { right:18px; transform:rotate(8deg); transform-origin:top center; }
+  /* Прореха на колене */
+  body.theme-realistic .z-leg::before {
+    content:''; position:absolute;
+    top:24px; left:50%;
+    transform:translateX(-50%);
+    width:10px; height:8px;
+    background:radial-gradient(ellipse, #3a0505 0%, #1a0202 100%);
+    border-radius:50%;
+    box-shadow:inset 0 0 3px rgba(0,0,0,.9);
+    filter:blur(.3px);
+  }
+  /* Обувь — тяжёлые ботинки */
+  body.theme-realistic .z-leg::after {
+    content:''; position:absolute;
+    bottom:-3px; left:-4px; right:-4px;
+    height:12px;
+    background:
+      linear-gradient(180deg,
+        #1a1a1a 0%,
+        #0a0a0a 60%,
+        #000 100%);
+    border-radius:4px 4px 6px 6px;
+    border:1px solid #000;
+    box-shadow:
+      inset 0 3px 3px rgba(80,80,80,.2),
+      0 3px 6px rgba(0,0,0,.8);
+  }
+
+  /* Тень — реалистичная */
+  body.theme-realistic .z-shadow {
+    position:absolute; bottom:-10px; left:50%;
+    transform:translateX(-50%);
+    width:90px; height:14px;
+    background:
+      radial-gradient(ellipse,
+        rgba(0,0,0,.95) 0%,
+        rgba(0,0,0,.7) 30%,
+        transparent 80%);
+    border-radius:50%;
+    filter:blur(3px);
   }
 
   /* ============ СМЕРТЬ ВРАГА ============ */
@@ -851,40 +953,6 @@
     font-family:'KaiTi','SimSun','Microsoft YaHei',serif;
     letter-spacing:2px;
   }
-  body.theme-horror .sign {
-    background:linear-gradient(180deg, #a88850 0%, #7a5a20 50%, #4a2808 100%);
-    color:#fff8e0;
-    border:3px solid #2a1000;
-    box-shadow:
-      0 0 30px rgba(255,20,0,.7),
-      0 6px 12px rgba(0,0,0,.95),
-      inset 0 0 20px rgba(0,0,0,.5),
-      0 0 60px rgba(180,0,0,.6);
-    text-shadow:0 0 12px rgba(255,40,0,.8), 1px 1px 0 #000;
-    animation:signFlicker 2.5s infinite;
-  }
-  @keyframes signFlicker {
-    0%, 90%, 100% { opacity:1; }
-    92% { opacity:.5; }
-    94% { opacity:1; }
-    96% { opacity:.6; }
-  }
-  body.theme-horror .sign::before {
-    content:''; position:absolute;
-    top:0; left:20%; right:25%; height:100%;
-    background:linear-gradient(180deg, rgba(150,0,0,.7) 0%, rgba(100,0,0,.5) 30%, transparent 100%);
-    border-radius:0 0 40% 40%;
-    pointer-events:none;
-    filter:blur(1px);
-  }
-  body.theme-horror .sign::after {
-    content:''; position:absolute;
-    bottom:-22px; left:50%;
-    transform:translateX(-50%);
-    width:6px; height:22px;
-    background:linear-gradient(180deg, #4a2808, #1a0800);
-    box-shadow:0 0 4px rgba(0,0,0,.9);
-  }
   body.theme-funny .sign {
     background:linear-gradient(180deg, #ffffff 0%, #fff8e8 100%);
     color:#8a3a10;
@@ -903,10 +971,7 @@
     background:linear-gradient(180deg, #e8d8a8 0%, #c8b878 100%);
     color:#3a2a08;
     border:3px solid #6a4a10;
-    box-shadow:
-      0 0 15px rgba(200,150,60,.4),
-      0 6px 12px rgba(0,0,0,.5),
-      inset 0 0 20px rgba(120,80,20,.3);
+    box-shadow:0 0 15px rgba(200,150,60,.4), 0 6px 12px rgba(0,0,0,.5), inset 0 0 20px rgba(120,80,20,.3);
     text-shadow:1px 1px 0 rgba(255,255,255,.4);
   }
   body.theme-lotr .sign::after {
@@ -916,6 +981,37 @@
     width:5px; height:20px;
     background:linear-gradient(180deg, #6a4a10, #2a1a04);
   }
+  /* РЕАЛИСТИЧНАЯ табличка: картонка с надписью маркером */
+  body.theme-realistic .sign {
+    background:
+      linear-gradient(180deg,
+        #c8b898 0%,
+        #a89878 40%,
+        #887850 100%);
+    color:#2a1810;
+    border:2px solid #5a4a30;
+    box-shadow:
+      0 4px 10px rgba(0,0,0,.8),
+      inset 0 0 15px rgba(60,40,20,.4),
+      inset 0 2px 0 rgba(255,255,255,.15);
+    text-shadow:1px 1px 0 rgba(0,0,0,.15);
+    font-family:'Microsoft YaHei',serif;
+    letter-spacing:1px;
+    /* Потёртости, грязь */
+    background-image:
+      radial-gradient(circle at 15% 20%, rgba(80,50,20,.4) 3px, transparent 5px),
+      radial-gradient(circle at 80% 60%, rgba(60,40,20,.3) 4px, transparent 6px),
+      radial-gradient(circle at 45% 85%, rgba(40,25,10,.35) 2px, transparent 4px),
+      linear-gradient(180deg, #c8b898 0%, #a89878 40%, #887850 100%);
+  }
+  body.theme-realistic .sign::after {
+    content:''; position:absolute;
+    bottom:-20px; left:50%;
+    transform:translateX(-50%);
+    width:5px; height:20px;
+    background:linear-gradient(180deg, #5a4a30, #1a1008);
+    box-shadow:0 0 3px rgba(0,0,0,.8);
+  }
 
   .sign.len-2 { font-size:26px; padding:8px 16px; letter-spacing:1px; }
   .sign.len-3 { font-size:21px; padding:7px 14px; letter-spacing:0; }
@@ -923,15 +1019,19 @@
   .sign.len-5 { font-size:15px; padding:6px 10px; letter-spacing:0; }
 
   /* ============ СНАРЯДЫ ============ */
-  .laser {
-    position:absolute; height:10px;
+  /* Реалистичная пуля — маленький жёлто-белый след */
+  .bullet {
+    position:absolute; height:3px; width:24px;
     background:linear-gradient(90deg,
-      rgba(255,20,0,0), #ff3300 15%, #ffaa00 40%, #ffffff 50%, #ffaa00 60%, #ff3300 85%, rgba(255,20,0,0));
-    border-radius:5px;
+      rgba(255,200,80,0),
+      rgba(255,220,120,.9) 60%,
+      #ffffff 100%);
+    border-radius:2px;
     box-shadow:
-      0 0 15px #ff4400, 0 0 30px #ff2200,
-      0 0 60px rgba(255,60,0,.9), 0 0 120px rgba(255,40,0,.6);
+      0 0 8px rgba(255,220,120,.9),
+      0 0 16px rgba(255,180,60,.6);
     z-index:12;
+    transform-origin:left center;
   }
   .arrow {
     position:absolute; height:5px; width:60px;
@@ -988,47 +1088,45 @@
   }
 
   /* ============ ЭФФЕКТЫ ПОПАДАНИЯ ============ */
-  /* Общие искры — оставим для всех, но с разным цветом через тему */
   .spark {
     position:absolute; width:5px; height:5px;
     border-radius:50%; z-index:12;
     pointer-events:none;
   }
-
-  /* Хоррор: взрыв (кровавый) */
-  .explosion {
-    position:absolute; width:80px; height:80px; border-radius:50%;
-    background:radial-gradient(circle, #ffffff 0%, #ffff00 15%, #ff8800 35%, #ff0000 55%, #6a0000 75%, transparent 100%);
-    z-index:11; animation:explode .55s forwards;
-    pointer-events:none; box-shadow:0 0 40px #ff4400;
+  /* Реалистичное попадание — вспышка + кровь */
+  .bullet-impact {
+    position:absolute; width:36px; height:36px;
+    border-radius:50%;
+    background:
+      radial-gradient(circle,
+        rgba(255,240,180,1) 0%,
+        rgba(255,180,60,.8) 30%,
+        rgba(180,60,20,.4) 60%,
+        transparent 90%);
+    z-index:12;
+    pointer-events:none;
+    animation:bulletImpact .25s ease-out forwards;
   }
-  @keyframes explode {
-    0%   { transform:scale(0) rotate(0); opacity:1; }
-    60%  { transform:scale(1.6) rotate(180deg); opacity:.9; }
-    100% { transform:scale(2.6) rotate(360deg); opacity:0; }
+  @keyframes bulletImpact {
+    0%   { transform:scale(.2); opacity:1; }
+    100% { transform:scale(1.6); opacity:0; }
   }
 
-  /* Funny: облачко тыквы + разлетающиеся мини-тыковки */
   .puff-funny {
     position:absolute; width:70px; height:70px; border-radius:50%;
-    background:
-      radial-gradient(circle, rgba(255,220,140,.9) 0%, rgba(255,160,60,.7) 30%, rgba(255,120,30,.4) 60%, transparent 85%);
-    z-index:11;
-    animation:puffExplode .5s ease-out forwards;
-    pointer-events:none;
-    filter:blur(2px);
+    background:radial-gradient(circle, rgba(255,220,140,.9) 0%, rgba(255,160,60,.7) 30%, rgba(255,120,30,.4) 60%, transparent 85%);
+    z-index:11; animation:puffExplode .5s ease-out forwards;
+    pointer-events:none; filter:blur(2px);
   }
   @keyframes puffExplode {
     0%   { transform:scale(.2); opacity:1; }
     60%  { transform:scale(1.5); opacity:.9; }
     100% { transform:scale(2.2); opacity:0; }
   }
-
   .mini-pumpkin {
     position:absolute; width:20px; height:20px; border-radius:50%;
     background:radial-gradient(circle at 35% 35%, #ffcc70, #ff7518);
-    z-index:12;
-    pointer-events:none;
+    z-index:12; pointer-events:none;
     box-shadow:0 0 10px rgba(255,150,50,.8);
     animation:miniPumpkinFly .7s ease-out forwards;
   }
@@ -1043,32 +1141,23 @@
     0%   { transform:scale(.6) rotate(0); opacity:1; }
     100% { transform:scale(1.3) rotate(360deg) translate(var(--dx), var(--dy)); opacity:0; }
   }
-
-  /* LOTR: эльфийская вспышка — серебристо-зелёная */
   .elf-flash {
     position:absolute; width:80px; height:80px; border-radius:50%;
-    background:
-      radial-gradient(circle, #ffffff 0%, #c8ffa0 20%, #88dd55 45%, #3a8a20 70%, transparent 95%);
-    z-index:11;
-    animation:elfFlash .5s ease-out forwards;
+    background:radial-gradient(circle, #ffffff 0%, #c8ffa0 20%, #88dd55 45%, #3a8a20 70%, transparent 95%);
+    z-index:11; animation:elfFlash .5s ease-out forwards;
     pointer-events:none;
-    box-shadow:
-      0 0 40px #88dd55,
-      0 0 80px rgba(140,220,80,.6);
+    box-shadow:0 0 40px #88dd55, 0 0 80px rgba(140,220,80,.6);
   }
   @keyframes elfFlash {
     0%   { transform:scale(.3); opacity:1; }
     60%  { transform:scale(1.6); opacity:.9; }
     100% { transform:scale(2.4); opacity:0; }
   }
-
-  /* Эльфийский лист — осколок */
   .elf-leaf {
     position:absolute; width:14px; height:8px;
     background:linear-gradient(90deg, #4a8a20 0%, #88dd55 100%);
     border-radius:50% 0 50% 0;
-    z-index:12;
-    pointer-events:none;
+    z-index:12; pointer-events:none;
     box-shadow:0 0 8px rgba(140,220,80,.9);
     animation:leafFly .8s ease-out forwards;
   }
@@ -1076,14 +1165,10 @@
     0%   { transform:rotate(0) scale(.7); opacity:1; }
     100% { transform:rotate(720deg) scale(1.1) translate(var(--dx), var(--dy)); opacity:0; }
   }
-
-  /* Эльфийская искра */
   .elf-spark {
     position:absolute; width:5px; height:5px;
     background:radial-gradient(circle, #ffffff, #aaff66);
-    border-radius:50%;
-    z-index:12;
-    pointer-events:none;
+    border-radius:50%; z-index:12; pointer-events:none;
     box-shadow:0 0 10px #aaff66, 0 0 20px #88dd55;
     animation:elfSparkFly .7s ease-out forwards;
   }
@@ -1091,31 +1176,24 @@
     0%   { transform:scale(1); opacity:1; }
     100% { transform:scale(0) translate(var(--dx), var(--dy)); opacity:0; }
   }
-
-  /* Кровавые брызги (только хоррор) */
-  .blood-splat {
-    position:absolute; width:20px; height:20px;
+  /* Реалистичные брызги крови — маленькие капли */
+  .blood-real {
+    position:absolute;
     border-radius:50%;
-    background:radial-gradient(circle, #ff0000 0%, #8a0000 40%, #2a0000 70%, transparent 100%);
+    background:radial-gradient(circle at 40% 40%,
+      #a01010 0%,
+      #6a0808 40%,
+      #3a0202 70%,
+      transparent 100%);
     z-index:14; pointer-events:none;
-    animation:bloodFly .9s ease-out forwards;
-    filter:blur(.5px); box-shadow:0 0 8px rgba(255,0,0,.8);
+    animation:bloodRealFly .8s ease-out forwards;
+    filter:blur(.2px);
+    box-shadow:0 0 4px rgba(100,0,0,.6);
   }
-  @keyframes bloodFly {
-    0%   { transform:scale(.3); opacity:1; }
-    70%  { opacity:.9; }
-    100% { transform:scale(1.8) translate(var(--dx), var(--dy)); opacity:0; }
-  }
-  .hit-flash {
-    position:absolute; width:40px; height:40px;
-    border-radius:50%;
-    background:radial-gradient(circle, #fff 0%, #ffcc00 30%, #ff0000 70%, transparent 100%);
-    z-index:13; pointer-events:none;
-    animation:hitFlash .3s forwards;
-  }
-  @keyframes hitFlash {
-    0%   { transform:scale(0); opacity:1; }
-    100% { transform:scale(2); opacity:0; }
+  @keyframes bloodRealFly {
+    0%   { transform:scale(.4); opacity:1; }
+    60%  { opacity:.9; }
+    100% { transform:scale(1.1) translate(var(--dx), var(--dy)); opacity:0; }
   }
 
   /* ============ ГЕРОЙ ============ */
@@ -1123,12 +1201,6 @@
     position:absolute; bottom:55px; left:130px;
     width:80px; height:150px; z-index:10;
     transition:filter .3s;
-  }
-  body.theme-horror #hero {
-    filter:
-      drop-shadow(0 0 20px rgba(255,200,100,.8))
-      drop-shadow(0 0 40px rgba(255,150,50,.5))
-      drop-shadow(0 8px 12px rgba(0,0,0,1));
   }
   body.theme-funny #hero {
     filter:drop-shadow(0 8px 12px rgba(0,0,0,.4));
@@ -1138,6 +1210,12 @@
       drop-shadow(0 0 15px rgba(180,255,140,.4))
       drop-shadow(0 8px 12px rgba(0,0,0,.8));
   }
+  /* РЕАЛИСТИЧНЫЙ герой (Леон) */
+  body.theme-realistic #hero {
+    filter:
+      drop-shadow(0 0 15px rgba(255,220,150,.4))
+      drop-shadow(0 10px 15px rgba(0,0,0,1));
+  }
   #hero.hurt { animation:heroHurt .6s; }
   @keyframes heroHurt {
     0%   { transform:translateX(0) rotate(0); }
@@ -1146,64 +1224,6 @@
     80%  { transform:translateX(-8px) rotate(-4deg); }
     100% { transform:translateX(0) rotate(0); }
   }
-
-  /* Resident Evil */
-  .hr-leg { position:absolute; top:108px; width:20px; height:42px;
-    background:linear-gradient(180deg, #1a1a20, #0a0a0e);
-    border-radius:3px; border:1px solid #000; }
-  .hr-leg.l { left:16px; } .hr-leg.r { right:16px; }
-  .hr-boot { position:absolute; top:142px; width:24px; height:12px;
-    background:linear-gradient(180deg, #2a2a2e, #050508);
-    border-radius:3px 3px 5px 5px; border:1px solid #000; }
-  .hr-boot.l { left:14px; } .hr-boot.r { right:14px; }
-  .hr-torso { position:absolute; top:52px; left:12px; width:56px; height:64px;
-    background:linear-gradient(90deg, #16161c 0%, #3b3b45 20%, #3b3b45 80%, #16161c 100%);
-    border-radius:8px 8px 6px 6px; border:1px solid #000;
-    box-shadow:inset 0 0 8px rgba(0,0,0,.9); }
-  .hr-vest { position:absolute; top:60px; left:16px; width:48px; height:44px;
-    background:linear-gradient(180deg, #4a4a52 0%, #2a2a32 100%);
-    border-radius:5px; border:1px solid #0a0a0e;
-    box-shadow:inset 0 -6px 8px rgba(0,0,0,.7), inset 0 0 0 1px rgba(120,120,140,.5); }
-  .hr-vest::before { content:''; position:absolute; left:4px; right:4px; top:6px; height:6px;
-    background:repeating-linear-gradient(90deg, #6a6a72 0 3px, #3a3a42 3px 6px);
-    border-radius:2px; opacity:.8; }
-  .hr-belt { position:absolute; top:100px; left:14px; width:52px; height:8px;
-    background:linear-gradient(180deg, #6a5a2a, #2a1a08);
-    border-radius:2px; border:1px solid #000; }
-  .hr-arm { position:absolute; top:62px; width:14px; height:48px;
-    background:linear-gradient(180deg, #1c1c22, #0a0a0e);
-    border-radius:5px; border:1px solid #000; }
-  .hr-arm.l { left:0; transform:rotate(8deg); transform-origin:top center;}
-  .hr-arm.r { right:0; transform:rotate(-25deg); transform-origin:top center;}
-  .hr-gun { position:absolute; top:96px; right:-10px; width:26px; height:10px;
-    background:linear-gradient(180deg, #4a4a52, #0a0a0e);
-    border-radius:2px; border:1px solid #000; transform:rotate(-10deg); }
-  .hr-gun::after { content:''; position:absolute; right:-4px; top:2px;
-    width:8px; height:6px; background:#0a0a0e; border-radius:1px; }
-  .hr-gun::before { content:''; position:absolute; left:2px; top:3px;
-    width:12px; height:3px;
-    background:linear-gradient(90deg, #ff4400, #ffffff);
-    box-shadow:0 0 10px #ff4400; animation:pulse 1.2s infinite; }
-  @keyframes pulse { 0%,100%{opacity:.8} 50%{opacity:1; box-shadow:0 0 20px #ff4400} }
-  .hr-head { position:absolute; top:14px; left:18px; width:44px; height:44px;
-    background:radial-gradient(circle at 40% 40%, #7a5a38, #3a2010);
-    border-radius:50%; border:1px solid #000;
-    box-shadow:inset -4px -4px 6px rgba(0,0,0,.6); }
-  .hr-cap { position:absolute; top:8px; left:16px; width:48px; height:22px;
-    background:linear-gradient(180deg, #3a3a42, #18181c);
-    border-radius:24px 24px 4px 4px; border:1px solid #000;
-    box-shadow:inset 0 3px 3px rgba(255,255,255,.15); }
-  .hr-mask { position:absolute; top:26px; left:22px; width:36px; height:22px;
-    background:linear-gradient(180deg, #2a2a30, #050508);
-    border-radius:4px 4px 10px 10px; border:1px solid #000;
-    box-shadow:inset 0 0 6px rgba(0,0,0,.9); }
-  .hr-mask::before, .hr-mask::after {
-    content:''; position:absolute; top:5px; width:8px; height:6px;
-    background:radial-gradient(circle, #ff5533 0%, #660000 100%);
-    border-radius:50%; box-shadow:0 0 10px #ff2200; }
-  .hr-mask::before { left:5px; } .hr-mask::after { right:5px; }
-  .hr-filter { position:absolute; top:42px; left:30px; width:12px; height:10px;
-    background:#1a1a20; border-radius:2px; border:1px solid #000; }
 
   /* БАБУШКА */
   .gr-leg { position:absolute; top:108px; width:22px; height:42px;
@@ -1571,6 +1591,438 @@
     clip-path:polygon(50% 0, 100% 100%, 0 100%);
   }
 
+  /* =========================================================
+     РЕАЛИСТИЧНЫЙ ГЕРОЙ — Леон С. Кеннеди (RE4 Remake style)
+     ========================================================= */
+  .rl-leg {
+    position:absolute; top:108px;
+    width:20px; height:44px;
+    background:
+      linear-gradient(180deg,
+        #2a2a2a 0%,
+        #1a1a1a 40%,
+        #0a0a0a 100%);
+    border-radius:3px;
+    border:1px solid #000;
+    box-shadow:
+      inset -3px 0 4px rgba(0,0,0,.9),
+      inset 2px 0 2px rgba(80,80,80,.15);
+  }
+  .rl-leg.l { left:16px; }
+  .rl-leg.r { right:16px; }
+  .rl-boot {
+    position:absolute; top:146px;
+    width:26px; height:14px;
+    background:
+      linear-gradient(180deg,
+        #1a1a1a 0%,
+        #0a0a0a 60%,
+        #000 100%);
+    border-radius:4px 4px 6px 6px;
+    border:1px solid #000;
+    box-shadow:
+      inset 0 3px 3px rgba(60,60,60,.2),
+      0 3px 6px rgba(0,0,0,.8);
+  }
+  .rl-boot.l { left:14px; }
+  .rl-boot.r { right:14px; }
+
+  .rl-torso {
+    position:absolute; top:52px; left:13px;
+    width:54px; height:64px;
+    background:
+      linear-gradient(180deg,
+        #3a3f3a 0%,
+        #2a2f2a 40%,
+        #1a1f1a 80%,
+        #0a0e0a 100%);
+    border-radius:6px 6px 4px 4px;
+    border:1px solid #000;
+    box-shadow:
+      inset 0 0 12px rgba(0,0,0,.8),
+      inset -6px -3px 8px rgba(0,0,0,.6),
+      inset 4px 2px 6px rgba(120,130,110,.15);
+  }
+  .rl-torso::before {
+    content:''; position:absolute;
+    top:0; left:50%;
+    transform:translateX(-50%);
+    width:0; height:0;
+    border-left:8px solid transparent;
+    border-right:8px solid transparent;
+    border-top:14px solid #1a1a1a;
+    filter:drop-shadow(0 1px 1px rgba(0,0,0,.8));
+  }
+  .rl-torso::after {
+    content:''; position:absolute; inset:0;
+    background:
+      radial-gradient(ellipse at 30% 60%, rgba(0,0,0,.35) 8px, transparent 14px),
+      radial-gradient(ellipse at 70% 70%, rgba(0,0,0,.3) 6px, transparent 12px),
+      linear-gradient(75deg, transparent 40%, rgba(0,0,0,.2) 42%, transparent 44%);
+    border-radius:6px;
+    pointer-events:none;
+  }
+
+  .rl-harness {
+    position:absolute; top:54px; left:14px;
+    width:52px; height:58px;
+    pointer-events:none;
+    z-index:3;
+  }
+  .rl-harness::before {
+    content:''; position:absolute;
+    top:4px; left:0; right:0;
+    height:8px;
+    background:linear-gradient(180deg,
+      #5a3a18 0%,
+      #3a2408 40%,
+      #1a1004 100%);
+    transform:rotate(-22deg);
+    transform-origin:center;
+    border-radius:2px;
+    box-shadow:
+      inset 0 1px 1px rgba(180,140,80,.3),
+      0 1px 3px rgba(0,0,0,.9);
+  }
+  .rl-harness::after {
+    content:''; position:absolute;
+    top:18px; left:24px;
+    width:8px; height:8px;
+    background:
+      radial-gradient(circle at 40% 40%,
+        #d8d8d8 0%, #8a8a8a 40%, #3a3a3a 80%, #0a0a0a 100%);
+    border-radius:2px;
+    transform:rotate(-22deg);
+    box-shadow:
+      0 0 4px rgba(0,0,0,.9),
+      inset 0 1px 1px rgba(255,255,255,.4);
+  }
+
+  .rl-holster {
+    position:absolute; top:68px; right:6px;
+    width:14px; height:22px;
+    background:linear-gradient(180deg, #2a1a08, #0a0500);
+    border-radius:3px 3px 4px 4px;
+    border:1px solid #000;
+    z-index:2;
+    box-shadow:
+      inset 0 2px 3px rgba(80,60,20,.3),
+      0 2px 4px rgba(0,0,0,.8);
+    transform:rotate(-8deg);
+  }
+  .rl-holster::before {
+    content:''; position:absolute;
+    top:-8px; left:2px; right:2px;
+    height:10px;
+    background:linear-gradient(180deg,
+      #3a3a3a 0%,
+      #2a2a2a 60%,
+      #0a0a0a 100%);
+    border-radius:2px 2px 1px 1px;
+    box-shadow:
+      inset 0 1px 2px rgba(120,120,120,.4),
+      0 0 3px rgba(0,0,0,.7);
+  }
+
+  .rl-arm {
+    position:absolute; top:62px;
+    width:14px; height:46px;
+    background:linear-gradient(180deg,
+      #2a2f2a 0%,
+      #1a1f1a 60%,
+      #0a0e0a 100%);
+    border-radius:5px;
+    border:1px solid #000;
+    box-shadow:inset -2px 0 3px rgba(0,0,0,.8);
+  }
+  .rl-arm.l { left:0; transform:rotate(8deg); transform-origin:top center;}
+  .rl-arm.r { right:0; transform:rotate(-28deg); transform-origin:top center;}
+  .rl-arm::after {
+    content:''; position:absolute;
+    bottom:-6px; left:50%;
+    transform:translateX(-50%);
+    width:14px; height:14px;
+    background:radial-gradient(circle at 40% 40%,
+      #2a2a2a 0%, #1a1a1a 60%, #050505 100%);
+    border-radius:50% 50% 45% 45%;
+    border:1px solid #000;
+    box-shadow:
+      inset -2px -2px 3px rgba(0,0,0,.9),
+      0 1px 2px rgba(0,0,0,.8);
+  }
+  .rl-arm.l::before {
+    content:''; position:absolute;
+    bottom:6px; left:50%;
+    transform:translateX(-50%);
+    width:10px; height:6px;
+    background:linear-gradient(180deg, #1a1a1a, #050505);
+    border-radius:2px;
+    border:1px solid #000;
+    box-shadow:
+      inset 0 1px 1px rgba(120,120,120,.3),
+      0 0 3px rgba(0,0,0,.7);
+  }
+
+  .rl-gun {
+    position:absolute; top:92px; right:-16px;
+    width:32px; height:11px;
+    background:linear-gradient(180deg,
+      #f0f0f0 0%,
+      #c8c8c8 25%,
+      #8a8a8a 55%,
+      #5a5a5a 80%,
+      #2a2a2a 100%);
+    border-radius:2px 2px 1px 1px;
+    border:1px solid #1a1a1a;
+    transform:rotate(-8deg);
+    box-shadow:
+      inset 0 1px 1px rgba(255,255,255,.7),
+      inset 0 -1px 1px rgba(0,0,0,.6),
+      0 2px 5px rgba(0,0,0,.8),
+      0 0 8px rgba(180,180,180,.3);
+    z-index:4;
+  }
+  .rl-gun::before {
+    content:''; position:absolute;
+    top:-1px; left:2px; right:4px;
+    height:2px;
+    background:linear-gradient(90deg,
+      #1a1a1a 0%,
+      #0a0a0a 40%,
+      #2a2a2a 100%);
+    border-radius:1px 1px 0 0;
+  }
+  .rl-gun::after {
+    content:''; position:absolute;
+    right:-2px; top:3px;
+    width:6px; height:5px;
+    background:radial-gradient(circle at 60% 50%,
+      #000 0%,
+      #1a1a1a 50%,
+      #3a3a3a 100%);
+    border-radius:50%;
+    box-shadow:
+      inset 0 0 3px rgba(0,0,0,1),
+      0 0 4px rgba(0,0,0,.8);
+  }
+  .rl-grip {
+    position:absolute; top:100px; right:0;
+    width:10px; height:16px;
+    background:linear-gradient(180deg,
+      #1a1a1a 0%,
+      #2a2a2a 30%,
+      #0a0a0a 100%);
+    border-radius:1px 1px 3px 3px;
+    transform:rotate(-8deg);
+    border:1px solid #000;
+    z-index:3;
+    box-shadow:
+      inset 1px 1px 2px rgba(120,120,120,.15),
+      0 2px 4px rgba(0,0,0,.9);
+  }
+  .rl-grip::before {
+    content:''; position:absolute;
+    top:2px; left:1px; right:1px; bottom:2px;
+    background:repeating-linear-gradient(0deg,
+      transparent 0 1px,
+      rgba(255,255,255,.08) 1px 2px);
+    border-radius:1px;
+  }
+  .rl-trigger {
+    position:absolute; top:99px; right:14px;
+    width:8px; height:8px;
+    border:1.5px solid #0a0a0a;
+    border-radius:0 0 50% 50%;
+    border-top:none;
+    z-index:3;
+    box-shadow:0 1px 2px rgba(0,0,0,.7);
+  }
+  .rl-muzzle {
+    position:absolute; top:94px; right:-46px;
+    width:14px; height:10px;
+    background:radial-gradient(circle,
+      #ffffff 0%,
+      #fff8b0 30%,
+      #ffaa00 55%,
+      transparent 85%);
+    border-radius:50%;
+    opacity:0;
+    z-index:11;
+    filter:blur(1px);
+    box-shadow:
+      0 0 15px #ffaa00,
+      0 0 30px rgba(255,150,0,.7);
+  }
+  #hero.shoot .rl-muzzle {
+    animation:muzzleFlash .12s;
+  }
+  @keyframes muzzleFlash {
+    0%, 100% { opacity:0; }
+    50% { opacity:1; }
+  }
+
+  .rl-head {
+    position:absolute; top:16px; left:22px;
+    width:38px; height:44px;
+    background:
+      radial-gradient(ellipse at 45% 40%,
+        #e8b890 0%,
+        #c89878 25%,
+        #a87858 55%,
+        #7a5030 85%,
+        #4a2a18 100%);
+    border-radius:48% 48% 45% 45% / 50% 50% 50% 50%;
+    border:1px solid #000;
+    box-shadow:
+      inset -4px -3px 6px rgba(0,0,0,.4),
+      inset 3px 2px 4px rgba(255,220,180,.3),
+      0 2px 4px rgba(0,0,0,.5);
+    z-index:2;
+  }
+
+  .rl-hair {
+    position:absolute; top:8px; left:16px;
+    width:50px; height:30px;
+    background:
+      linear-gradient(180deg,
+        #f0e0b8 0%,
+        #d8c090 25%,
+        #b8a070 55%,
+        #8a7048 100%);
+    border-radius:50% 50% 35% 35% / 65% 65% 35% 35%;
+    clip-path:polygon(
+      8% 10%, 92% 10%,
+      100% 35%, 98% 75%,
+      92% 100%, 88% 85%,
+      82% 100%, 78% 80%,
+      72% 100%, 68% 78%,
+      60% 95%, 55% 75%,
+      48% 100%, 42% 82%,
+      35% 100%, 30% 78%,
+      22% 95%, 18% 70%,
+      10% 90%, 5% 65%,
+      0% 35%
+    );
+    box-shadow:
+      inset 0 -4px 8px rgba(60,40,20,.4),
+      inset 2px 0 4px rgba(255,250,220,.4),
+      0 2px 4px rgba(0,0,0,.6);
+    z-index:4;
+  }
+  .rl-hair::before {
+    content:''; position:absolute;
+    bottom:-10px; left:6px;
+    width:38px; height:14px;
+    background:
+      linear-gradient(180deg,
+        #d8c090 0%,
+        #b8a070 40%,
+        #8a7048 100%);
+    border-radius:0 0 60% 40% / 0 0 100% 100%;
+    transform:rotate(-8deg);
+    box-shadow:
+      inset 0 -3px 4px rgba(60,40,20,.5),
+      0 2px 3px rgba(0,0,0,.5);
+    z-index:5;
+  }
+  .rl-hair::after {
+    content:''; position:absolute;
+    bottom:-12px; left:10px;
+    width:32px; height:6px;
+    background:radial-gradient(ellipse, rgba(80,50,30,.5) 0%, transparent 80%);
+    filter:blur(2px);
+    z-index:3;
+  }
+
+  .rl-eye {
+    position:absolute; top:34px;
+    width:7px; height:5px;
+    background:
+      radial-gradient(ellipse at 50% 50%,
+        #ffffff 0%,
+        #d8c8a8 30%,
+        #6a9ab8 55%,
+        #3a5a78 75%,
+        #1a2a3a 100%);
+    border-radius:50%;
+    box-shadow:
+      inset 0 -1px 1px rgba(0,0,0,.6),
+      0 1px 1px rgba(0,0,0,.4),
+      0 0 3px rgba(90,140,180,.4);
+    z-index:5;
+  }
+  .rl-eye.l { left:28px; }
+  .rl-eye.r { right:28px; }
+  .rl-eye::before {
+    content:''; position:absolute;
+    top:1px; left:2.5px;
+    width:2px; height:3px;
+    background:#0a0505;
+    border-radius:50%;
+    box-shadow:0 0 1px rgba(0,0,0,.8);
+  }
+  .rl-eye::after {
+    content:''; position:absolute;
+    top:0.5px; left:1.5px;
+    width:1.5px; height:1.5px;
+    background:#ffffff;
+    border-radius:50%;
+    opacity:.9;
+  }
+
+  .rl-brow {
+    position:absolute; top:28px;
+    width:9px; height:2px;
+    background:linear-gradient(90deg,
+      #a89060 0%,
+      #8a7048 100%);
+    border-radius:1px;
+    z-index:5;
+  }
+  .rl-brow.l { left:27px; transform:rotate(-6deg); }
+  .rl-brow.r { right:27px; transform:rotate(6deg); }
+
+  .rl-nose {
+    position:absolute; top:38px; left:50%;
+    transform:translateX(-50%);
+    width:5px; height:7px;
+    background:
+      radial-gradient(ellipse at 50% 30%,
+        #d8a888 0%,
+        #b88858 50%,
+        #8a5838 100%);
+    border-radius:50%;
+    box-shadow:
+      inset -1px -1px 1px rgba(0,0,0,.4),
+      0 1px 1px rgba(0,0,0,.3);
+    z-index:4;
+  }
+
+  .rl-mouth {
+    position:absolute; top:50px; left:50%;
+    transform:translateX(-50%);
+    width:11px; height:2px;
+    background:linear-gradient(90deg,
+      #8a5030 0%,
+      #a06040 50%,
+      #8a5030 100%);
+    border-radius:1px;
+    z-index:5;
+  }
+  .rl-mouth::after {
+    content:''; position:absolute;
+    top:2px; left:-3px; right:-3px;
+    height:10px;
+    background:
+      radial-gradient(circle at 20% 40%, rgba(80,50,30,.35) 1px, transparent 1.5px),
+      radial-gradient(circle at 50% 70%, rgba(80,50,30,.3) 1px, transparent 1.5px),
+      radial-gradient(circle at 80% 30%, rgba(80,50,30,.35) 1px, transparent 1.5px),
+      radial-gradient(circle at 35% 90%, rgba(80,50,30,.25) 1px, transparent 1.5px),
+      radial-gradient(circle at 65% 85%, rgba(80,50,30,.3) 1px, transparent 1.5px);
+    border-radius:50%;
+    pointer-events:none;
+  }
+
   /* ============ СКРИМЕР ============ */
   #screamer {
     position:absolute; inset:0;
@@ -1688,22 +2140,18 @@
     text-shadow:0 0 20px #8a0000, 0 0 40px #ff2200;
     letter-spacing:3px;
   }
-  body.theme-horror .overlay h1 {
-    color:#cc0000;
-    text-shadow:0 0 20px #ff0000, 0 0 40px #8a0000;
-    animation:titleFlicker 3s infinite;
-  }
-  @keyframes titleFlicker {
-    0%, 90%, 100% { opacity:1; }
-    92% { opacity:.4; }
-    94% { opacity:1; }
+  body.theme-realistic .overlay h1 {
+    color:#88c8ff;
+    text-shadow:0 0 20px #4488dd, 0 0 40px #2244aa;
+    font-family:'Courier New', monospace;
+    letter-spacing:6px;
   }
   .overlay h2 { font-size:20px; margin:10px 0 6px; color:#ff8844; letter-spacing:2px; }
-  body.theme-horror .overlay h2 { color:#aa2222; }
+  body.theme-realistic .overlay h2 { color:#88c8ff; }
   .overlay p { font-size:15px; margin:4px 0; color:#bbbbbb; max-width:840px; }
-  body.theme-horror .overlay p { color:#888; }
+  body.theme-realistic .overlay p { color:#8899aa; }
   .overlay b { color:#ff8844; }
-  body.theme-horror .overlay b { color:#cc3333; }
+  body.theme-realistic .overlay b { color:#88c8ff; }
 
   #wordInput {
     width:420px; height:170px;
@@ -1718,16 +2166,6 @@
     letter-spacing:4px;
     font-weight:500;
     transition:all .2s;
-  }
-  body.theme-horror #wordInput {
-    background:linear-gradient(180deg, #1a0a0a 0%, #0a0303 100%);
-    color:#ff6666;
-    border:3px solid #5a0000;
-    box-shadow:
-      inset 0 0 30px rgba(120,0,0,.5),
-      0 6px 20px rgba(0,0,0,.9),
-      0 0 20px rgba(120,0,0,.5);
-    text-shadow:0 0 8px rgba(255,0,0,.6);
   }
   body.theme-funny #wordInput {
     background:linear-gradient(180deg, #f5e9c8 0%, #e8d8a8 100%);
@@ -1745,19 +2183,30 @@
       inset 0 0 30px rgba(120,160,60,.3),
       0 6px 20px rgba(0,0,0,.5);
   }
+  body.theme-realistic #wordInput {
+    background:linear-gradient(180deg, #0a0f1a 0%, #050810 100%);
+    color:#88c8ff;
+    border:3px solid #2a4a6a;
+    box-shadow:
+      inset 0 0 30px rgba(0,40,80,.6),
+      0 6px 20px rgba(0,0,0,.9),
+      0 0 20px rgba(60,120,180,.4);
+    text-shadow:0 0 6px rgba(100,180,255,.6);
+    font-family:'KaiTi','Microsoft YaHei',serif;
+  }
   #wordInput::placeholder {
     color:rgba(120,80,20,.5);
     font-style:italic;
     font-size:16px;
     letter-spacing:1px;
   }
-  body.theme-horror #wordInput::placeholder { color:rgba(180,60,60,.5); }
   body.theme-lotr #wordInput::placeholder { color:rgba(60,100,20,.5); }
+  body.theme-realistic #wordInput::placeholder { color:rgba(100,150,200,.5); }
 
   .optGroup { margin:10px 0; }
   .optGroup h3 { font-size:16px; color:#ff8844; margin-bottom:8px; letter-spacing:2px; }
-  body.theme-horror .optGroup h3 { color:#aa2222; }
   body.theme-lotr .optGroup h3 { color:#a8d878; }
+  body.theme-realistic .optGroup h3 { color:#88c8ff; }
   .optRow { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
   .optBtn {
     padding:10px 22px; font-size:15px;
@@ -1768,9 +2217,11 @@
   }
   body.theme-funny .optBtn { background:rgba(255,240,220,.9); color:#6a3a00; border:2px solid #ffaa66; }
   body.theme-lotr .optBtn { background:rgba(30,50,20,.8); color:#e8f0c8; border:2px solid #6a8a3a; }
+  body.theme-realistic .optBtn { background:rgba(10,20,35,.9); color:#a8c8e8; border:2px solid #2a4a6a; }
   .optBtn:hover { border-color:#cc2222; color:#fff; }
   body.theme-funny .optBtn:hover { border-color:#ff5500; color:#3a2000; }
   body.theme-lotr .optBtn:hover { border-color:#a8d878; color:#fff; }
+  body.theme-realistic .optBtn:hover { border-color:#88c8ff; color:#fff; }
   .optBtn.active {
     background:linear-gradient(180deg, #8a1010, #3a0505);
     border-color:#cc2222; color:#ffffff;
@@ -1788,6 +2239,12 @@
     border-color:#a8d878; color:#fff;
     box-shadow:0 0 20px rgba(120,200,80,.8);
     text-shadow:0 0 8px rgba(180,220,140,.9);
+  }
+  body.theme-realistic .optBtn.active {
+    background:linear-gradient(180deg, #2a5a8a, #0a1a3a);
+    border-color:#88c8ff; color:#fff;
+    box-shadow:0 0 20px rgba(100,180,255,.8);
+    text-shadow:0 0 8px rgba(140,200,255,.9);
   }
 
   .overlay .bigBtn {
@@ -1813,6 +2270,14 @@
     box-shadow:0 0 25px rgba(120,200,80,.8);
     text-shadow:0 0 8px rgba(180,220,140,.9);
   }
+  body.theme-realistic .overlay .bigBtn {
+    background:linear-gradient(180deg, #2a5a8a, #0a1a3a);
+    border:2px solid #88c8ff;
+    box-shadow:0 0 25px rgba(100,180,255,.7);
+    text-shadow:0 0 10px rgba(140,200,255,.9);
+    font-family:'Courier New', monospace;
+    letter-spacing:4px;
+  }
   .overlay .bigBtn:hover { filter:brightness(1.15); }
   .overlay .bigBtn:active { transform:translateY(2px); }
 
@@ -1825,12 +2290,6 @@
     font-size:13px; letter-spacing:1px; z-index:20;
     transition:all .4s;
   }
-  body.theme-horror #hint {
-    background:rgba(20,0,0,.9); color:#cc4444;
-    border:1px solid #5a0000;
-    box-shadow:0 0 15px rgba(120,0,0,.6);
-    text-shadow:0 0 6px rgba(255,0,0,.6);
-  }
   body.theme-funny #hint {
     background:rgba(255,255,255,.9); color:#6a3a00;
     border:2px solid #ff8844;
@@ -1839,35 +2298,42 @@
     background:rgba(30,50,20,.85); color:#e8f0c8;
     border:1px solid #8ab86a;
   }
+  body.theme-realistic #hint {
+    background:rgba(10,20,35,.9); color:#88c8ff;
+    border:1px solid #2a4a6a;
+    box-shadow:0 0 15px rgba(60,120,180,.4);
+    font-family:'Courier New', monospace;
+  }
   #hint b { color:#ff2222; text-shadow:0 0 8px #ff2200; }
   body.theme-funny #hint b { color:#d95400; text-shadow:none; }
   body.theme-lotr #hint b { color:#d8e88a; text-shadow:0 0 8px rgba(180,220,140,.6); }
+  body.theme-realistic #hint b { color:#c8e8ff; text-shadow:0 0 10px #88c8ff; }
 
   #hitFlash {
     position:absolute; inset:0;
     opacity:0; pointer-events:none; z-index:55;
     transition:opacity .15s;
   }
-  body.theme-horror #hitFlash {
-    background:radial-gradient(circle, transparent 20%, rgba(180,0,0,.95) 90%);
-  }
   body.theme-funny #hitFlash,
   body.theme-lotr #hitFlash {
     background:radial-gradient(circle, transparent 40%, rgba(180,0,0,.5) 100%);
+  }
+  body.theme-realistic #hitFlash {
+    background:radial-gradient(circle, transparent 30%, rgba(150,10,10,.85) 90%);
   }
   #attackFlash {
     position:absolute; inset:0;
     opacity:0; pointer-events:none; z-index:56;
     transition:opacity .05s;
   }
-  body.theme-horror #attackFlash {
-    background:radial-gradient(circle at 18% 82%, rgba(255,0,0,1) 0%, rgba(120,0,0,.8) 30%, transparent 60%);
-  }
   body.theme-funny #attackFlash {
     background:radial-gradient(circle at 18% 82%, rgba(255,150,100,.9) 0%, rgba(200,60,20,.6) 30%, transparent 60%);
   }
   body.theme-lotr #attackFlash {
     background:radial-gradient(circle at 18% 82%, rgba(255,50,50,.9) 0%, rgba(120,0,0,.6) 30%, transparent 60%);
+  }
+  body.theme-realistic #attackFlash {
+    background:radial-gradient(circle at 18% 82%, rgba(200,20,20,.9) 0%, rgba(80,5,5,.7) 30%, transparent 60%);
   }
 
   #muteBtn {
@@ -1879,13 +2345,6 @@
     font-family:inherit;
     transition:all .15s;
   }
-  body.theme-horror #muteBtn {
-    background:rgba(20,0,0,.9);
-    border:1px solid #5a0000;
-    color:#cc4444;
-    box-shadow:0 0 10px rgba(120,0,0,.5);
-  }
-  body.theme-horror #muteBtn:hover { background:rgba(80,0,0,.9); color:#fff; }
   body.theme-funny #muteBtn {
     background:rgba(255,255,255,.9); color:#6a3a00;
     border:2px solid #ff8844;
@@ -1894,6 +2353,13 @@
     background:rgba(30,50,20,.85); color:#e8f0c8;
     border:1px solid #8ab86a;
   }
+  body.theme-realistic #muteBtn {
+    background:rgba(10,20,35,.9);
+    border:1px solid #2a4a6a;
+    color:#88c8ff;
+    box-shadow:0 0 10px rgba(60,120,180,.4);
+  }
+  body.theme-realistic #muteBtn:hover { background:rgba(30,60,100,.9); color:#fff; }
 
   .intro-banner {
     position:absolute; top:50%; left:50%;
@@ -1905,10 +2371,6 @@
     letter-spacing:6px;
     font-family:'Courier New', monospace;
   }
-  body.theme-horror .intro-banner {
-    color:#ff0000;
-    text-shadow:0 0 30px #ff0000, 0 0 60px #ff0000, 0 0 90px #8a0000;
-  }
   body.theme-funny .intro-banner {
     color:#ff8833;
     text-shadow:0 0 30px #ffaa44, 0 0 60px #ff6600;
@@ -1916,6 +2378,14 @@
   body.theme-lotr .intro-banner {
     color:#a8ff88;
     text-shadow:0 0 30px #88ff44, 0 0 60px #44aa22;
+  }
+  body.theme-realistic .intro-banner {
+    color:#c8e8ff;
+    text-shadow:
+      0 0 20px #88c8ff,
+      0 0 40px #4488dd,
+      0 0 80px #2244aa;
+    letter-spacing:8px;
   }
   @keyframes introAnim {
     0%   { opacity:0; transform:translate(-50%,-50%) scale(.3); }
@@ -1936,11 +2406,12 @@
   }
 </style>
 </head>
-<body class="theme-horror">
+<body class="theme-realistic">
 <div id="game">
   <div id="stars"></div>
   <div id="moon"></div>
   <div id="scene"></div>
+  <div id="rain"></div>
   <div id="ground"></div>
   <div id="fog"></div>
   <div id="bloodfog"></div>
@@ -1988,7 +2459,7 @@
     <div class="optGroup">
       <h3>选择视觉风格</h3>
       <div class="optRow" id="themeRow">
-        <button class="optBtn active" data-theme="horror">🧟 恐怖战士</button>
+        <button class="optBtn active" data-theme="realistic">🎯 真实模式</button>
         <button class="optBtn" data-theme="funny">👵 搞笑奶奶</button>
         <button class="optBtn" data-theme="lotr">🏹 魔戒弓箭手</button>
       </div>
@@ -2016,7 +2487,7 @@
 
 <script>
 /* =========================================================
-   ЗВУК (без изменений)
+   ЗВУК
    ========================================================= */
 const Sound = (() => {
   let ctx = null;
@@ -2076,52 +2547,36 @@ const Sound = (() => {
     src.stop(t0 + dur + 0.05);
   }
 
-  function blasterHorror() {
-    playOsc({ freq:1800, dur:0.15, type:'sawtooth', vol:0.22, slideTo:120 });
-    playOsc({ freq:900, dur:0.2, type:'square', vol:0.15, slideTo:80, delay:0.01 });
-    playNoise({ dur:0.12, vol:0.15, filterFreq:5000 });
-    playOsc({ freq:60, dur:0.3, type:'sine', vol:0.18, slideTo:30, delay:0.02 });
+  /* Реалистичный выстрел — пистолет */
+  function gunshot() {
+    // Резкий удар — короткий белый шум
+    playNoise({ dur:0.08, vol:0.5, filterFreq:4000, filterType:'highpass' });
+    playNoise({ dur:0.15, vol:0.35, filterFreq:1200, filterType:'lowpass' });
+    // Низкий "бум"
+    playOsc({ freq:180, dur:0.12, type:'sine', vol:0.35, slideTo:40 });
+    // Отдача
+    playNoise({ dur:0.3, vol:0.1, filterFreq:600, delay:0.05 });
   }
-  function hitHorror() {
-    playNoise({ dur:0.4, vol:0.35, filterFreq:800, filterQ:1 });
-    playNoise({ dur:0.15, vol:0.25, filterFreq:2500, filterType:'bandpass', filterQ:3 });
-    playOsc({ freq:150, dur:0.3, type:'sine', vol:0.28, slideTo:45 });
-    playOsc({ freq:320, dur:0.25, type:'sawtooth', vol:0.12, slideTo:60, delay:0.03 });
+  /* Реалистичное попадание — мясистый "шлепок" */
+  function hitReal() {
+    playNoise({ dur:0.18, vol:0.35, filterFreq:500, filterQ:1 });
+    playOsc({ freq:120, dur:0.25, type:'sine', vol:0.3, slideTo:35 });
+    playNoise({ dur:0.1, vol:0.2, filterFreq:2500, filterType:'bandpass', filterQ:2 });
   }
-  function zombieAttackHorror() {
-    playOsc({ freq:140, dur:1.2, type:'sawtooth', vol:0.35, slideTo:60 });
-    playOsc({ freq:200, dur:1.0, type:'square', vol:0.15, slideTo:80, delay:0.05 });
-    playNoise({ dur:0.8, vol:0.28, filterFreq:600, filterType:'lowpass' });
-    playOsc({ freq:800, dur:0.15, type:'sine', vol:0.15, slideTo:200, delay:0.02 });
+  /* Реалистичное рычание зомби */
+  function zombieAttackReal() {
+    playOsc({ freq:90, dur:1.0, type:'sawtooth', vol:0.3, slideTo:50 });
+    playOsc({ freq:130, dur:0.8, type:'triangle', vol:0.15, slideTo:70, delay:0.1 });
+    playNoise({ dur:1.0, vol:0.2, filterFreq:400, filterType:'lowpass' });
+    // Хрип
+    playNoise({ dur:0.6, vol:0.15, filterFreq:800, filterType:'bandpass', filterQ:1, delay:0.2 });
   }
-  function zombieSpawnHorror() {
-    playOsc({ freq:110, dur:0.6, type:'sawtooth', vol:0.12, slideTo:70 });
-    playNoise({ dur:0.5, vol:0.1, filterFreq:400 });
-  }
-  function whisper() {
-    playNoise({ dur:1.5, vol:0.05, filterFreq:1200, filterType:'bandpass', filterQ:0.5 });
-  }
-  function scream() {
-    playOsc({ freq:1500, dur:0.7, type:'sawtooth', vol:0.4, slideTo:2400 });
-    playOsc({ freq:1200, dur:0.7, type:'square', vol:0.25, slideTo:2000, delay:0.02 });
-    playOsc({ freq:80, dur:0.9, type:'sawtooth', vol:0.4, slideTo:40 });
-    playNoise({ dur:0.9, vol:0.35, filterFreq:3000, filterType:'highpass' });
-    playNoise({ dur:0.5, vol:0.4, filterFreq:150, delay:0.3 });
-    playOsc({ freq:50, dur:0.6, type:'sine', vol:0.4, slideTo:25, delay:0.3 });
-  }
-  function heartbeat() {
-    playOsc({ freq:60, dur:0.1, type:'sine', vol:0.18, slideTo:40 });
-    setTimeout(() => {
-      if (muted) return;
-      playOsc({ freq:55, dur:0.12, type:'sine', vol:0.14, slideTo:35 });
-    }, 220);
-  }
-  function breath() {
-    playNoise({ dur:0.5, vol:0.05, filterFreq:600, filterType:'bandpass', filterQ:0.8 });
-    setTimeout(() => {
-      if (muted) return;
-      playNoise({ dur:0.4, vol:0.04, filterFreq:800, filterType:'bandpass', filterQ:0.8 });
-    }, 900);
+  function zombieSpawnReal() {
+    // Медленные шаркающие шаги
+    playNoise({ dur:0.15, vol:0.08, filterFreq:250, filterType:'lowpass' });
+    playNoise({ dur:0.12, vol:0.06, filterFreq:200, filterType:'lowpass', delay:0.3 });
+    // Далёкий стон
+    playOsc({ freq:95, dur:0.7, type:'sine', vol:0.08, slideTo:60, delay:0.15 });
   }
   function thunder() {
     playNoise({ dur:1.8, vol:0.3, filterFreq:400, filterType:'lowpass' });
@@ -2134,7 +2589,6 @@ const Sound = (() => {
     playNoise({ dur:0.15, vol:0.08, filterFreq:800 });
   }
   function hitFunny() {
-    // Приятный "поп"-звук
     playOsc({ freq:600, dur:0.15, type:'sine', vol:0.18, slideTo:900 });
     playOsc({ freq:900, dur:0.1, type:'triangle', vol:0.12, slideTo:1200, delay:0.05 });
     playNoise({ dur:0.1, vol:0.05, filterFreq:2000, filterType:'highpass' });
@@ -2152,7 +2606,6 @@ const Sound = (() => {
     playOsc({ freq:1800, dur:0.18, type:'sine', vol:0.08, slideTo:400 });
   }
   function hitLOTR() {
-    // Эльфийский колокольчик + мягкий удар
     playOsc({ freq:900, dur:0.3, type:'sine', vol:0.14, slideTo:1400 });
     playOsc({ freq:1300, dur:0.25, type:'triangle', vol:0.08, slideTo:1800, delay:0.05 });
     playNoise({ dur:0.15, vol:0.08, filterFreq:1500, filterType:'bandpass', filterQ:2 });
@@ -2205,35 +2658,33 @@ const Sound = (() => {
     stopBg();
     const c = ensure(); if (!c) return;
 
-    if (theme === 'horror') {
-      drone(40, 0.08, 'sine');
-      drone(55, 0.06, 'triangle');
-      drone(82, 0.04, 'sine');
-      drone(110, 0.03, 'sine');
+    if (theme === 'realistic') {
+      // Мрачный эмбиент ночи + дождь
+      drone(45, 0.06, 'sine');
+      drone(67, 0.04, 'triangle');
+      // Шум дождя
       const bufferSize = c.sampleRate * 4;
       const buffer = c.createBuffer(1, bufferSize, c.sampleRate);
       const data = buffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) data[i] = (Math.random()*2-1)*0.12;
+      for (let i = 0; i < bufferSize; i++) data[i] = (Math.random()*2-1)*0.08;
       const src = c.createBufferSource();
       src.buffer = buffer; src.loop = true;
       const filter = c.createBiquadFilter();
-      filter.type = 'lowpass'; filter.frequency.value = 200;
-      const g = c.createGain(); g.gain.value = 0.2;
+      filter.type = 'highpass'; filter.frequency.value = 2000;
+      const g = c.createGain(); g.gain.value = 0.15;
       src.connect(filter).connect(g).connect(c.destination);
       src.start();
       bgSources.push(src);
 
-      function scheduleWhisper() {
+      // Далёкий гром
+      function scheduleThunder() {
         if (muted) return;
-        whisper();
-        bgLoopId = setTimeout(scheduleWhisper, 8000 + Math.random() * 12000);
+        thunder();
+        bgLoopId = setTimeout(scheduleThunder, 15000 + Math.random() * 20000);
       }
-      scheduleWhisper();
-      heartbeat();
-      heartbeatId = setInterval(heartbeat, 1400);
-      breath();
-      breathId = setInterval(breath, 5000);
-    } else if (theme === 'funny') {
+      scheduleThunder();
+    }
+    else if (theme === 'funny') {
       const melody = [
         [659.25, 0.15], [784.0, 0.15], [880.0, 0.15], [1046.5, 0.15],
         [880.0, 0.15], [784.0, 0.15], [659.25, 0.3],
@@ -2250,7 +2701,8 @@ const Sound = (() => {
       }
       playNote();
       drone(130.8, 0.03, 'sine');
-    } else if (theme === 'lotr') {
+    }
+    else if (theme === 'lotr') {
       drone(98, 0.05, 'sine');
       drone(146.8, 0.035, 'triangle');
       drone(196, 0.03, 'sine');
@@ -2271,26 +2723,26 @@ const Sound = (() => {
 
   return {
     shoot(theme) {
-      if (theme === 'horror') blasterHorror();
-      else if (theme === 'funny') pumpkinThrow();
+      if (theme === 'funny') pumpkinThrow();
+      else if (theme === 'realistic') gunshot();
       else arrowShot();
     },
     hit(theme) {
-      if (theme === 'horror') hitHorror();
-      else if (theme === 'funny') hitFunny();
+      if (theme === 'funny') hitFunny();
+      else if (theme === 'realistic') hitReal();
       else hitLOTR();
     },
     zombieAttack(theme) {
-      if (theme === 'horror') zombieAttackHorror();
-      else if (theme === 'funny') zombieAttackFunny();
+      if (theme === 'funny') zombieAttackFunny();
+      else if (theme === 'realistic') zombieAttackReal();
       else zombieAttackLOTR();
     },
     zombieSpawn(theme) {
-      if (theme === 'horror') zombieSpawnHorror();
-      else if (theme === 'funny') zombieSpawnFunny();
+      if (theme === 'funny') zombieSpawnFunny();
+      else if (theme === 'realistic') zombieSpawnReal();
       else zombieSpawnLOTR();
     },
-    scream, thunder, victory, defeat,
+    thunder, victory, defeat,
     startBg, stopBg, setMuted, isMuted
   };
 })();
@@ -2316,11 +2768,10 @@ const hitFlash   = document.getElementById('hitFlash');
 const attackFlash= document.getElementById('attackFlash');
 const bloodDropsEl = document.getElementById('bloodDrops');
 const muteBtn    = document.getElementById('muteBtn');
-const screamer   = document.getElementById('screamer');
-const glitchEl   = document.getElementById('glitch');
 const sceneEl    = document.getElementById('scene');
 const starsEl    = document.getElementById('stars');
 const lightningEl= document.getElementById('flashLightning');
+const rainEl     = document.getElementById('rain');
 
 wordInput.value = `南瓜
 僵尸
@@ -2344,7 +2795,7 @@ wordInput.value = `南瓜
 南瓜灯`;
 
 let difficulty = 'easy';
-let theme = 'horror';
+let theme = 'realistic';
 
 document.querySelectorAll('#diffRow .optBtn').forEach(btn => {
   btn.onclick = () => {
@@ -2387,11 +2838,12 @@ function applyTheme() {
   document.body.className = 'theme-' + theme;
   buildStars();
   buildScene();
+  buildRain();
 }
 
 function buildStars() {
   starsEl.innerHTML = '';
-  if (theme !== 'horror') return;
+  if (theme !== 'realistic') return;
   for (let i = 0; i < 100; i++) {
     const s = document.createElement('div');
     s.className = 'star';
@@ -2401,13 +2853,30 @@ function buildStars() {
     s.style.left = Math.random() * 100 + '%';
     s.style.top  = Math.random() * 55 + '%';
     s.style.animationDelay = (Math.random() * 3) + 's';
+    s.style.opacity = '.3';
     starsEl.appendChild(s);
+  }
+}
+
+function buildRain() {
+  rainEl.innerHTML = '';
+  if (theme !== 'realistic') return;
+  for (let i = 0; i < 120; i++) {
+    const r = document.createElement('div');
+    r.className = 'raindrop';
+    const h = 15 + Math.random() * 35;
+    r.style.height = h + 'px';
+    r.style.left = Math.random() * 110 + '%';
+    r.style.animationDuration = (0.4 + Math.random() * 0.5) + 's';
+    r.style.animationDelay = (Math.random() * 2) + 's';
+    r.style.opacity = 0.3 + Math.random() * 0.5;
+    rainEl.appendChild(r);
   }
 }
 
 function buildScene() {
   sceneEl.innerHTML = '';
-  if (theme === 'horror') return;
+  if (theme === 'realistic') return;
 
   if (theme === 'funny') {
     const rb = document.createElement('div');
@@ -2526,10 +2995,10 @@ function buildScene() {
 applyTheme();
 
 /* =========================================================
-   ХОРРОР-ЭФФЕКТЫ
+   ХОРРОР-ЭФФЕКТЫ (realistic)
    ========================================================= */
 function spawnBloodDrop() {
-  if (!running || theme !== 'horror') return;
+  if (!running || theme !== 'realistic') return;
   const d = document.createElement('div');
   d.className = 'blood-drop';
   d.style.left = (Math.random() * 100) + '%';
@@ -2542,12 +3011,13 @@ function spawnBloodDrop() {
 setInterval(spawnBloodDrop, 600);
 
 function spawnShadowRunner() {
-  if (!running || theme !== 'horror') return;
+  if (!running || theme !== 'realistic') return;
   const s = document.createElement('div');
   s.className = 'shadow-runner';
   const fromLeft = Math.random() < 0.5;
   s.style.left = fromLeft ? '-100px' : 'calc(100% + 100px)';
   s.style.top = (20 + Math.random() * 60) + '%';
+  s.style.opacity = '.5';
   game.appendChild(s);
   s.animate([
     { transform:'translateX(0)', opacity:0 },
@@ -2559,17 +3029,8 @@ function spawnShadowRunner() {
 }
 setInterval(spawnShadowRunner, 3500);
 
-function triggerGlitch() {
-  if (!running || theme !== 'horror') return;
-  glitchEl.classList.add('active');
-  setTimeout(() => glitchEl.classList.remove('active'), 350);
-}
-setInterval(() => {
-  if (running && theme === 'horror' && Math.random() < 0.35) triggerGlitch();
-}, 4500);
-
 function triggerLightning() {
-  if (!running || theme !== 'horror') return;
+  if (!running || theme !== 'realistic') return;
   lightningEl.style.opacity = '1';
   setTimeout(() => {
     lightningEl.style.transition = 'opacity .4s';
@@ -2577,7 +3038,7 @@ function triggerLightning() {
     setTimeout(() => lightningEl.style.transition = 'opacity 0s', 400);
   }, 80);
   setTimeout(() => {
-    if (!running || theme !== 'horror') return;
+    if (!running) return;
     lightningEl.style.opacity = '.8';
     setTimeout(() => {
       lightningEl.style.transition = 'opacity .5s';
@@ -2591,55 +3052,17 @@ function triggerLightning() {
 function scheduleLightning() {
   const delay = 8000 + Math.random() * 12000;
   setTimeout(() => {
-    if (running && theme === 'horror') {
+    if (running && theme === 'realistic') {
       triggerLightning();
       scheduleLightning();
     }
   }, delay);
 }
 
-function triggerScreamer() {
-  if (!running || theme !== 'horror') return;
-  Sound.scream();
-  screamer.classList.add('show');
-  game.animate([
-    { transform:'translate(0,0) rotate(0)' },
-    { transform:'translate(-20px,15px) rotate(-3deg)' },
-    { transform:'translate(20px,-15px) rotate(3deg)' },
-    { transform:'translate(-15px,10px) rotate(-2deg)' },
-    { transform:'translate(15px,-10px) rotate(2deg)' },
-    { transform:'translate(-8px,5px) rotate(-1deg)' },
-    { transform:'translate(8px,-5px) rotate(1deg)' },
-    { transform:'translate(0,0) rotate(0)' }
-  ], { duration: 900 });
-  setTimeout(() => screamer.classList.remove('show'), 900);
-}
-
-function scheduleScreamer() {
-  const delay = 10000 + Math.random() * 8000;
-  setTimeout(() => {
-    if (running && theme === 'horror') {
-      triggerScreamer();
-      scheduleScreamer();
-    }
-  }, delay);
-}
-
 function bloodScreenEffect() {
-  if (theme !== 'horror') return;
+  if (theme !== 'realistic') return;
   hitFlash.style.opacity = '1';
   setTimeout(() => hitFlash.style.opacity = '0', 200);
-  for (let i = 0; i < 20; i++) {
-    setTimeout(() => {
-      const d = document.createElement('div');
-      d.className = 'blood-drop';
-      d.style.left = (Math.random() * 100) + '%';
-      d.style.height = (30 + Math.random() * 100) + 'px';
-      d.style.animationDuration = (2 + Math.random() * 2) + 's';
-      bloodDropsEl.appendChild(d);
-      setTimeout(() => d.remove(), 4000);
-    }, i * 50);
-  }
 }
 
 /* =========================================================
@@ -2649,25 +3072,15 @@ function renderHero() {
   const hero = document.createElement('div');
   hero.id = 'hero';
 
-  if (theme === 'horror')      hero.innerHTML = heroHorror();
-  else if (theme === 'funny')  hero.innerHTML = heroGranny();
-  else                         hero.innerHTML = heroLOTR();
+  if (theme === 'funny')       hero.innerHTML = heroGranny();
+  else if (theme === 'lotr')   hero.innerHTML = heroLOTR();
+  else                         hero.innerHTML = heroRealistic();
 
   const old = document.getElementById('hero');
   if (old) old.remove();
   game.appendChild(hero);
 }
 
-function heroHorror() {
-  return `
-    <div class="hr-leg l"></div><div class="hr-leg r"></div>
-    <div class="hr-boot l"></div><div class="hr-boot r"></div>
-    <div class="hr-torso"></div><div class="hr-vest"></div><div class="hr-belt"></div>
-    <div class="hr-arm l"></div><div class="hr-arm r"></div><div class="hr-gun"></div>
-    <div class="hr-head"></div><div class="hr-cap"></div>
-    <div class="hr-mask"></div><div class="hr-filter"></div>
-  `;
-}
 function heroGranny() {
   return `
     <div class="gr-leg l"></div><div class="gr-leg r"></div>
@@ -2703,6 +3116,27 @@ function heroLOTR() {
     <div class="lg-hair"></div>
     <div class="lg-brow l"></div><div class="lg-brow r"></div>
     <div class="lg-eye l"></div><div class="lg-eye r"></div>
+  `;
+}
+/* РЕАЛИСТИЧНЫЙ ГЕРОЙ — Леон */
+function heroRealistic() {
+  return `
+    <div class="rl-leg l"></div><div class="rl-leg r"></div>
+    <div class="rl-boot l"></div><div class="rl-boot r"></div>
+    <div class="rl-torso"></div>
+    <div class="rl-harness"></div>
+    <div class="rl-holster"></div>
+    <div class="rl-arm l"></div><div class="rl-arm r"></div>
+    <div class="rl-gun"></div>
+    <div class="rl-grip"></div>
+    <div class="rl-trigger"></div>
+    <div class="rl-muzzle"></div>
+    <div class="rl-head"></div>
+    <div class="rl-hair"></div>
+    <div class="rl-brow l"></div><div class="rl-brow r"></div>
+    <div class="rl-eye l"></div><div class="rl-eye r"></div>
+    <div class="rl-nose"></div>
+    <div class="rl-mouth"></div>
   `;
 }
 
@@ -2781,6 +3215,7 @@ function shoot(target) {
   let sy = hp.y + 5;
   if (theme === 'funny')      { sx = hp.x + 30; sy = hp.y + 10; }
   else if (theme === 'lotr')  { sx = hp.x + 25; sy = hp.y - 10; }
+  else if (theme === 'realistic') { sx = hp.x + 38; sy = hp.y + 5; }
 
   const dx = tx - sx, dy = ty - sy;
   const dist = Math.hypot(dx, dy);
@@ -2788,33 +3223,46 @@ function shoot(target) {
 
   Sound.shoot(theme);
 
-  if (theme === 'horror') {
-    const laser = document.createElement('div');
-    laser.className = 'laser';
-    laser.style.left = sx + 'px';
-    laser.style.top  = (sy - 5) + 'px';
-    laser.style.width = '0px';
-    laser.style.transformOrigin = '0 50%';
-    laser.style.transform = `rotate(${angleDeg}deg)`;
-    game.appendChild(laser);
+  /* РЕАЛИСТИЧНЫЙ — быстрая пуля */
+  if (theme === 'realistic') {
+    // Вспышка на дуле
+    const hero = document.getElementById('hero');
+    if (hero) {
+      hero.classList.remove('shoot');
+      void hero.offsetWidth;
+      hero.classList.add('shoot');
+      setTimeout(() => hero.classList.remove('shoot'), 150);
+    }
 
-    let w = 0;
-    const grow = setInterval(() => {
-      w += dist / 5;
-      if (w >= dist) { w = dist; clearInterval(grow); }
-      laser.style.width = w + 'px';
-    }, 15);
+    const bullet = document.createElement('div');
+    bullet.className = 'bullet';
+    bullet.style.left = sx + 'px';
+    bullet.style.top  = (sy - 1) + 'px';
+    bullet.style.transformOrigin = '0 50%';
+    bullet.style.transform = `rotate(${angleDeg}deg)`;
+    game.appendChild(bullet);
 
-    setTimeout(() => {
-      laser.style.transition = 'opacity .12s';
-      laser.style.opacity = '0';
-      setTimeout(() => laser.remove(), 130);
-      killEnemy(target);
-    }, 150);
+    // Пуля летит быстро — 120 мс
+    const flightTime = 120;
+    const startT = performance.now();
+    const cos = Math.cos(angleDeg * Math.PI / 180);
+    const sin = Math.sin(angleDeg * Math.PI / 180);
+
+    function flyBullet(now) {
+      const t = Math.min(1, (now - startT) / flightTime);
+      const cx = sx + cos * dist * t;
+      const cy = sy + sin * dist * t;
+      bullet.style.left = cx + 'px';
+      bullet.style.top  = (cy - 1) + 'px';
+      if (t < 1) requestAnimationFrame(flyBullet);
+      else { bullet.remove(); killEnemy(target); }
+    }
+    requestAnimationFrame(flyBullet);
     recoil();
     return;
   }
 
+  /* Funny */
   if (theme === 'funny') {
     const proj = document.createElement('div');
     proj.className = 'pumpkin-proj';
@@ -2840,6 +3288,7 @@ function shoot(target) {
     return;
   }
 
+  /* LOTR — стрела */
   const proj = document.createElement('div');
   proj.className = 'arrow';
   proj.style.left = sx + 'px';
@@ -2877,7 +3326,7 @@ function recoil() {
 }
 
 /* =========================================================
-   УБИЙСТВО — БЕЗ ЗАДЕРЖКИ, МГНОВЕННОЕ УДАЛЕНИЕ
+   УБИЙСТВО
    ========================================================= */
 function killEnemy(z) {
   if (!z.alive) return;
@@ -2890,44 +3339,34 @@ function killEnemy(z) {
   const cx = r.left - gr.left + r.width / 2;
   const cy = r.top  - gr.top  + r.height / 2;
 
-  // === МГНОВЕННОЕ УДАЛЕНИЕ — зомби не задерживается
   z.el.remove();
 
-  // === Эффекты по теме ===
-  if (theme === 'horror') {
-    // Кровавый взрыв + брызги + вспышка
-    const hf = document.createElement('div');
-    hf.className = 'hit-flash';
-    hf.style.left = (cx - 20) + 'px';
-    hf.style.top  = (cy - 20) + 'px';
-    game.appendChild(hf);
-    setTimeout(() => hf.remove(), 350);
+  if (theme === 'realistic') {
+    const bimp = document.createElement('div');
+    bimp.className = 'bullet-impact';
+    bimp.style.left = (cx - 18) + 'px';
+    bimp.style.top  = (cy - 18) + 'px';
+    game.appendChild(bimp);
+    setTimeout(() => bimp.remove(), 300);
 
-    const ex = document.createElement('div');
-    ex.className = 'explosion';
-    ex.style.left = (cx - 40) + 'px';
-    ex.style.top  = (cy - 40) + 'px';
-    game.appendChild(ex);
-    setTimeout(() => ex.remove(), 600);
-
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 25; i++) {
       const b = document.createElement('div');
-      b.className = 'blood-splat';
+      b.className = 'blood-real';
       const angle = Math.random() * Math.PI * 2;
-      const d = 50 + Math.random() * 120;
+      const d = 40 + Math.random() * 130;
       b.style.setProperty('--dx', Math.cos(angle) * d + 'px');
       b.style.setProperty('--dy', Math.sin(angle) * d + 'px');
       b.style.left = cx + 'px';
       b.style.top  = cy + 'px';
-      b.style.width  = (6 + Math.random() * 18) + 'px';
-      b.style.height = (6 + Math.random() * 18) + 'px';
-      b.style.animationDelay = (Math.random() * 0.15) + 's';
+      const size = 3 + Math.random() * 10;
+      b.style.width  = size + 'px';
+      b.style.height = size + 'px';
+      b.style.animationDelay = (Math.random() * 0.2) + 's';
       game.appendChild(b);
-      setTimeout(() => b.remove(), 1000);
+      setTimeout(() => b.remove(), 900);
     }
   }
   else if (theme === 'funny') {
-    // === Тыквенное облачко + разлетающиеся мини-тыковки ===
     const puff = document.createElement('div');
     puff.className = 'puff-funny';
     puff.style.left = (cx - 35) + 'px';
@@ -2935,7 +3374,6 @@ function killEnemy(z) {
     game.appendChild(puff);
     setTimeout(() => puff.remove(), 550);
 
-    // Разлетающиеся мини-тыковки
     for (let i = 0; i < 12; i++) {
       const mp = document.createElement('div');
       mp.className = 'mini-pumpkin';
@@ -2950,7 +3388,6 @@ function killEnemy(z) {
       setTimeout(() => mp.remove(), 800);
     }
 
-    // Немного оранжевых искр
     for (let i = 0; i < 8; i++) {
       const sp = document.createElement('div');
       sp.className = 'spark';
@@ -2970,7 +3407,6 @@ function killEnemy(z) {
     }
   }
   else {
-    // === LOTR: эльфийская вспышка + листья + зелёные искры ===
     const ef = document.createElement('div');
     ef.className = 'elf-flash';
     ef.style.left = (cx - 40) + 'px';
@@ -2978,7 +3414,6 @@ function killEnemy(z) {
     game.appendChild(ef);
     setTimeout(() => ef.remove(), 550);
 
-    // Разлетающиеся листья
     for (let i = 0; i < 8; i++) {
       const leaf = document.createElement('div');
       leaf.className = 'elf-leaf';
@@ -2993,7 +3428,6 @@ function killEnemy(z) {
       setTimeout(() => leaf.remove(), 850);
     }
 
-    // Светящиеся эльфийские искры
     for (let i = 0; i < 12; i++) {
       const sp = document.createElement('div');
       sp.className = 'elf-spark';
@@ -3009,7 +3443,6 @@ function killEnemy(z) {
     }
   }
 
-  // === Счётчики ===
   score++;
   KILLED++;
   scoreEl.textContent = score;
@@ -3059,28 +3492,25 @@ function hurtHero() {
 
   const hp = heroPos();
 
-  // Брызги по теме
-  if (theme === 'horror') {
+  if (theme === 'realistic') {
     for (let i = 0; i < 25; i++) {
       const b = document.createElement('div');
-      b.className = 'blood-splat';
+      b.className = 'blood-real';
       const angle = Math.random() * Math.PI * 2;
       const d = 50 + Math.random() * 120;
       b.style.setProperty('--dx', Math.cos(angle) * d + 'px');
       b.style.setProperty('--dy', Math.sin(angle) * d + 'px');
       b.style.left = hp.x + 'px';
       b.style.top  = hp.y + 'px';
-      b.style.width  = (8 + Math.random() * 22) + 'px';
-      b.style.height = (8 + Math.random() * 22) + 'px';
+      const size = 4 + Math.random() * 12;
+      b.style.width  = size + 'px';
+      b.style.height = size + 'px';
       game.appendChild(b);
       setTimeout(() => b.remove(), 1000);
     }
     bloodScreenEffect();
-    triggerGlitch();
-    if (Math.random() < 0.5) triggerLightning();
   }
   else if (theme === 'funny') {
-    // Разлетающиеся тыковки
     for (let i = 0; i < 15; i++) {
       const mp = document.createElement('div');
       mp.className = 'mini-pumpkin';
@@ -3095,7 +3525,6 @@ function hurtHero() {
     }
   }
   else {
-    // LOTR: зелёные листья
     for (let i = 0; i < 15; i++) {
       const leaf = document.createElement('div');
       leaf.className = 'elf-leaf';
@@ -3213,9 +3642,9 @@ function startGame() {
 
   const intro = document.createElement('div');
   intro.className = 'intro-banner';
-  intro.textContent = theme === 'horror' ? '准备受死' :
-                      theme === 'funny'  ? '奶奶出击！' :
-                                            '为了中土！';
+  intro.textContent = theme === 'funny'  ? '奶奶出击！' :
+                      theme === 'lotr'   ? '为了中土！' :
+                                            '生 存';
   game.appendChild(intro);
   setTimeout(() => intro.remove(), 2500);
 
@@ -3224,14 +3653,8 @@ function startGame() {
     if (running) spawnEnemy();
   }, 600);
 
-  if (theme === 'horror') {
-    setTimeout(() => {
-      if (running) {
-        triggerScreamer();
-        scheduleScreamer();
-        scheduleLightning();
-      }
-    }, 7000);
+  if (theme === 'realistic') {
+    scheduleLightning();
   }
 
   rafId = requestAnimationFrame(loop);
