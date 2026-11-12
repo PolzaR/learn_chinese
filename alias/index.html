@@ -5,57 +5,189 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>汉字卡牌游戏</title>
 <style>
-  :root { --bg:#f6f7fb; --card:#fff; --accent:#3b6ef6; --muted:#8a90a2; }
-  * { box-sizing:border-box; }
-  body { margin:0; font-family: system-ui, "PingFang SC", "Microsoft YaHei", sans-serif;
-         background:var(--bg); color:#1c2030; }
-  header { padding:14px 18px; background:#fff; border-bottom:1px solid #e6e8f0;
-           display:flex; justify-content:space-between; align-items:center; }
-  h1 { font-size:18px; margin:0; }
-  main { max-width:1000px; margin:0 auto; padding:18px; }
-  .grid { display:grid; gap:12px; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); }
-  .card { background:var(--card); border-radius:14px; padding:18px 12px; min-height:120px;
-          display:flex; flex-direction:column; align-items:center; justify-content:center;
-          box-shadow:0 2px 8px rgba(20,30,80,.08); user-select:none;
-          transition:transform .15s, opacity .3s; text-align:center; }
-  
-  /* Делаем курсор-указатель только для кликабельных карточек */
-  .card.clickable { cursor:pointer; }
-  .card.clickable:active { transform:scale(.97); }
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap');
 
-  .card .hanzi { font-size:32px; font-weight:600; }
-  .card .py { color:var(--accent); margin-top:8px; font-size:16px; }
-  .card .tr { color:var(--muted); font-size:14px; margin-top:4px; }
+  :root { 
+    --bg: #f0f4f8; 
+    --card-bg: #ffffff; 
+    --primary: #4f46e5; 
+    --primary-hover: #4338ca;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --border: #e2e8f0;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -1px rgba(0,0,0,0.04);
+    --shadow-hover: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+  }
+
+  * { box-sizing: border-box; }
+
+  body { 
+    margin: 0; 
+    font-family: 'Nunito', system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg); 
+    color: var(--text-main);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  header { 
+    padding: 16px 24px; 
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  h1 { font-size: 20px; margin: 0; font-weight: 700; color: var(--primary); }
   
-  /* Стили для карточек, которые еще не раскрыты и лежат "рубашкой" в игре (у оппонента) */
-  .card.back { background:#2c3350; color:#fff; cursor:default; }
-  .card.back .hanzi::after { content:"？"; font-size:40px; opacity:.5; }
-  .card.back .hanzi { font-size:0; }
+  main { max-width: 900px; margin: 0 auto; padding: 24px 16px; }
+
+  /* Сетка карточек */
+  .grid { 
+    display: grid; 
+    gap: 16px; 
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); 
+  }
+
+  /* Базовый стиль карточки */
+  .card { 
+    background: var(--card-bg); 
+    border-radius: 16px; 
+    padding: 20px 12px; 
+    min-height: 130px;
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center;
+    box-shadow: var(--shadow-md); 
+    user-select: none;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); 
+    text-align: center;
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card.clickable { cursor: pointer; }
+  .card.clickable:hover { 
+    transform: translateY(-4px); 
+    box-shadow: var(--shadow-hover); 
+    border-color: #cbd5e1;
+  }
+  .card.clickable:active { transform: scale(0.97); }
+
+  .card .hanzi { font-size: 36px; font-weight: 700; line-height: 1.2; }
+  .card .py { color: var(--primary); margin-top: 8px; font-size: 16px; font-weight: 600; }
+  .card .tr { color: var(--text-muted); font-size: 14px; margin-top: 4px; }
+  
+  /* Стили для карточек оппонента (закрытые) */
+  .card.back { 
+    background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%); 
+    color: white; 
+    cursor: default; 
+    border: none;
+  }
+  .card.back .hanzi::after { content: "？"; font-size: 48px; opacity: 0.6; font-weight: 300; }
+  .card.back .hanzi { font-size: 0; }
 
   /* Стили для сброшенных карточек */
-  .card.discarded { opacity:.35; pointer-events:none; background:#e8ebf5; box-shadow:none; }
+  .card.discarded { 
+    opacity: 0.4; 
+    pointer-events: none; 
+    background: #f8fafc; 
+    box-shadow: none; 
+    transform: scale(0.95);
+    border-color: transparent;
+  }
 
-  button { background:var(--accent); color:#fff; border:0; border-radius:10px;
-           padding:12px 16px; font-size:16px; cursor:pointer; }
-  button.secondary { background:#e8ebf5; color:#1c2030; }
-  button:disabled { opacity:.5; cursor:not-allowed; }
-  input, textarea { width:100%; padding:12px; border-radius:10px; border:1px solid #d5d9e6;
-                    font-size:16px; font-family:inherit; }
-  textarea { min-height:120px; resize:vertical; }
-  .row { display:flex; gap:10px; flex-wrap:wrap; margin:12px 0; }
-  .zone { background:#fff; border-radius:16px; padding:16px; margin-bottom:16px;
-          box-shadow:0 2px 8px rgba(20,30,80,.06); }
-  .zone h2 { font-size:16px; margin:0 0 12px; display:flex; justify-content:space-between; }
-  .muted { color:var(--muted); font-size:14px; }
-  .code { font-family:ui-monospace, monospace; font-size:22px; letter-spacing:3px;
-          background:#eef1fa; padding:8px 14px; border-radius:10px; display:inline-block; }
-  @media (max-width:600px){ .card{min-height:100px;} .card .hanzi{font-size:28px;} }
+  /* Кнопки */
+  button { 
+    background: var(--primary); 
+    color: white; 
+    border: none; 
+    border-radius: 12px;
+    padding: 12px 20px; 
+    font-size: 16px; 
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer; 
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-sm);
+  }
+  button:hover { background: var(--primary-hover); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+  button:active { transform: translateY(1px); }
+  
+  button.secondary { 
+    background: white; 
+    color: var(--text-main); 
+    border: 1px solid var(--border);
+  }
+  button.secondary:hover { background: #f8fafc; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  /* Поля ввода */
+  input, textarea { 
+    width: 100%; 
+    padding: 14px; 
+    border-radius: 12px; 
+    border: 1px solid var(--border);
+    font-size: 16px; 
+    font-family: inherit;
+    background: #f8fafc;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+  }
+  input:focus, textarea:focus { 
+    border-color: var(--primary); 
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+    background: white;
+  }
+  textarea { min-height: 140px; resize: vertical; line-height: 1.5; }
+
+  .row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
+  
+  /* Контейнеры (зоны) */
+  .zone { 
+    background: white; 
+    border-radius: 20px; 
+    padding: 24px; 
+    margin-bottom: 24px;
+    box-shadow: var(--shadow-sm); 
+    border: 1px solid var(--border);
+  }
+  .zone h2 { font-size: 18px; margin: 0 0 16px; display: flex; justify-content: space-between; align-items: center; font-weight: 700; }
+  
+  .muted { color: var(--text-muted); font-size: 15px; margin-bottom: 8px; }
+  
+  .code { 
+    font-family: ui-monospace, monospace; 
+    font-size: 24px; 
+    letter-spacing: 4px; 
+    font-weight: 700;
+    background: #e0e7ff; 
+    color: var(--primary);
+    padding: 10px 20px; 
+    border-radius: 12px; 
+    display: inline-block; 
+  }
+
+  @media (max-width: 600px) { 
+    .card { min-height: 110px; padding: 16px 8px; }
+    .card .hanzi { font-size: 30px; }
+    .zone { padding: 16px; border-radius: 16px; }
+    header { padding: 12px 16px; }
+  }
 </style>
 </head>
 <body>
 <header>
   <h1>汉字卡牌游戏</h1>
-  <span id="status" class="muted">未连接</span>
+  <span id="status" class="muted" style="margin:0;">未连接</span>
 </header>
 <main id="app"></main>
 
@@ -63,8 +195,8 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 /* ==== 1. 替换为你的 Supabase 配置 ==== */
-const SUPABASE_URL = 'https://edbjillxuropaxxykwlw.supabase.co' // У вас уже вставлено
-const SUPABASE_KEY = 'sb_publishable_K_gfzWC4ZVnQamezf9SRHA_ndJp74ij'
+const SUPABASE_URL = 'https://edbjillxuropaxxykwlw.supabase.co'
+const SUPABASE_KEY = 'ВАШ_КЛЮЧ_ЗДЕСЬ' // Убедитесь, что ключ на месте
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
 
@@ -76,8 +208,8 @@ const T = {
   reviewTitle:"复习卡片（点击查看）", perPlayer:"每个玩家发几张？",
   deal:"发牌", waitingDeal:"等待老师发牌…",
   yourCards:"你的卡片", discarded:"已丢弃", remaining:"剩余",
-  explainHint:"请用中文解释你的卡片，点击卡片可揭晓答案", 
-  guessed:"已揭晓并丢弃", roundEnd:"本回合结束",
+  explainHint:"请用中文解释你的卡片，点击卡片可揭晓答案并丢弃", 
+  roundEnd:"本回合结束",
   newRound:"新回合", newWords:"新汉字", backToReview:"返回复习",
   waitingHost:"等待老师操作…", copyCode:"复制代码",
 };
@@ -252,7 +384,7 @@ function renderReview(){
   const hostControls = role==="host"
     ? el("div",{class:"row"},
         el("button",{onclick:()=>patchRoom({phase:"setup"})},T.startReview))
-    : el("div",{class:"muted"},T.waitingHost);
+    : el("div",{class:"muted", style:"margin-top:16px;"},T.waitingHost);
   app.replaceChildren(
     el("div",{class:"zone"}, el("h2",{},T.reviewTitle), grid, hostControls)
   );
@@ -299,29 +431,29 @@ function renderPlaying(){
   const discardedCount = myHand.filter(c=>c.discarded).length;
   const remaining = myHand.length - discardedCount;
 
-  // 1. МОИ КАРТОЧКИ (всегда видны иероглифы)
+  // 1. МОИ КАРТОЧКИ
   const myGrid = el("div",{class:"grid"});
   myHand.forEach((c,i)=>{
     const w = room.words[c.wordIdx];
     const isDiscarded = c.discarded;
     
-    // Если сброшена - прозрачная. Если нет - обычная.
-    // Показываем пиньинь/перевод только если c.revealed === true
     const card = el("div",{class:`card ${isDiscarded ? "discarded" : "clickable"}`},
       el("div",{class:"hanzi"}, w.hanzi),
       c.revealed ? el("div",{class:"py"}, w.pinyin||"—") : "",
       c.revealed ? el("div",{class:"tr"}, w.translation||"—") : ""
     );
     
-    // Клик по своей карточке (если не сброшена): раскрываем и сбрасываем
+    // Клик по своей карточке (если не сброшена)
     if(!isDiscarded){
       card.addEventListener("click", async ()=>{
-        // Устанавливаем revealed: true, discarded: true
         const next = myHand.map((x,j)=> j===i ? {...x, revealed:true, discarded:true} : x);
         const hands = { ...room.hands, [role]: next };
         
-        // Если все карточки сброшены - переходим в конец раунда
-        if(next.every(x=>x.discarded)){
+        // Проверяем, сбросили ли ОБА игрока все свои карточки
+        const hostAllDiscarded = hands.host.every(x => x.discarded);
+        const guestAllDiscarded = hands.guest.every(x => x.discarded);
+        
+        if(hostAllDiscarded && guestAllDiscarded){
           await patchRoom({ hands, phase:"roundEnd" });
         } else {
           await patchRoom({ hands });
@@ -331,15 +463,13 @@ function renderPlaying(){
     myGrid.append(card);
   });
 
-  // 2. КАРТОЧКИ ОППОНЕНТА (видны только сброшенные/раскрытые)
+  // 2. КАРТОЧКИ ОППОНЕНТА
   const otherGrid = el("div",{class:"grid"});
   otherHand.forEach(c=>{
     const w = room.words[c.wordIdx];
-    // Если карточка оппонента не раскрыта (в процессе игры) - показываем рубашку
     if(!c.revealed && !c.discarded){
       otherGrid.append(el("div",{class:"card back"}, el("div",{class:"hanzi"},"？")));
     } else {
-      // Если оппонент нажал на карточку (revealed:true) - она показывается всем вместе с переводом
       otherGrid.append(el("div",{class:`card ${c.discarded?"discarded":""}`},
         el("div",{class:"hanzi"}, w.hanzi),
         el("div",{class:"py"}, w.pinyin||"—"),
@@ -351,7 +481,6 @@ function renderPlaying(){
   const myTitle = role==="host" ? "老师的卡片" : "你的卡片";
   const otherTitle = role==="host" ? "学生的卡片" : "老师的卡片";
   
-  // Подсказка о том, что нужно делать
   const hint = remaining>0 ? el("div",{class:"muted"}, T.explainHint) : "";
 
   app.replaceChildren(
