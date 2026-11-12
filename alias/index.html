@@ -196,7 +196,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 /* ==== 1. 替换为你的 Supabase 配置 ==== */
 const SUPABASE_URL = 'https://edbjillxuropaxxykwlw.supabase.co'
-const SUPABASE_KEY = 'sb_publishable_K_gfzWC4ZVnQamezf9SRHA_ndJp74ij' 
+const SUPABASE_KEY = 'sb_publishable_K_gfzWC4ZVnQamezf9SRHA_ndJp74ij'
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
 
@@ -320,8 +320,12 @@ async function patchRoom(patch){
   if('perPlayer' in patch)       dbPatch.per_player = patch.perPlayer;
   if('round' in patch)           dbPatch.round = patch.round;
   if('hands' in patch)           dbPatch.hands = patch.hands;
+  
   const { error } = await supabase.from('rooms').update(dbPatch).eq('code', roomCode);
-  if(error) alert("更新失败："+error.message);
+  if(error) {
+    alert("更新失败 (Update error): " + error.message);
+    console.error(error);
+  }
 }
 
 /* ==== 7. 房间内 lobby：host 输入汉字 ==== */
@@ -446,8 +450,9 @@ function renderPlaying(){
     // Клик по своей карточке (если не сброшена)
     if(!isDiscarded){
       card.addEventListener("click", async ()=>{
+        // Обновляем карточку, на которую кликнули
         const next = myHand.map((x,j)=> j===i ? {...x, revealed:true, discarded:true} : x);
-        const hands = { ...room.hands, [role]: next };
+        const hands = { ...room.hands, [role]: next }; // Важно: используем [role]
         
         // Проверяем, сбросили ли ОБА игрока все свои карточки
         const hostAllDiscarded = hands.host.every(x => x.discarded);
