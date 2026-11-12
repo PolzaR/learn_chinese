@@ -52,11 +52,9 @@ canvas{display:block;width:100%;height:100%;object-fit:contain;border-radius:14p
 .toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
 .toast b{display:block;font-size:clamp(26px,7vw,40px);letter-spacing:2px;margin-bottom:4px;color:#ffd76e}
 .toast span{font-size:clamp(14px,3.5vw,19px);opacity:.8}
-.controls{width:100%;max-width:900px;display:grid;grid-template-columns:1fr 1fr;gap:10px;height:clamp(66px,13vh,105px);flex:0 0 auto}
-.ctrl{border-radius:16px;font-size:24px;font-weight:800;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;user-select:none;transition:transform .06s,filter .06s;box-shadow:0 5px 0 rgba(0,0,0,.35)}
-.ctrl span{font-size:11px;opacity:.7;font-weight:700;letter-spacing:.8px;text-transform:uppercase}
-.ctrl.up{background:linear-gradient(180deg,#5dd0f8,#1e88e5);color:#03131f}
-.ctrl.down{background:linear-gradient(180deg,#ff9d7a,#e64a19);color:#200800}
+.controls{width:100%;max-width:900px;display:flex;justify-content:center;height:clamp(66px,13vh,105px);flex:0 0 auto;padding:0 10px}
+.ctrl{width:100%;max-width:400px;border-radius:16px;font-size:20px;font-weight:800;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;user-select:none;transition:transform .06s,filter .06s;box-shadow:0 5px 0 rgba(0,0,0,.35);background:linear-gradient(180deg,#5dd0f8,#1e88e5);color:#03131f}
+.ctrl span{font-size:12px;opacity:.8;font-weight:700;letter-spacing:.8px;text-transform:uppercase}
 .ctrl:active{transform:translateY(3px);filter:brightness(1.2);box-shadow:0 2px 0 rgba(0,0,0,.35)}
 .pause-ov{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:rgba(6,6,16,.82);border-radius:14px;backdrop-filter:blur(4px);z-index:5}
 .pause-ov h2{margin:0;font-size:26px}
@@ -120,8 +118,10 @@ canvas{display:block;width:100%;height:100%;object-fit:contain;border-radius:14p
     </div>
   </div>
   <div class="controls">
-    <button class="ctrl up" id="btnUp">⬆<span>Прыжок</span></button>
-    <button class="ctrl down" id="btnDown">⬇<span>Подкат</span></button>
+    <button class="ctrl" id="btnDodge">
+      <span>НАЖМИ ПРОБЕЛ</span>
+      ⚡ УКЛОНЕНИЕ
+    </button>
   </div>
 </section>
 
@@ -143,18 +143,19 @@ canvas{display:block;width:100%;height:100%;object-fit:contain;border-radius:14p
 
 const CUSTOM_AUDIO = { src: "audio_mc.mp3", volume: 0.4 };
 
-// W увеличено до 720, чтобы слова дольше находились на экране
 const W = 720, H = 270, GROUND = 215;
 const GRAVITY = 1000;
 const JUMP_V = -360;
 const SLIDE_TIME = 1.0;
-const PX = 150; // Сдвинут правее для широкого экрана
+const PX = 150; 
+const VILLAIN_X = W - 90; 
 
+// ЗАМЕДЛЕННЫЕ РЕЖИМЫ (больше времени на чтение)
 const MODES = {
-  slow:   { speed: 88,  accel: 0   },
-  medium: { speed: 118, accel: 0   },
-  fast:   { speed: 160, accel: 0   },
-  accel:  { speed: 85,  accel: 2.4 }
+  slow:   { speed: 60,  accel: 0   },
+  medium: { speed: 85,  accel: 0   },
+  fast:   { speed: 120, accel: 0   },
+  accel:  { speed: 60,  accel: 1.5 }
 };
 
 /* ===== АУДИО ===== */
@@ -218,9 +219,9 @@ const game = {
   lives:3, score:0, streak:0, t:0, paused:false,
   fireballs:[], particles:[],
   deck:[], deckIdx:0, review:[],
-  spawnTimer:0,
+  spawnTimer:0, villainThrowT:0,
   waitingForFireball:false,
-  speed:118, shake:0, hitFlash:0, hurt:0, hitStop:0, overTimer:-1, won:false,
+  speed:85, shake:0, hitFlash:0, hurt:0, hitStop:0, overTimer:-1, won:false,
   missed:[],
   player:{ x:PX, y:0, vy:0, state:'stand', slideT:0, recover:0, dodgeTarget:null }
 };
@@ -284,7 +285,7 @@ function startGame(){
   game.lives=3; game.score=0; game.streak=0; game.t=0; game.paused=false;
   game.fireballs=[]; game.particles=[]; game.review=[]; game.missed=[];
   game.deck=shuffle(state.words.slice()); game.deckIdx=0;
-  game.spawnTimer=1.6; game.waitingForFireball=false;
+  game.spawnTimer=1.6; game.villainThrowT=0; game.waitingForFireball=false;
   game.speed=MODES[state.mode].speed;
   game.shake=0; game.hitFlash=0; game.hurt=0; game.hitStop=0; game.overTimer=-1; game.won=false;
   const p=game.player; p.x=PX; p.y=0; p.vy=0; p.state='stand'; p.slideT=0; p.recover=0; p.dodgeTarget=null;
@@ -297,54 +298,46 @@ function updateHUD(){
   $('score').textContent=game.score;
 }
 
-function doJump(){
+/* ===== АВТО-УКЛОНЕНИЕ ===== */
+function doAutoDodge(){
   if(state.screen!=='play'||game.paused||game.overTimer>=0)return;
   const p=game.player;
   if(p.recover>0||p.y<0||p.state==='slide')return;
   
-  const nearestFb = game.fireballs.find(f => !f.resolved && f.x > PX - 40 && f.x < W);
-  p.dodgeTarget = nearestFb || null;
-
-  p.vy=JUMP_V; 
-  p.state='jump'; 
-  sfxJump();
-}
-
-function doSlide(){
-  if(state.screen!=='play'||game.paused||game.overTimer>=0)return;
-  const p=game.player;
-  if(p.recover>0||p.y<0||p.state==='slide')return;
-
-  const nearestFb = game.fireballs.find(f => !f.resolved && f.x > PX - 40 && f.x < W);
-  p.dodgeTarget = nearestFb || null;
-
-  p.state='slide'; 
-  p.slideT=SLIDE_TIME; 
-  sfxSlide();
+  const nearestFb = game.fireballs.find(f => !f.resolved && f.x > PX - 20 && f.x < W);
+  
+  if(nearestFb){
+    p.dodgeTarget = nearestFb;
+    if(nearestFb.high){
+      p.state = 'slide';
+      p.slideT = SLIDE_TIME;
+      sfxSlide();
+    } else {
+      p.vy = JUMP_V;
+      p.state = 'jump';
+      sfxJump();
+    }
+  } else {
+    p.vy = JUMP_V;
+    p.state = 'jump';
+    sfxJump();
+  }
 }
 
 window.addEventListener('keydown',e=>{
   if(state.screen!=='play')return;
   const k=e.key;
-  if(k==='ArrowUp'||k===' '||k==='w'||k==='W'||k==='ц'||k==='Ц'){e.preventDefault();if(!e.repeat)doJump();}
-  else if(k==='ArrowDown'||k==='s'||k==='S'||k==='ы'||k==='Ы'){e.preventDefault();if(!e.repeat)doSlide();}
+  if(k===' '||k==='Spacebar'){
+    e.preventDefault();
+    if(!e.repeat) doAutoDodge();
+  }
   else if(k==='Escape'||k==='p'||k==='P'){togglePause();}
 },{passive:false});
 
-const btnUp=$('btnUp'),btnDown=$('btnDown');
-function bindBtn(el,fn){el.addEventListener('pointerdown',e=>{e.preventDefault();fn();});el.addEventListener('contextmenu',e=>e.preventDefault());}
-bindBtn(btnUp,doJump); bindBtn(btnDown,doSlide);
-
-let touchY=null,touchX=null,touchT=0;
-stage.addEventListener('touchstart',e=>{const t=e.touches[0];touchY=t.clientY;touchX=t.clientX;touchT=performance.now();},{passive:true});
-stage.addEventListener('touchend',e=>{
-  if(touchY===null)return;
-  const t=e.changedTouches[0];
-  const dy=t.clientY-touchY; const dx=Math.abs(t.clientX-touchX); const dt=performance.now()-touchT;
-  if(dt<700&&Math.abs(dy)>26&&Math.abs(dy)>dx){ if(dy<0)doJump(); else doSlide(); }
-  touchY=null;
-},{passive:true});
-stage.addEventListener('touchmove',e=>{if(e.cancelable)e.preventDefault();},{passive:false});
+$('btnDodge').onclick = doAutoDodge;
+stage.addEventListener('pointerdown',e=>{
+  if(state.screen==='play') doAutoDodge();
+});
 
 function togglePause(){
   if(state.screen!=='play')return;
@@ -376,14 +369,15 @@ function spawnFireball(){
   }
   const high = Math.random() < 0.5;
   game.fireballs.push({
-    x: W + 60,
+    x: VILLAIN_X - 40,
     y: high ? GROUND - 80 : GROUND - 20,
-    r: 22,
+    r: 32, 
     word, high, speed: game.speed,
     resolved: false, dead: false,
     wob: Math.random() * 6.283,
     soundPlayed: false
   });
+  game.villainThrowT = 0.5;
   game.waitingForFireball = true;
   fireWhoosh();
 }
@@ -398,7 +392,6 @@ function playerBox(){
 
 function checkCollision(fb){
   if(fb.resolved) return;
-  
   if(game.player.dodgeTarget === fb) return;
 
   const b = playerBox();
@@ -465,6 +458,7 @@ function update(dt){
   if(game.overTimer>=0){game.overTimer-=dt; if(game.overTimer<=0){endGame(game.won); return;}}
 
   game.t += dt;
+  if(game.villainThrowT > 0) game.villainThrowT -= dt;
 
   const m = MODES[state.mode];
   game.speed = m.accel ? Math.min(245, m.speed + game.t*m.accel) : m.speed;
@@ -489,11 +483,7 @@ function update(dt){
     if(p.y >= 0){ p.y=0; p.vy=0; if(p.state==='jump'){p.state='stand'; p.recover=0.15;} }
   } else if(p.state === 'slide'){
     p.slideT -= dt;
-    
-    if (p.dodgeTarget) {
-        p.slideT = Math.max(p.slideT, 0.1);
-    }
-    
+    if (p.dodgeTarget) p.slideT = Math.max(p.slideT, 0.1);
     if(p.slideT <= 0){ p.state='stand'; p.recover=0.15; }
   }
   if(p.recover > 0) p.recover -= dt;
@@ -561,140 +551,124 @@ function drawChar(cx, feetY, pose) {
     const glove = '#ffffff';
 
     if (pose === 'stand') {
-        // Боевая стойка (передняя рука отодвинута)
-        
-        // Ноги
-        px(-4.5, -9, 2.5, 9, pants); 
-        px(-5, -2, 3, 2, pantsDark);
-        px(-5, 0, 3, 1, outline);
-
-        px(2, -9, 2.5, 9, pants); 
-        px(2.5, -2, 3, 2, pantsDark);
-        px(2.5, 0, 3, 1, outline);
-
-        // Торс
+        px(-4.5, -9, 2.5, 9, pants); px(-5, -2, 3, 2, pantsDark); px(-5, 0, 3, 1, outline);
+        px(2, -9, 2.5, 9, pants); px(2.5, -2, 3, 2, pantsDark); px(2.5, 0, 3, 1, outline);
         px(-3, -17, 6, 8, shirt);
-        for(let i=0; i<2; i++){
-            px(-2, -15 + i*2, 2, 1, shirtDark);
-            px(1, -15 + i*2, 2, 1, shirtDark);
-        }
-
-        // Левая рука (сзади, ближе к телу)
-        px(-5.5, -17, 1.5, 4, skin); 
-        px(-6.5, -20, 2, 4, skin); 
-        px(-6.5, -23, 2, 2, glove); 
-        
-        // Правая рука (впереди, отодвинута дальше вправо)
-        px(4.5, -17, 1.5, 4, skin);
-        px(6.5, -20, 2, 4, skin);
-        px(6, -23, 2, 2, glove); 
-
-        // Шея
+        for(let i=0; i<2; i++){ px(-2, -15 + i*2, 2, 1, shirtDark); px(1, -15 + i*2, 2, 1, shirtDark); }
+        px(-5.5, -17, 1.5, 4, skin); px(-6.5, -20, 2, 4, skin); px(-6.5, -23, 2, 2, glove);
+        px(4.5, -17, 1.5, 4, skin); px(6.5, -20, 2, 4, skin); px(6, -23, 2, 2, glove);
         px(-1, -18, 2, 1, skinDark);
-
-        // Голова
         px(-3.5, -25, 7, 7, skin);
-        
-        // Волосы
-        px(-4, -27, 8, 2, hair);
-        px(-4.5, -25, 1, 3, hair);
-        px(4.5, -25, 1, 3, hair);
-        
-        // Бандана
-        px(-4, -25, 8, 1.5, band);
-        px(4, -24, 1.5, 2, band); 
-        px(4, -22, 1, 1, bandDark);
-
-        // Лицо
-        px(-2, -23, 1, 1.5, outline); // глаз
-        px(1, -23, 1, 1.5, outline);  // глаз
-        px(-0.5, -21, 1, 0.5, outline); // рот
+        px(-4, -27, 8, 2, hair); px(-4.5, -25, 1, 3, hair); px(4.5, -25, 1, 3, hair);
+        px(-4, -25, 8, 1.5, band); px(4, -24, 1.5, 2, band); px(4, -22, 1, 1, bandDark);
+        px(-2, -23, 1, 1.5, outline); px(1, -23, 1, 1.5, outline); px(-0.5, -21, 1, 0.5, outline);
     } 
     else if (pose === 'jump') {
-        // В прыжке
-        
-        // Ноги
-        px(-3, -10, 2.5, 5, pants);
-        px(1, -10, 2.5, 5, pants);
-        px(-3.5, -5, 3, 2, pantsDark);
-        px(1.5, -5, 3, 2, pantsDark);
-        px(-3.5, -3, 3, 1, outline);
-        px(1.5, -3, 3, 1, outline);
-
-        // Торс
-        px(-3, -17, 6, 7, shirt);
-        px(-2, -15, 2, 1, shirtDark);
-        px(1, -15, 2, 1, shirtDark);
-        px(-2, -13, 2, 1, shirtDark);
-        px(1, -13, 2, 1, shirtDark);
-
-        // Руки (подняты)
-        px(-5.5, -17, 1.5, 4, skin);
-        px(-6.5, -21, 2, 4, skin); 
-        px(-6.5, -23, 2, 2, glove); 
-        
-        // Правая рука (отодвинута)
-        px(5, -17, 1.5, 4, skin);
-        px(7, -21, 2, 4, skin);
-        px(6.5, -23, 2, 2, glove); 
-
-        // Шея
+        px(-3, -10, 2.5, 5, pants); px(1, -10, 2.5, 5, pants);
+        px(-3.5, -5, 3, 2, pantsDark); px(1.5, -5, 3, 2, pantsDark);
+        px(-3.5, -3, 3, 1, outline); px(1.5, -3, 3, 1, outline);
+        px(-3, -17, 6, 7, shirt); px(-2, -15, 2, 1, shirtDark); px(1, -15, 2, 1, shirtDark); px(-2, -13, 2, 1, shirtDark); px(1, -13, 2, 1, shirtDark);
+        px(-5.5, -17, 1.5, 4, skin); px(-6.5, -21, 2, 4, skin); px(-6.5, -23, 2, 2, glove);
+        px(5, -17, 1.5, 4, skin); px(7, -21, 2, 4, skin); px(6.5, -23, 2, 2, glove);
         px(-1, -18, 2, 1, skinDark);
-
-        // Голова
-        px(-3.5, -25, 7, 7, skin);
-        px(-4, -27, 8, 2, hair);
-        px(-4, -25, 8, 1.5, band);
-        px(-2, -23, 1, 1.5, outline);
-        px(1, -23, 1, 1.5, outline);
-        px(-0.5, -21, 1, 0.5, outline);
+        px(-3.5, -25, 7, 7, skin); px(-4, -27, 8, 2, hair); px(-4, -25, 8, 1.5, band);
+        px(-2, -23, 1, 1.5, outline); px(1, -23, 1, 1.5, outline); px(-0.5, -21, 1, 0.5, outline);
     } 
     else if (pose === 'slide') {
-        // Подкат
-        
-        // Левая нога (согнута)
-        px(-4, -6, 3, 6, pants);
-        px(-4.5, -2, 3, 2, pantsDark);
-        px(-4.5, 0, 3, 1, outline);
-
-        // Правая нога (вытянута)
-        px(2, -4, 6, 4, pants);
-        px(7, -3, 2, 2, pantsDark);
-        px(8, -2, 1.5, 1, outline);
-
-        // Торс
-        px(-3, -12, 6, 6, shirt);
-        px(-2, -10, 2, 1, shirtDark);
-        px(1, -10, 2, 1, shirtDark);
-
-        // Руки
-        px(3, -11, 3, 1.5, skin);
-        px(5, -11, 1.5, 1.5, glove);
-        px(-4.5, -11, 1.5, 3, skin);
-        px(-5, -9, 1.5, 1.5, glove);
-
-        // Шея
+        px(-4, -6, 3, 6, pants); px(-4.5, -2, 3, 2, pantsDark); px(-4.5, 0, 3, 1, outline);
+        px(2, -4, 6, 4, pants); px(7, -3, 2, 2, pantsDark); px(8, -2, 1.5, 1, outline);
+        px(-3, -12, 6, 6, shirt); px(-2, -10, 2, 1, shirtDark); px(1, -10, 2, 1, shirtDark);
+        px(3, -11, 3, 1.5, skin); px(5, -11, 1.5, 1.5, glove);
+        px(-4.5, -11, 1.5, 3, skin); px(-5, -9, 1.5, 1.5, glove);
         px(-1, -13, 2, 1, skinDark);
-
-        // Голова
-        px(-4, -19, 7, 6, skin);
-        px(-4.5, -20, 8, 1.5, hair);
-        px(-4, -18, 8, 1, band);
-        px(-3, -16, 1, 1, outline);
-        px(0, -16, 1, 1, outline);
-        px(-1.5, -14, 1, 0.5, outline);
+        px(-4, -19, 7, 6, skin); px(-4.5, -20, 8, 1.5, hair); px(-4, -18, 8, 1, band);
+        px(-3, -16, 1, 1, outline); px(0, -16, 1, 1, outline); px(-1.5, -14, 1, 0.5, outline);
     }
 }
 
-/* ===== РЕНДЕР ===== */
+/* ===== ДАРТ ВЕЙДЕР ===== */
+function drawVillain(){
+    const cx = VILLAIN_X;
+    const c = 3; 
+    const px = (x, y, w, h, color) => {
+        ctx.fillStyle = color;
+        ctx.fillRect(Math.round(cx + x*c), Math.round(GROUND + y*c), Math.round(w*c), Math.round(h*c));
+    };
+
+    // Плащ
+    px(-12, -25, 24, 25, '#0a0a0c'); 
+    px(-16, -15, 32, 15, '#0a0a0c'); // Расширение книзу
+    px(-12, -25, 24, 2, '#1a1a20'); // Воротник
+
+    // Шлем (купол)
+    px(-8, -35, 16, 10, '#0a0a0c'); 
+    px(-6, -38, 12, 3, '#0a0a0c'); // Макушка
+
+    // Маска и респиратор
+    px(-7, -33, 14, 6, '#111');
+    // Респиратор (треугольник)
+    px(-4, -30, 8, 3, '#222');
+    px(-3, -29, 2, 2, '#111');
+    px(1, -29, 2, 2, '#111');
+    px(-1.5, -28, 3, 1, '#111');
+
+    // Глаза (красные линзы)
+    px(-5, -32, 3, 2, '#ff2200');
+    px(2, -32, 3, 2, '#ff2200');
+    
+    // Свечение глаз
+    ctx.fillStyle = 'rgba(255,0,0,0.7)';
+    ctx.beginPath(); ctx.arc(cx - 3.5*c, GROUND - 31*c, 5, 0, 6.283); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx + 3.5*c, GROUND - 31*c, 5, 0, 6.283); ctx.fill();
+
+    // Панель управления на груди
+    px(-4, -20, 8, 6, '#222');
+    px(-3, -19, 2, 2, '#ff0000'); // Красная кнопка
+    px(1, -19, 2, 2, '#00ff00'); // Зеленая кнопка
+    px(-3, -17, 6, 1, '#555'); // Полоска
+
+    // Руки
+    if(game.villainThrowT > 0){
+        // Бросок (используем Силу)
+        px(-16, -20, 8, 4, '#0a0a0c'); 
+        px(-18, -18, 4, 4, '#111'); // Рука в перчатке
+        
+        px(6, -18, 8, 4, '#0a0a0c'); 
+        px(14, -18, 4, 4, '#111'); 
+    } else {
+        // Стойка
+        px(-14, -20, 4, 12, '#0a0a0c');
+        px(10, -20, 4, 12, '#0a0a0c');
+        px(-14, -8, 4, 4, '#111');
+        px(10, -8, 4, 4, '#111');
+    }
+
+    // Световой меч (красный)
+    // Рукоять
+    px(14, -25, 3, 8, '#888');
+    px(15, -27, 1, 2, '#fff');
+    // Клинок
+    px(15, -55, 1, 28, '#ff2222');
+    ctx.fillStyle = 'rgba(255,0,0,0.5)';
+    ctx.fillRect(cx + 14*c, GROUND - 55*c, 3*c, 28*c);
+
+    // Тень
+    ctx.fillStyle='rgba(0,0,0,0.8)';
+    ctx.beginPath(); ctx.ellipse(cx, GROUND+2, 40, 8, 0, 0, 6.283); ctx.fill();
+}
+
+/* ===== ПРИРОДА ИЗ MORTAL KOMBAT ===== */
 let skyGrad=null;
 function drawBackground(){
   if(!skyGrad){
     skyGrad=ctx.createLinearGradient(0,0,0,GROUND);
-    skyGrad.addColorStop(0,'#0b0b14'); skyGrad.addColorStop(0.55,'#1d1a44'); skyGrad.addColorStop(1,'#2a1f4d');
+    skyGrad.addColorStop(0,'#05050a'); 
+    skyGrad.addColorStop(0.4,'#1a0a2a'); 
+    skyGrad.addColorStop(1,'#2a1535');
   }
   ctx.fillStyle=skyGrad; ctx.fillRect(0,0,W,GROUND);
 
+  // Звезды
   for(const s of STARS){
     const px = (s.x - game.t * s.sp * 10) % W;
     const drawX = px < 0 ? px + W : px;
@@ -705,37 +679,54 @@ function drawBackground(){
   }
   ctx.globalAlpha = 1;
 
-  // Дальние горы (чуть больше циклов для широкого экрана)
-  ctx.fillStyle = 'rgba(30,20,60,0.6)';
+  // Кровавая луна
+  ctx.fillStyle = '#cc2200';
+  ctx.beginPath(); ctx.arc(W/2, 70, 40, 0, 6.283); ctx.fill();
+  const moonGlow = ctx.createRadialGradient(W/2, 70, 10, W/2, 70, 100);
+  moonGlow.addColorStop(0, 'rgba(200,30,0,0.4)');
+  moonGlow.addColorStop(1, 'rgba(200,30,0,0)');
+  ctx.fillStyle = moonGlow;
+  ctx.fillRect(0, 0, W, GROUND);
+
+  // Скалистые горы (дальний план)
+  ctx.fillStyle = 'rgba(20,10,35,0.8)';
   ctx.beginPath();
   ctx.moveTo(0, GROUND);
-  const off1 = (game.t * 20) % 120;
+  const off1 = (game.t * 15) % 150;
   for(let i = -1; i < 8; i++){
-    const bx = i * 120 - off1;
-    ctx.lineTo(bx + 40, GROUND - 60);
-    ctx.lineTo(bx + 70, GROUND - 90);
-    ctx.lineTo(bx + 110, GROUND - 40);
-    ctx.lineTo(bx + 140, GROUND);
+    const bx = i * 150 - off1;
+    ctx.lineTo(bx + 50, GROUND - 100);
+    ctx.lineTo(bx + 90, GROUND - 150);
+    ctx.lineTo(bx + 140, GROUND - 60);
+    ctx.lineTo(bx + 180, GROUND);
   }
   ctx.fill();
 
-  // Ближние горы
-  ctx.fillStyle = 'rgba(20,12,45,0.85)';
-  ctx.beginPath();
-  ctx.moveTo(0, GROUND);
-  const off2 = (game.t * 45) % 90;
-  for(let i = -1; i < 10; i++){
+  // Мрачные ели (ближний план)
+  ctx.fillStyle = '#0a0510';
+  const off2 = (game.t * 40) % 90;
+  for(let i = -1; i < 12; i++){
     const bx = i * 90 - off2;
-    ctx.lineTo(bx + 20, GROUND - 30);
-    ctx.lineTo(bx + 45, GROUND - 50);
-    ctx.lineTo(bx + 70, GROUND - 20);
-    ctx.lineTo(bx + 90, GROUND);
+    // Ствол
+    ctx.fillRect(bx + 40, GROUND - 20, 6, 20);
+    // Крона
+    ctx.beginPath();
+    ctx.moveTo(bx + 43, GROUND - 80);
+    ctx.lineTo(bx + 20, GROUND - 20);
+    ctx.lineTo(bx + 66, GROUND - 20);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(bx + 43, GROUND - 100);
+    ctx.lineTo(bx + 25, GROUND - 50);
+    ctx.lineTo(bx + 61, GROUND - 50);
+    ctx.fill();
   }
-  ctx.fill();
 
+  // Туман
   ctx.fillStyle = 'rgba(80,60,160,0.15)';
   ctx.fillRect(0, GROUND - 15, W, 30);
 
+  // Земля
   ctx.fillStyle = '#0f0a1a'; ctx.fillRect(0, GROUND, W, H - GROUND);
   const glowGrad = ctx.createLinearGradient(0, GROUND, 0, GROUND + 25);
   glowGrad.addColorStop(0, 'rgba(124,92,255,0.4)');
@@ -834,7 +825,7 @@ function drawFireball(fb){
 
   const word = fb.word.h;
   const len = [...word].length;
-  const fs = len <= 2 ? 28 : (len === 3 ? 25 : 22);
+  const fs = len <= 2 ? 38 : (len === 3 ? 32 : 26);
   ctx.font = `900 ${fs}px "Noto Sans SC", "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -867,10 +858,13 @@ function render(){
   ctx.setTransform(1,0,0,1,0,0); ctx.clearRect(0,0,W,H); ctx.imageSmoothingEnabled=false;
   ctx.save();
   if(game.shake>0.4) ctx.translate((Math.random()-0.5)*game.shake,(Math.random()-0.5)*game.shake);
+  
   drawBackground();
+  drawVillain(); 
   for(const fb of game.fireballs) drawFireball(fb);
   drawPlayer();
   drawParticles();
+  
   ctx.restore();
   if(game.hitFlash>0){ctx.fillStyle=`rgba(255,50,50,${game.hitFlash*0.35})`; ctx.fillRect(0,0,W,H);}
   if(!render._vig){
