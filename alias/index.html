@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>汉字卡牌游戏</title>
+<style>
+  :root { --bg:#f6f7fb; --card:#fff; --accent:#3b6ef6; --muted:#8a90a2; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family: system-ui, "PingFang SC", "Microsoft YaHei", sans-serif;
+         background:var(--bg); color:#1c2030; }
+  header { padding:14px 18px; background:#fff; border-bottom:1px solid #e6e8f0;
+           display:flex; justify-content:space-between; align-items:center; }
+  h1 { font-size:18px; margin:0; }
+  main { max-width:1000px; margin:0 auto; padding:18px; }
+  .grid { display:grid; gap:12px; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); }
+  .card { background:var(--card); border-radius:14px; padding:18px 12px; min-height:120px;
+          display:flex; flex-direction:column; align-items:center; justify-content:center;
+          box-shadow:0 2px 8px rgba(20,30,80,.08); cursor:pointer; user-select:none;
+          transition:transform .15s; text-align:center; }
+  .card:active { transform:scale(.97); }
+  .card .hanzi { font-size:30px; font-weight:600; }
+  .card .py { color:var(--accent); margin-top:6px; }
+  .card .tr { color:var(--muted); font-size:14px; margin-top:4px; }
+  .card.back { background:#2c3350; color:#fff; }
+  .card.back .hanzi::after { content:"？"; font-size:40px; opacity:.5; }
+  .card.back .hanzi { font-size:0; }
+  .card.discarded { opacity:.35; pointer-events:none; }
+  button { background:var(--accent); color:#fff; border:0; border-radius:10px;
+           padding:12px 16px; font-size:16px; cursor:pointer; }
+  button.secondary { background:#e8ebf5; color:#1c2030; }
+  button:disabled { opacity:.5; cursor:not-allowed; }
+  input, textarea { width:100%; padding:12px; border-radius:10px; border:1px solid #d5d9e6;
+                    font-size:16px; font-family:inherit; }
+  textarea { min-height:120px; resize:vertical; }
+  .row { display:flex; gap:10px; flex-wrap:wrap; margin:12px 0; }
+  .zone { background:#fff; border-radius:16px; padding:16px; margin-bottom:16px;
+          box-shadow:0 2px 8px rgba(20,30,80,.06); }
+  .zone h2 { font-size:16px; margin:0 0 12px; display:flex; justify-content:space-between; }
+  .muted { color:var(--muted); font-size:14px; }
+  .code { font-family:ui-monospace, monospace; font-size:22px; letter-spacing:3px;
+          background:#eef1fa; padding:8px 14px; border-radius:10px; display:inline-block; }
+  @media (max-width:600px){ .card{min-height:100px;} .card .hanzi{font-size:26px;} }
+</style>
+</head>
+<body>
+<header>
+  <h1>汉字卡牌游戏</h1>
+  <span id="status" class="muted">未连接</span>
+</header>
+<main id="app"></main>
+
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
+/* ==== 1. 替换为你的 Supabase 配置 ==== */
+const SUPABASE_URL = 'https://edbjillxuropaxxykwlw.supabase.co'
+const SUPABASE_KEY = 'sb_publishable_K_gfzWC4ZVnQamezf9SRHA_ndJp74ij'   // 或 anon key
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
+
+/* ==== 2. 文案 ==== */
+const T = {
+  createRoom:"创建房间", joinRoom:"加入房间", roomCode:"房间代码",
+  enterWords:"输入汉字（每行一个：汉字|拼音|翻译）",
+  createCards:"生成卡片", startReview:"开始复习",
+  reviewTitle:"复习卡片（点击查看）", perPlayer:"每个玩家发几张？",
+  deal:"发牌", waitingDeal:"等待老师发牌…",
+  yourCards:"你的卡片", discarded:"已丢弃", remaining:"剩余",
+  explainHint:"请用中文解释这张卡片", reveal:"显示",
+  guessed:"已猜出，丢弃", roundEnd:"本回合结束",
+  newRound:"新回合", newWords:"新汉字", backToReview:"返回复习",
+  waitingHost:"等待老师操作…", copyCode:"复制代码",
+};
+
+/* ==== 3. 工具 ==== */
+const $ = (s, el=document)=>el.querySelector(s);
+const el = (tag, attrs={}, ...kids)=>{
+  const n=document.createElement(tag);
+  for(const[k,v] of Object.entries(attrs)){
+    if(k==="class") n.className=v;
+    else if(k.startsWith("on")) n.addEventListener(k.slice(2),v);
+    else n.setAttribute(k,v);
+  }
+  kids.forEach(c=>n.append(c?.nodeType?c:document.createTextNode(c)));
+  return n;
+};
+const shuffle = a=>{ a=[...a]; for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];} return a; };
+
+/* ==== 4. 全局状态 ==== */
+let meId = null;
+let roomCode = null, room = null, role = null; // "host" | "guest"
+let channel = null;
+
+/* ==== 5. 渲染分发 ==== */
+const app = $("#app");
+function render(){
+  const status = $("#status");
+  if(!meId){ status.textContent = "认证中…"; return; }
+  if(!room){ status.textContent = "未连接"; return renderLobby(); }
+  status.textContent = `房间 ${roomCode} · ${role==="host"?"老师":"学生"}`;
+  switch(room.phase){
+    case "lobby":   return renderLobbyInRoom();
+    case "review":  return renderReview();
+    case "setup":   return renderSetup();
+    case "playing": return renderPlaying();
+    case "roundEnd":return renderRoundEnd();
+  }
+}
+
+/* ==== 6. 大厅（未进房间） ==== */
+function renderLobby(){
+  app.replaceChildren(
+    el("div",{class:"zone"},
+      el("h2",{},"创建房间"),
+      el("button",{onclick:createRoom},T.createRoom)
+    ),
+    el("div",{class:"zone"},
+      el("h2",{},"加入房间"),
+      el("input",{id:"joinCode",placeholder:"6 位代码",maxlength:6}),
+      el("div",{class:"row"},
+        el("button",{onclick:()=>joinRoom($("#joinCode").value.trim())},T.joinRoom))
+    )
+  );
+}
+
+async function createRoom(){
+  const code = String(Math.floor(100000+Math.random()*900000));
+  role = "host"; roomCode = code;
+  const { error } = await supabase.from('rooms').insert({
+    code,
+    phase: "lobby",
+    host_id: meId,
+    guest_id: null,
+    words: [],
+    review_revealed: [],
+    per_player: 3,
+    round: 1,
+    hands: { host: [], guest: [] }
+  });
+  if(error){ alert("创建失败："+error.message); return; }
+  subscribe();
+}
+
+async function joinRoom(code){
+  if(!code) return alert("请输入房间代码");
+  const { data, error } = await supabase.from('rooms').select().eq('code', code).single();
+  if(error || !data) return alert("房间不存在");
+  if(data.guest_id) return alert("房间已满");
+  role = "guest"; roomCode = code;
+  const { error: upErr } = await supabase.from('rooms')
+    .update({ guest_id: meId }).eq('code', code);
+  if(upErr){ alert("加入失败："+upErr.message); return; }
+  subscribe();
+}
+
+function subscribe(){
+  if(channel) supabase.removeChannel(channel);
+  // 先拉一次当前状态（插入/更新都会带整行）
+  supabase.from('rooms').select().eq('code', roomCode).single()
+    .then(({data}) => { if(data){ room = normalize(data); render(); } });
+
+  channel = supabase
+    .channel(`room-${roomCode}`)
+    .on('postgres_changes',
+      { event: 'UPDATE', schema: 'public', table: 'rooms', filter: `code=eq.${roomCode}` },
+      (payload) => { room = normalize(payload.new); render(); }
+    )
+    .subscribe();
+}
+
+// Postgres 返回的列名是蛇形，统一转成前端的驼峰
+function normalize(r){
+  return {
+    phase: r.phase,
+    hostId: r.host_id,
+    guestId: r.guest_id,
+    words: r.words || [],
+    reviewRevealed: r.review_revealed || [],
+    perPlayer: r.per_player,
+    round: r.round,
+    hands: r.hands || { host: [], guest: [] },
+  };
+}
+
+/* 统一更新封装 */
+async function patchRoom(patch){
+  const dbPatch = {};
+  if('phase' in patch)           dbPatch.phase = patch.phase;
+  if('words' in patch)           dbPatch.words = patch.words;
+  if('reviewRevealed' in patch)  dbPatch.review_revealed = patch.reviewRevealed;
+  if('perPlayer' in patch)       dbPatch.per_player = patch.perPlayer;
+  if('round' in patch)           dbPatch.round = patch.round;
+  if('hands' in patch)           dbPatch.hands = patch.hands;
+  const { error } = await supabase.from('rooms').update(dbPatch).eq('code', roomCode);
+  if(error) alert("更新失败："+error.message);
+}
+
+/* ==== 7. 房间内 lobby：host 输入汉字 ==== */
+function renderLobbyInRoom(){
+  if(role==="host"){
+    app.replaceChildren(
+      el("div",{class:"zone"},
+        el("div",{class:"muted"},"房间代码"),
+        el("div",{class:"code"},roomCode),
+        el("div",{class:"row"},
+          el("button",{class:"secondary",onclick:()=>navigator.clipboard.writeText(roomCode)},T.copyCode))
+      ),
+      el("div",{class:"zone"},
+        el("h2",{},T.enterWords),
+        el("textarea",{id:"wordsInput",
+          placeholder:"苹果|píngguǒ|яблоко\n香蕉|xiāngjiāo|банан\n西瓜|xīguā|арбуз"}),
+        el("div",{class:"row"},
+          el("button",{onclick:submitWords},T.createCards))
+      )
+    );
+  } else {
+    app.replaceChildren(
+      el("div",{class:"zone"},
+        el("h2",{},"等待老师输入汉字…"),
+        el("div",{class:"muted"},`房间 ${roomCode}`))
+    );
+  }
+}
+
+async function submitWords(){
+  const raw = $("#wordsInput").value.trim();
+  if(!raw) return alert("请输入至少一个汉字");
+  const words = raw.split("\n").map(line=>{
+    const [hanzi, pinyin="", translation=""] = line.split("|").map(s=>s.trim());
+    return { hanzi, pinyin, translation };
+  }).filter(w=>w.hanzi);
+  if(words.length < 2) return alert("至少需要 2 个汉字");
+  await patchRoom({
+    words,
+    reviewRevealed: words.map(()=>false),
+    phase: "review",
+  });
+}
+
+/* ==== 8. 复习网格（双方同步） ==== */
+function renderReview(){
+  const grid = el("div",{class:"grid"});
+  room.words.forEach((w,i)=>{
+    const revealed = room.reviewRevealed?.[i];
+    const card = el("div",{class:`card${revealed?"":" back"}`},
+      el("div",{class:"hanzi"}, w.hanzi),
+      revealed ? el("div",{class:"py"}, w.pinyin||"—") : "",
+      revealed ? el("div",{class:"tr"}, w.translation||"—") : ""
+    );
+    card.addEventListener("click", async ()=>{
+      const next = [...(room.reviewRevealed||[])];
+      next[i] = !next[i];
+      await patchRoom({ reviewRevealed: next });
+    });
+    grid.append(card);
+  });
+  const hostControls = role==="host"
+    ? el("div",{class:"row"},
+        el("button",{onclick:()=>patchRoom({phase:"setup"})},T.startReview))
+    : el("div",{class:"muted"},T.waitingHost);
+  app.replaceChildren(
+    el("div",{class:"zone"}, el("h2",{},T.reviewTitle), grid, hostControls)
+  );
+}
+
+/* ==== 9. 设置发牌数 ==== */
+function renderSetup(){
+  const max = Math.floor(room.words.length/2);
+  if(role==="host"){
+    app.replaceChildren(
+      el("div",{class:"zone"},
+        el("h2",{},T.perPlayer),
+        el("div",{class:"muted"},`最多 ${max} 张`),
+        el("input",{id:"perPlayer",type:"number",min:1,max,value:room.perPlayer||1}),
+        el("div",{class:"row"},
+          el("button",{onclick:dealCards},T.deal))
+      )
+    );
+  } else {
+    app.replaceChildren(el("div",{class:"zone"}, el("h2",{},T.waitingDeal)));
+  }
+}
+
+async function dealCards(){
+  const n = parseInt($("#perPlayer").value,10);
+  const max = Math.floor(room.words.length/2);
+  if(!n || n<1 || n>max) return alert(`请输入 1–${max}`);
+  const idx = shuffle(room.words.map((_,i)=>i));
+  const hostIdx = idx.slice(0,n);
+  const guestIdx = idx.slice(n,2*n);
+  const mk = arr => arr.map(i=>({ wordIdx:i, revealed:false, discarded:false }));
+  await patchRoom({
+    phase: "playing",
+    perPlayer: n,
+    hands: { host: mk(hostIdx), guest: mk(guestIdx) }
+  });
+}
+
+/* ==== 10. 游戏进行中 ==== */
+function renderPlaying(){
+  const myHand = room.hands?.[role] || [];
+  const otherRole = role==="host" ? "guest" : "host";
+  const otherHand = room.hands?.[otherRole] || [];
+
+  const discardedCount = myHand.filter(c=>c.discarded).length;
+  const remaining = myHand.length - discardedCount;
+
+  // 我的卡片
+  const myGrid = el("div",{class:"grid"});
+  myHand.forEach((c,i)=>{
+    const w = room.words[c.wordIdx];
+    const isDiscarded = c.discarded;
+    const card = el("div",{class:`card${c.revealed?"":" back"}${isDiscarded?" discarded":""}`},
+      el("div",{class:"hanzi"}, w.hanzi),
+      c.revealed ? el("div",{class:"py"}, w.pinyin||"—") : "",
+      c.revealed ? el("div",{class:"tr"}, w.translation||"—") : ""
+    );
+    if(!c.revealed && !isDiscarded && role==="guest"){
+      card.addEventListener("click", async ()=>{
+        const next = myHand.map((x,j)=> j===i ? {...x, revealed:true} : x);
+        const hands = { ...room.hands, guest: next };
+        await patchRoom({ hands });
+      });
+    }
+    if(c.revealed && !isDiscarded && role==="guest"){
+      const btn = el("button",{class:"secondary",style:"margin-top:8px",
+        onclick: async ()=>{
+          const next = myHand.map((x,j)=> j===i ? {...x, discarded:true} : x);
+          const hands = { ...room.hands, guest: next };
+          if(next.every(x=>x.discarded)){
+            await patchRoom({ hands, phase:"roundEnd" });
+          } else {
+            await patchRoom({ hands });
+          }
+        }}, T.guessed);
+      card.append(btn);
+    }
+    myGrid.append(card);
+  });
+
+  // 对手的卡片：只显示 revealed 或 discarded
+  const otherGrid = el("div",{class:"grid"});
+  otherHand.forEach(c=>{
+    const w = room.words[c.wordIdx];
+    if(!c.revealed && !c.discarded){
+      otherGrid.append(el("div",{class:"card back"}, el("div",{class:"hanzi"},"？")));
+    } else {
+      otherGrid.append(el("div",{class:`card${c.discarded?" discarded":""}`},
+        el("div",{class:"hanzi"}, w.hanzi),
+        el("div",{class:"py"}, w.pinyin||"—"),
+        el("div",{class:"tr"}, w.translation||"—")
+      ));
+    }
+  });
+
+  const myTitle = role==="host" ? "老师的卡片" : "你的卡片";
+  const otherTitle = role==="host" ? "学生的卡片" : "老师的卡片";
+  const hint = role==="guest" && remaining>0
+    ? el("div",{class:"muted"}, T.explainHint) : "";
+
+  app.replaceChildren(
+    el("div",{class:"zone"},
+      el("h2",{}, `${myTitle} · ${T.remaining} ${remaining}`), hint, myGrid),
+    el("div",{class:"zone"},
+      el("h2",{}, otherTitle), otherGrid)
+  );
+}
+
+/* ==== 11. 回合结束 ==== */
+function renderRoundEnd(){
+  if(role==="host"){
+    app.replaceChildren(
+      el("div",{class:"zone"},
+        el("h2",{},T.roundEnd),
+        el("div",{class:"row"},
+          el("button",{onclick:()=>patchRoom({phase:"setup"})},T.newRound),
+          el("button",{class:"secondary",onclick:()=>patchRoom({
+            phase:"lobby", words:[], hands:{host:[],guest:[]}, reviewRevealed:[]
+          })},T.newWords),
+          el("button",{class:"secondary",onclick:()=>patchRoom({
+            phase:"review", reviewRevealed: room.words.map(()=>false)
+          })},T.backToReview)
+        )
+      )
+    );
+  } else {
+    app.replaceChildren(
+      el("div",{class:"zone"},
+        el("h2",{},T.roundEnd),
+        el("div",{class:"muted"},T.waitingHost))
+    );
+  }
+}
+
+/* ==== 启动：匿名登录 ==== */
+(async ()=>{
+  render();
+  const { data, error } = await supabase.auth.signInAnonymously();
+  if(error){ alert("匿名登录失败："+error.message); return; }
+  meId = data.user.id;
+  render();
+})();
+</script>
+</body>
+</html>
