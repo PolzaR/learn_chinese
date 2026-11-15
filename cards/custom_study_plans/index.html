@@ -20,7 +20,7 @@
       align-items: center;
       justify-content: center;
       padding: 12px;
-      touch-action: pan-y;
+      touch-action: pan-y; /* Разрешаем вертикальный скролл страницы, но не мешаем горизонтальным свайпам */
       -webkit-user-select: none;
       user-select: none;
       -webkit-tap-highlight-color: transparent;
@@ -378,7 +378,7 @@
       padding: 4px 12px; border-radius: 999px; font-size: 0.8rem; font-weight: 600;
     }
 
-    /* Исправление огромной кнопки на финальном экране */
+    /* Фикс огромной кнопки на финальном экране */
     #restartBtn {
       flex: none !important; 
       width: 100%;
