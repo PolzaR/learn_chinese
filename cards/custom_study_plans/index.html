@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Карточки</title>
+  <title>Карточки · HSK</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -28,7 +28,7 @@
 
     .app {
       width: 100%;
-      max-width: 500px;
+      max-width: 900px;
       background: white;
       border-radius: 28px;
       box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.2);
@@ -36,6 +36,9 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+      max-height: 95vh;
+      overflow-y: auto;
+      overflow-x: hidden;
     }
 
     h1 {
@@ -84,10 +87,12 @@
     .card-container {
       position: relative;
       width: 100%;
+      max-width: 500px;
       height: 440px;
       margin: 6px 0 10px;
       perspective: 1200px;
       touch-action: none;
+      overflow: hidden;
     }
 
     .card {
@@ -279,6 +284,7 @@
       display: flex;
       gap: 14px;
       width: 100%;
+      max-width: 500px;
       margin-top: 12px;
       justify-content: center;
     }
@@ -372,14 +378,10 @@
       font-weight: 600;
     }
 
+    /* ===== ГРИД-СЕТКА НАБОРОВ ===== */
     .menu {
       width: 100%;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
       padding: 8px 4px;
-      max-height: 85vh;
-      overflow-y: auto;
     }
 
     .menu-title {
@@ -394,95 +396,110 @@
       font-size: 0.9rem;
       color: #64748b;
       text-align: center;
-      margin-bottom: 12px;
+      margin-bottom: 20px;
+    }
+
+    .sets-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 14px;
+      width: 100%;
+      padding: 4px;
     }
 
     .set-btn {
       display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 14px 16px;
-      background: #f8fafc;
+      flex-direction: column;
+      gap: 10px;
+      padding: 18px 16px;
+      background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
       border: 1px solid #e2e8f0;
-      border-radius: 16px;
+      border-radius: 20px;
       cursor: pointer;
-      transition: all 0.15s;
+      transition: all 0.2s ease;
       text-align: left;
       width: 100%;
       font-family: inherit;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .set-btn::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 4px;
+      height: 100%;
+      background: linear-gradient(180deg, #3b82f6, #8b5cf6);
+      opacity: 0;
+      transition: opacity 0.2s;
     }
 
     .set-btn:hover {
-      background: #eff6ff;
+      background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%);
       border-color: #bfdbfe;
-      transform: translateY(-1px);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 24px -8px rgba(59, 130, 246, 0.25);
     }
 
-    .set-btn:active { transform: scale(0.99); }
+    .set-btn:hover::before { opacity: 1; }
+
+    .set-btn:active { transform: scale(0.98); }
+
+    .set-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
 
     .set-num {
       flex-shrink: 0;
-      width: 38px;
-      height: 38px;
+      width: 36px;
+      height: 36px;
       border-radius: 10px;
-      background: #3b82f6;
+      background: linear-gradient(135deg, #3b82f6, #6366f1);
       color: white;
       font-weight: 700;
-      font-size: 1rem;
+      font-size: 0.95rem;
       display: flex;
       align-items: center;
       justify-content: center;
-    }
-
-    .set-info {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .set-name {
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: #0f172a;
-      margin-bottom: 2px;
-    }
-
-    .set-desc {
-      font-size: 0.75rem;
-      color: #64748b;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      box-shadow: 0 4px 10px -2px rgba(59, 130, 246, 0.4);
     }
 
     .set-count {
       flex-shrink: 0;
       font-size: 0.7rem;
       font-weight: 600;
-      padding: 3px 8px;
+      padding: 3px 10px;
       border-radius: 999px;
       background: #dbeafe;
       color: #1d4ed8;
     }
 
-    .back-btn {
-      margin-top: 8px;
-      padding: 12px;
-      background: transparent;
-      border: 1px solid #e2e8f0;
-      border-radius: 14px;
-      color: #64748b;
-      font-size: 0.9rem;
-      font-weight: 500;
-      cursor: pointer;
-      font-family: inherit;
-      width: 100%;
+    .set-name {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #0f172a;
+      line-height: 1.3;
+      word-break: break-word;
     }
 
-    .back-btn:hover { background: #f8fafc; }
+    .set-desc {
+      font-size: 0.78rem;
+      color: #64748b;
+      line-height: 1.4;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
 
     /* ===== ЭКРАН ВЫБОРА РЕЖИМА ===== */
     .mode-screen {
       width: 100%;
+      max-width: 500px;
       display: flex;
       flex-direction: column;
       gap: 14px;
@@ -538,18 +555,10 @@
       font-size: 1.6rem;
     }
 
-    .mode-icon.with-pinyin {
-      background: #dbeafe;
-    }
+    .mode-icon.with-pinyin { background: #dbeafe; }
+    .mode-icon.without-pinyin { background: #f1f5f9; }
 
-    .mode-icon.without-pinyin {
-      background: #f1f5f9;
-    }
-
-    .mode-info {
-      flex: 1;
-      min-width: 0;
-    }
+    .mode-info { flex: 1; min-width: 0; }
 
     .mode-name {
       font-size: 1.05rem;
@@ -580,17 +589,113 @@
 
     .mode-back:hover { background: #f8fafc; }
 
+    .back-btn {
+      margin-top: 8px;
+      padding: 12px;
+      background: transparent;
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      color: #64748b;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: inherit;
+      width: 100%;
+      max-width: 260px;
+    }
+
+    .back-btn:hover { background: #f8fafc; }
+
     .hidden { display: none !important; }
+
+    /* ===== АДАПТИВНОСТЬ ===== */
+    @media (max-width: 600px) {
+      .app {
+        border-radius: 20px;
+        padding: 16px 12px 20px;
+      }
+
+      .sets-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      .set-btn {
+        padding: 14px;
+        flex-direction: row;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .set-top {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+      }
+
+      .set-info-block {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .set-name {
+        font-size: 0.9rem;
+      }
+
+      .set-desc {
+        font-size: 0.72rem;
+        -webkit-line-clamp: 1;
+      }
+
+      .card-container {
+        height: 400px;
+      }
+
+      .card-word {
+        font-size: 4rem;
+      }
+
+      .peek-pinyin {
+        font-size: 1.6rem;
+      }
+
+      .card-pinyin {
+        font-size: 1.5rem;
+      }
+
+      .card-translation {
+        font-size: 1.1rem;
+      }
+    }
+
+    @media (max-width: 380px) {
+      .card-container { height: 360px; }
+      .card-word { font-size: 3.5rem; }
+      .buttons { gap: 10px; }
+      .btn { font-size: 0.9rem; padding: 12px 6px; }
+    }
+
+    @media (min-width: 601px) and (max-width: 900px) {
+      .sets-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (min-width: 901px) {
+      .sets-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
   </style>
 </head>
 <body>
 <div class="app" id="app">
 
-  <!-- ===== ЭКРАН ВЫБОРА НАБОРА ===== -->
+  <!-- ===== ЭКРАН ВЫБОРА НАБОРА (ГРИД) ===== -->
   <div id="menuScreen" class="menu">
     <div class="menu-title">🀄 Карточки</div>
     <div class="menu-subtitle">Выберите набор</div>
-    <!-- Наборы добавляются скриптом -->
+    <div class="sets-grid" id="setsGrid"></div>
   </div>
 
   <!-- ===== ЭКРАН ВЫБОРА РЕЖИМА ===== -->
@@ -661,7 +766,7 @@
       <div class="stats-total" id="statsTotal"></div>
       <p id="finishText">Все слова пройдены!</p>
       <button class="btn" id="restartBtn" style="max-width: 260px; margin: 0 auto; background: #3b82f6; color: white; border: none;">Продолжить →</button>
-      <button class="back-btn" id="backToMenuBtn" style="max-width: 260px; margin: 12px auto 0;">← К выбору набора</button>
+      <button class="back-btn" id="backToMenuBtn">← К выбору набора</button>
     </div>
   </div>
 
@@ -669,9 +774,18 @@
 
 <script>
   // ========== НАБОРЫ СЛОВ ==========
-  // Здесь вставьте все ваши 18 наборов (массивы SETS).
-  // Структура: { title: "...", words: [...] } — поле allowPeek больше не нужно,
-  // режим выбирается пользователем на экране выбора режима.
+  // Вставьте сюда свои наборы в формате:
+  // {
+  //   title: "Название набора",
+  //   words: [
+  //     { word: "...", pinyin: "...", translation: "...", examples: [
+  //       { zh: "...", ru: "..." },
+  //       { zh: "...", ru: "..." }
+  //     ]},
+  //     ...
+  //   ]
+  // }
+
   const SETS = [
     // ВСТАВЬТЕ СЮДА ВСЕ 18 НАБОРОВ (каждый в формате { title: "...", words: [...] })
     {
@@ -2048,9 +2162,563 @@
       { zh: "我不知道他在哪儿。", ru: "Я не знаю, где он." }
     ]}
   ]
-}
+},
 
+  {
+    "title": "Набор 19 · Время",
+    "allowPeek": false,
+    "words": [
+      { "word": "现在", "pinyin": "xiànzài", "translation": "сейчас", "examples": [
+        { "zh": "现在几点了？", "ru": "Который сейчас час?" },
+        { "zh": "我现在很忙。", "ru": "Сейчас я занят." }
+      ]},
+      { "word": "几点", "pinyin": "jǐ diǎn", "translation": "который час", "examples": [
+        { "zh": "现在几点？", "ru": "Который сейчас час?" },
+        { "zh": "你几点起床？", "ru": "Во сколько ты встаёшь?" }
+      ]},
+      { "word": "早上", "pinyin": "zǎoshang", "translation": "утро", "examples": [
+        { "zh": "早上我有课。", "ru": "Утром у меня занятия." },
+        { "zh": "早上好！", "ru": "Доброе утро!" }
+      ]},
+      { "word": "上午", "pinyin": "shàngwǔ", "translation": "утро, до обеда", "examples": [
+        { "zh": "上午我有课。", "ru": "Утром у меня занятия." },
+        { "zh": "上午九点见。", "ru": "Увидимся в девять утра." }
+      ]},
+      { "word": "中午", "pinyin": "zhōngwǔ", "translation": "полдень", "examples": [
+        { "zh": "中午我们吃什么？", "ru": "Что мы едим в полдень?" },
+        { "zh": "中午很热。", "ru": "В полдень жарко." }
+      ]},
+      { "word": "下午", "pinyin": "xiàwǔ", "translation": "после обеда, днём", "examples": [
+        { "zh": "下午我有空。", "ru": "Днём я свободен." },
+        { "zh": "下午我们去看电影。", "ru": "Днём мы пойдём в кино." }
+      ]},
+      { "word": "晚上", "pinyin": "wǎnshang", "translation": "вечер", "examples": [
+        { "zh": "晚上我有空。", "ru": "Вечером я свободен." },
+        { "zh": "今天晚上你去哪儿？", "ru": "Куда ты идёшь сегодня вечером?" }
+      ]},
+      { "word": "夜里", "pinyin": "yèli", "translation": "ночью", "examples": [
+        { "zh": "夜里很安静。", "ru": "Ночью очень тихо." },
+        { "zh": "他夜里工作。", "ru": "Он работает ночью." }
+      ]},
+      { "word": "点", "pinyin": "diǎn", "translation": "час (время); точка", "examples": [
+        { "zh": "现在三点。", "ru": "Сейчас три часа." },
+        { "zh": "我六点起床。", "ru": "Я встаю в шесть." }
+      ]},
+      { "word": "分", "pinyin": "fēn", "translation": "минута", "examples": [
+        { "zh": "请等五分钟。", "ru": "Подождите пять минут." },
+        { "zh": "现在八点十分。", "ru": "Сейчас десять минут девятого." }
+      ]},
+      { "word": "分钟", "pinyin": "fēnzhōng", "translation": "минута", "examples": [
+        { "zh": "请等五分钟。", "ru": "Подождите пять минут." },
+        { "zh": "还有十分钟。", "ru": "Осталось десять минут." }
+      ]},
+      { "word": "差五分", "pinyin": "chà wǔ fēn", "translation": "без пяти (минут)", "examples": [
+        { "zh": "现在差五分八点。", "ru": "Сейчас без пяти восемь." },
+        { "zh": "差五分三点。", "ru": "Без пяти три." }
+      ]},
+      { "word": "半", "pinyin": "bàn", "translation": "половина", "examples": [
+        { "zh": "现在两点半。", "ru": "Сейчас половина третьего." },
+        { "zh": "我吃了一半。", "ru": "Я съел половину." }
+      ]},
+      { "word": "一刻", "pinyin": "yí kè", "translation": "четверть (часа)", "examples": [
+        { "zh": "现在差一刻八点。", "ru": "Сейчас без четверти восемь." },
+        { "zh": "现在三点一刻。", "ru": "Сейчас четверть четвёртого." }
+      ]}
+    ]
+  },
+  {
+    "title": "Набор 20 · Распорядок дня",
+    "allowPeek": false,
+    "words": [
+      { "word": "上课", "pinyin": "shàngkè", "translation": "приходить на урок", "examples": [
+        { "zh": "我们八点上课。", "ru": "У нас урок в восемь." },
+        { "zh": "老师在上课。", "ru": "Учитель ведёт урок." }
+      ]},
+      { "word": "下课", "pinyin": "xiàkè", "translation": "заканчивать урок", "examples": [
+        { "zh": "我们四点下课。", "ru": "У нас занятия заканчиваются в четыре." },
+        { "zh": "下课了。", "ru": "Урок закончился." }
+      ]},
+      { "word": "上班", "pinyin": "shàngbān", "translation": "ходить на работу", "examples": [
+        { "zh": "我八点上班。", "ru": "Я начинаю работу в восемь." },
+        { "zh": "他每天上班。", "ru": "Он ходит на работу каждый день." }
+      ]},
+      { "word": "下班", "pinyin": "xiàbān", "translation": "уходить с работы", "examples": [
+        { "zh": "我六点下班。", "ru": "Я заканчиваю работу в шесть." },
+        { "zh": "他下班了吗？", "ru": "Он уже ушёл с работы?" }
+      ]},
+      { "word": "起床", "pinyin": "qǐchuáng", "translation": "вставать с кровати", "examples": [
+        { "zh": "我七点起床。", "ru": "Я встаю в семь." },
+        { "zh": "快起床！", "ru": "Вставай скорее!" }
+      ]},
+      { "word": "睡觉", "pinyin": "shuìjiào", "translation": "спать, идти спать", "examples": [
+        { "zh": "我十点睡觉。", "ru": "Я ложусь спать в десять." },
+        { "zh": "孩子在睡觉。", "ru": "Ребёнок спит." }
+      ]},
+      { "word": "吃饭", "pinyin": "chīfàn", "translation": "есть, кушать", "examples": [
+        { "zh": "我们去吃饭吧。", "ru": "Пойдём поедим." },
+        { "zh": "他正在吃饭。", "ru": "Он сейчас ест." }
+      ]},
+      { "word": "早饭", "pinyin": "zǎofàn", "translation": "завтрак", "examples": [
+        { "zh": "我吃早饭了。", "ru": "Я позавтракал." },
+        { "zh": "早饭吃什么？", "ru": "Что на завтрак?" }
+      ]},
+      { "word": "午饭", "pinyin": "wǔfàn", "translation": "обед", "examples": [
+        { "zh": "午饭吃什么？", "ru": "Что на обед?" },
+        { "zh": "我们一起吃午饭吧。", "ru": "Давай пообедаем вместе." }
+      ]},
+      { "word": "晚饭", "pinyin": "wǎnfàn", "translation": "ужин", "examples": [
+        { "zh": "我们一起吃晚饭吧。", "ru": "Давай поужинаем вместе." },
+        { "zh": "晚饭吃什么？", "ru": "Что на ужин?" }
+      ]},
+      { "word": "打扫房间", "pinyin": "dǎsǎo fángjiān", "translation": "убирать комнату", "examples": [
+        { "zh": "我在打扫房间。", "ru": "Я убираю комнату." },
+        { "zh": "周末我打扫房间。", "ru": "По выходным я убираю комнату." }
+      ]},
+      { "word": "洗衣服", "pinyin": "xǐ yīfu", "translation": "стирать одежду", "examples": [
+        { "zh": "我在洗衣服。", "ru": "Я стираю одежду." },
+        { "zh": "妈妈在洗衣服。", "ru": "Мама стирает одежду." }
+      ]},
+      { "word": "学习", "pinyin": "xuéxí", "translation": "учиться, изучать", "examples": [
+        { "zh": "我学习汉语。", "ru": "Я учу китайский." },
+        { "zh": "他在中国学习。", "ru": "Он учится в Китае." }
+      ]},
+      { "word": "做作业", "pinyin": "zuò zuòyè", "translation": "делать домашнюю работу", "examples": [
+        { "zh": "我在做作业。", "ru": "Я делаю домашнюю работу." },
+        { "zh": "你做完作业了吗？", "ru": "Ты сделал домашнюю работу?" }
+      ]},
+      { "word": "见朋友", "pinyin": "jiàn péngyou", "translation": "встречаться с друзьями", "examples": [
+        { "zh": "今天我去见朋友。", "ru": "Сегодня я иду встречаться с друзьями." },
+        { "zh": "周末我见朋友。", "ru": "По выходным я встречаюсь с друзьями." }
+      ]},
+      { "word": "休息", "pinyin": "xiūxi", "translation": "отдыхать, отдых", "examples": [
+        { "zh": "我要休息一下。", "ru": "Я хочу немного отдохнуть." },
+        { "zh": "请休息一会儿。", "ru": "Отдохните немного." }
+      ]},
+      { "word": "工作", "pinyin": "gōngzuò", "translation": "работать; работа", "examples": [
+        { "zh": "我在医院工作。", "ru": "Я работаю в больнице." },
+        { "zh": "他的工作很好。", "ru": "У него хорошая работа." }
+      ]},
+      { "word": "时间", "pinyin": "shíjiān", "translation": "время", "examples": [
+        { "zh": "我没有时间。", "ru": "У меня нет времени." },
+        { "zh": "时间过得很快。", "ru": "Время летит быстро." }
+      ]},
+      { "word": "有事儿", "pinyin": "yǒu shìr", "translation": "быть занятым, иметь дела", "examples": [
+        { "zh": "我今天有事儿。", "ru": "У меня сегодня дела." },
+        { "zh": "他有点儿事儿，先走了。", "ru": "У него дела, он ушёл пораньше." }
+      ]}
+    ]
+  },
+  {
+    "title": "Набор 21 · Распорядок дня (II)",
+    "allowPeek": false,
+    "words": [
+      { "word": "什么时候", "pinyin": "shénme shíhou", "translation": "когда", "examples": [
+        { "zh": "你什么时候来？", "ru": "Когда ты придёшь?" },
+        { "zh": "什么时候上课？", "ru": "Когда начинаются занятия?" }
+      ]},
+      { "word": "回", "pinyin": "huí", "translation": "возвращаться", "examples": [
+        { "zh": "我回家。", "ru": "Я иду домой." },
+        { "zh": "他回中国了。", "ru": "Он вернулся в Китай." }
+      ]},
+      { "word": "电影", "pinyin": "diànyǐng", "translation": "фильм, кино", "examples": [
+        { "zh": "我们去看电影吧。", "ru": "Пойдём в кино." },
+        { "zh": "这个电影很好看。", "ru": "Этот фильм очень хороший." }
+      ]},
+      { "word": "能", "pinyin": "néng", "translation": "мочь, быть в состоянии", "examples": [
+        { "zh": "你能来吗？", "ru": "Ты можешь прийти?" },
+        { "zh": "我不能去。", "ru": "Я не могу пойти." }
+      ]},
+      { "word": "留学生", "pinyin": "liúxuéshēng", "translation": "иностранный студент", "examples": [
+        { "zh": "他是留学生。", "ru": "Он иностранный студент." },
+        { "zh": "我们班有很多留学生。", "ru": "В нашем классе много иностранных студентов." }
+      ]},
+      { "word": "每天", "pinyin": "měitiān", "translation": "каждый день", "examples": [
+        { "zh": "我每天学习汉语。", "ru": "Я каждый день учу китайский." },
+        { "zh": "他每天上班。", "ru": "Он каждый день ходит на работу." }
+      ]},
+      { "word": "以后", "pinyin": "yǐhòu", "translation": "потом, после", "examples": [
+        { "zh": "以后我去中国。", "ru": "Потом я поеду в Китай." },
+        { "zh": "下课以后我回家。", "ru": "После уроков я иду домой." }
+      ]},
+      { "word": "以前", "pinyin": "yǐqián", "translation": "раньше, прежде", "examples": [
+        { "zh": "以前我不住在北京。", "ru": "Раньше я не жил в Пекине." },
+        { "zh": "三天以前他来了。", "ru": "Три дня назад он пришёл." }
+      ]},
+      { "word": "洗澡", "pinyin": "xǐzǎo", "translation": "принимать душ/ванну", "examples": [
+        { "zh": "我去洗澡。", "ru": "Я иду в душ." },
+        { "zh": "他每天晚上洗澡。", "ru": "Он каждый вечер принимает душ." }
+      ]},
+      { "word": "先", "pinyin": "xiān", "translation": "сначала; раньше", "examples": [
+        { "zh": "你先走吧。", "ru": "Иди первым." },
+        { "zh": "我先吃饭，然后工作。", "ru": "Сначала я поем, потом буду работать." }
+      ]},
+      { "word": "然后", "pinyin": "ránhòu", "translation": "затем, потом", "examples": [
+        { "zh": "我先吃饭，然后工作。", "ru": "Сначала я поем, потом буду работать." },
+        { "zh": "我们先上课，然后回家。", "ru": "Сначала у нас урок, потом идём домой." }
+      ]},
+      { "word": "教室", "pinyin": "jiàoshì", "translation": "аудитория, класс", "examples": [
+        { "zh": "我们的教室在三楼。", "ru": "Наша аудитория на третьем этаже." },
+        { "zh": "教室里有很多学生。", "ru": "В аудитории много студентов." }
+      ]},
+      { "word": "开始", "pinyin": "kāishǐ", "translation": "начинать, начинаться", "examples": [
+        { "zh": "上课开始了。", "ru": "Урок начался." },
+        { "zh": "我开始学习汉语。", "ru": "Я начал учить китайский." }
+      ]},
+      { "word": "常常", "pinyin": "chángcháng", "translation": "часто, обычно", "examples": [
+        { "zh": "我常常去图书馆。", "ru": "Я часто хожу в библиотеку." },
+        { "zh": "他常常迟到。", "ru": "Он часто опаздывает." }
+      ]},
+      { "word": "有时候", "pinyin": "yǒushíhou", "translation": "иногда", "examples": [
+        { "zh": "我有时候喝茶。", "ru": "Иногда я пью чай." },
+        { "zh": "他有时候来我家。", "ru": "Иногда он приходит ко мне домой." }
+      ]},
+      { "word": "图书馆", "pinyin": "túshūguǎn", "translation": "библиотека", "examples": [
+        { "zh": "我去图书馆看书。", "ru": "Я иду в библиотеку читать." },
+        { "zh": "图书馆在哪儿？", "ru": "Где библиотека?" }
+      ]},
+      { "word": "上网", "pinyin": "shàngwǎng", "translation": "заходить в интернет", "examples": [
+        { "zh": "我每天上网。", "ru": "Я каждый день сижу в интернете." },
+        { "zh": "他在上网看书。", "ru": "Он читает в интернете." }
+      ]},
+      { "word": "开门", "pinyin": "kāi mén", "translation": "открывать дверь", "examples": [
+        { "zh": "请开门。", "ru": "Откройте дверь, пожалуйста." },
+        { "zh": "商店几点开门？", "ru": "Во сколько открывается магазин?" }
+      ]},
+      { "word": "关门", "pinyin": "guān mén", "translation": "закрывать дверь", "examples": [
+        { "zh": "请关门。", "ru": "Закройте дверь, пожалуйста." },
+        { "zh": "商店已经关门了。", "ru": "Магазин уже закрыт." }
+      ]}
+    ]
+  },
 
+  {
+    "title": "Набор 22 · Университет",
+    "allowPeek": false,
+    "words": [
+      { "word": "专业", "pinyin": "zhuānyè", "translation": "специальность", "examples": [
+        { "zh": "我的专业是汉语。", "ru": "Моя специальность — китайский язык." },
+        { "zh": "你学什么专业？", "ru": "На какой специальности ты учишься?" }
+      ]},
+      { "word": "翻译", "pinyin": "fānyì", "translation": "перевод; переводить", "examples": [
+        { "zh": "我在翻译课文。", "ru": "Я перевожу текст." },
+        { "zh": "他是翻译。", "ru": "Он переводчик." }
+      ]},
+      { "word": "文学", "pinyin": "wénxué", "translation": "литература", "examples": [
+        { "zh": "我喜欢中国文学。", "ru": "Я люблю китайскую литературу." },
+        { "zh": "他在学文学。", "ru": "Он изучает литературу." }
+      ]},
+      { "word": "学院", "pinyin": "xuéyuàn", "translation": "институт, академия, колледж", "examples": [
+        { "zh": "我在外语学院学习。", "ru": "Я учусь в институте иностранных языков." },
+        { "zh": "这个学院很有名。", "ru": "Этот институт очень известный." }
+      ]},
+      { "word": "外语", "pinyin": "wàiyǔ", "translation": "иностранный язык", "examples": [
+        { "zh": "我学习外语。", "ru": "Я учу иностранный язык." },
+        { "zh": "他会说三门外语。", "ru": "Он говорит на трёх иностранных языках." }
+      ]},
+      { "word": "语言", "pinyin": "yǔyán", "translation": "язык", "examples": [
+        { "zh": "汉语是一种语言。", "ru": "Китайский — это язык." },
+        { "zh": "他会说三种语言。", "ru": "Он говорит на трёх языках." }
+      ]},
+      { "word": "外国", "pinyin": "wàiguó", "translation": "заграница, иностранное государство", "examples": [
+        { "zh": "他是外国人。", "ru": "Он иностранец." },
+        { "zh": "我想去外国学习。", "ru": "Я хочу учиться за границей." }
+      ]},
+      { "word": "系", "pinyin": "xì", "translation": "факультет; кафедра", "examples": [
+        { "zh": "我在中文系。", "ru": "Я на факультете китайского языка." },
+        { "zh": "这个系很大。", "ru": "Этот факультет большой." }
+      ]},
+      { "word": "年级", "pinyin": "niánjí", "translation": "курс; класс (год обучения)", "examples": [
+        { "zh": "我上二年级。", "ru": "Я на втором курсе." },
+        { "zh": "他是几年级的？", "ru": "На каком он курсе?" }
+      ]},
+      { "word": "新闻", "pinyin": "xīnwén", "translation": "новости", "examples": [
+        { "zh": "我在看新闻。", "ru": "Я смотрю новости." },
+        { "zh": "这是一个好消息。", "ru": "Это хорошая новость." }
+      ]},
+      { "word": "经济", "pinyin": "jīngjì", "translation": "экономика", "examples": [
+        { "zh": "中国经济很好。", "ru": "Экономика Китая хорошая." },
+        { "zh": "他在学经济。", "ru": "Он изучает экономику." }
+      ]},
+      { "word": "文化", "pinyin": "wénhuà", "translation": "культура", "examples": [
+        { "zh": "我喜欢中国文化。", "ru": "Я люблю китайскую культуру." },
+        { "zh": "文化很重要。", "ru": "Культура очень важна." }
+      ]},
+      { "word": "历史", "pinyin": "lìshǐ", "translation": "история", "examples": [
+        { "zh": "我在学中国历史。", "ru": "Я изучаю историю Китая." },
+        { "zh": "这个城市历史很长。", "ru": "У этого города длинная история." }
+      ]},
+      { "word": "美术", "pinyin": "měishù", "translation": "изобразительное искусство", "examples": [
+        { "zh": "我喜欢美术。", "ru": "Я люблю изобразительное искусство." },
+        { "zh": "他在学美术。", "ru": "Он изучает искусство." }
+      ]},
+      { "word": "医学", "pinyin": "yīxué", "translation": "медицина", "examples": [
+        { "zh": "他在学医学。", "ru": "Он изучает медицину." },
+        { "zh": "医学很重要。", "ru": "Медицина очень важна." }
+      ]},
+      { "word": "法律", "pinyin": "fǎlǜ", "translation": "закон, право", "examples": [
+        { "zh": "他在学法律。", "ru": "Он изучает право." },
+        { "zh": "我们要遵守法律。", "ru": "Мы должны соблюдать законы." }
+      ]}
+    ]
+  },
+  {
+    "title": "Набор 23 · Профессии",
+    "allowPeek": false,
+    "words": [
+      { "word": "家庭主妇", "pinyin": "jiātíng zhǔfù", "translation": "домохозяйка", "examples": [
+        { "zh": "她是家庭主妇。", "ru": "Она домохозяйка." },
+        { "zh": "我妈妈是家庭主妇。", "ru": "Моя мама домохозяйка." }
+      ]},
+      { "word": "工程师", "pinyin": "gōngchéngshī", "translation": "инженер", "examples": [
+        { "zh": "他是工程师。", "ru": "Он инженер." },
+        { "zh": "我想当工程师。", "ru": "Я хочу быть инженером." }
+      ]},
+      { "word": "售货员", "pinyin": "shòuhuòyuán", "translation": "продавец", "examples": [
+        { "zh": "她是售货员。", "ru": "Она продавец." },
+        { "zh": "售货员很忙。", "ru": "Продавец очень занят." }
+      ]},
+      { "word": "理发师", "pinyin": "lǐfàshī", "translation": "парикмахер", "examples": [
+        { "zh": "他是理发师。", "ru": "Он парикмахер." },
+        { "zh": "理发师在剪头发。", "ru": "Парикмахер стрижёт." }
+      ]},
+      { "word": "翻译家", "pinyin": "fānyìjiā", "translation": "переводчик (как профессия/деятель)", "examples": [
+        { "zh": "他是翻译家。", "ru": "Он переводчик." },
+        { "zh": "她是一个有名的翻译家。", "ru": "Она известный переводчик." }
+      ]},
+      { "word": "科学家", "pinyin": "kēxuéjiā", "translation": "учёный", "examples": [
+        { "zh": "他是科学家。", "ru": "Он учёный." },
+        { "zh": "科学家在研究这个问题。", "ru": "Учёный исследует этот вопрос." }
+      ]},
+      { "word": "运动员", "pinyin": "yùndòngyuán", "translation": "спортсмен", "examples": [
+        { "zh": "他是运动员。", "ru": "Он спортсмен." },
+        { "zh": "运动员每天训练。", "ru": "Спортсмен тренируется каждый день." }
+      ]},
+      { "word": "经济家", "pinyin": "jīngjìxuéjiā", "translation": "экономист", "examples": [
+        { "zh": "他是经济家。", "ru": "Он экономист." },
+        { "zh": "经济家在研究经济。", "ru": "Экономист изучает экономику." }
+      ]},
+      { "word": "政治家", "pinyin": "zhèngzhìjiā", "translation": "политик", "examples": [
+        { "zh": "他是政治家。", "ru": "Он политик." },
+        { "zh": "政治家在开会。", "ru": "Политик на совещании." }
+      ]},
+      { "word": "服务员", "pinyin": "fúwùyuán", "translation": "официант; обслуживающий персонал", "examples": [
+        { "zh": "服务员，请给我菜单。", "ru": "Официант, дайте мне меню." },
+        { "zh": "他是服务员。", "ru": "Он официант." }
+      ]},
+      { "word": "医生", "pinyin": "yīshēng", "translation": "врач", "examples": [
+        { "zh": "他是医生。", "ru": "Он врач." },
+        { "zh": "我想看医生。", "ru": "Я хочу к врачу." }
+      ]},
+      { "word": "商人", "pinyin": "shāngrén", "translation": "бизнесмен, торговец", "examples": [
+        { "zh": "他是商人。", "ru": "Он бизнесмен." },
+        { "zh": "这个商人很有钱。", "ru": "Этот бизнесмен очень богат." }
+      ]},
+      { "word": "工人", "pinyin": "gōngrén", "translation": "рабочий", "examples": [
+        { "zh": "他是工人。", "ru": "Он рабочий." },
+        { "zh": "工人在工作。", "ru": "Рабочие работают." }
+      ]},
+      { "word": "护士", "pinyin": "hùshi", "translation": "медсестра", "examples": [
+        { "zh": "她是护士。", "ru": "Она медсестра." },
+        { "zh": "护士在医院工作。", "ru": "Медсестра работает в больнице." }
+      ]},
+      { "word": "司机", "pinyin": "sījī", "translation": "водитель", "examples": [
+        { "zh": "他是司机。", "ru": "Он водитель." },
+        { "zh": "司机在开车。", "ru": "Водитель ведёт машину." }
+      ]},
+      { "word": "演员", "pinyin": "yǎnyuán", "translation": "актёр", "examples": [
+        { "zh": "他是演员。", "ru": "Он актёр." },
+        { "zh": "这个演员很有名。", "ru": "Этот актёр очень известный." }
+      ]},
+      { "word": "警察", "pinyin": "jǐngchá", "translation": "полицейский", "examples": [
+        { "zh": "他是警察。", "ru": "Он полицейский." },
+        { "zh": "警察在门口。", "ru": "Полицейский у входа." }
+      ]},
+      { "word": "律师", "pinyin": "lǜshī", "translation": "юрист, адвокат", "examples": [
+        { "zh": "他是律师。", "ru": "Он юрист." },
+        { "zh": "我想找律师。", "ru": "Я хочу найти юриста." }
+      ]},
+      { "word": "厨师", "pinyin": "chúshī", "translation": "повар", "examples": [
+        { "zh": "他是厨师。", "ru": "Он повар." },
+        { "zh": "厨师在做菜。", "ru": "Повар готовит." }
+      ]},
+      { "word": "程序员", "pinyin": "chéngxùyuán", "translation": "программист", "examples": [
+        { "zh": "他是程序员。", "ru": "Он программист." },
+        { "zh": "程序员在写程序。", "ru": "Программист пишет программу." }
+      ]},
+      { "word": "画家", "pinyin": "huàjiā", "translation": "художник", "examples": [
+        { "zh": "他是画家。", "ru": "Он художник." },
+        { "zh": "画家在画画。", "ru": "Художник рисует." }
+      ]},
+      { "word": "作家", "pinyin": "zuòjiā", "translation": "писатель", "examples": [
+        { "zh": "他是作家。", "ru": "Он писатель." },
+        { "zh": "这个作家很有名。", "ru": "Этот писатель очень известный." }
+      ]},
+      { "word": "老师", "pinyin": "lǎoshī", "translation": "учитель", "examples": [
+        { "zh": "他是我的老师。", "ru": "Он мой учитель." },
+        { "zh": "老师好！", "ru": "Здравствуйте, учитель!" }
+      ]},
+      { "word": "校长", "pinyin": "xiàozhǎng", "translation": "директор школы, ректор", "examples": [
+        { "zh": "他是校长。", "ru": "Он директор школы." },
+        { "zh": "校长在办公室。", "ru": "Директор в кабинете." }
+      ]},
+      { "word": "记者", "pinyin": "jìzhě", "translation": "журналист", "examples": [
+        { "zh": "她是记者。", "ru": "Она журналист." },
+        { "zh": "记者在问问题。", "ru": "Журналист задаёт вопросы." }
+      ]},
+      { "word": "经理", "pinyin": "jīnglǐ", "translation": "менеджер, управляющий", "examples": [
+        { "zh": "他是经理。", "ru": "Он менеджер." },
+        { "zh": "经理在开会。", "ru": "Менеджер на совещании." }
+      ]},
+      { "word": "歌手", "pinyin": "gēshǒu", "translation": "певец, певица", "examples": [
+        { "zh": "她是歌手。", "ru": "Она певица." },
+        { "zh": "这个歌手唱歌很好听。", "ru": "Этот певец очень красиво поёт." }
+      ]},
+      { "word": "秘书", "pinyin": "mìshū", "translation": "секретарь", "examples": [
+        { "zh": "她是秘书。", "ru": "Она секретарь." },
+        { "zh": "秘书在打电话。", "ru": "Секретарь звонит по телефону." }
+      ]},
+      { "word": "博主", "pinyin": "bózhǔ", "translation": "блогер", "examples": [
+        { "zh": "她是博主。", "ru": "Она блогер." },
+        { "zh": "这个博主很有名。", "ru": "Этот блогер очень известный." }
+      ]},
+      { "word": "老板", "pinyin": "lǎobǎn", "translation": "начальник, хозяин", "examples": [
+        { "zh": "他是老板。", "ru": "Он начальник." },
+        { "zh": "老板在办公室。", "ru": "Начальник в кабинете." }
+      ]}
+    ]
+  },
+  {
+    "title": "Набор 24 · Общая лексика урока 15",
+    "allowPeek": false,
+    "words": [
+      { "word": "非常", "pinyin": "fēicháng", "translation": "очень, крайне", "examples": [
+        { "zh": "这个菜非常好吃。", "ru": "Это блюдо очень вкусное." },
+        { "zh": "我非常高兴。", "ru": "Я очень рад." }
+      ]},
+      { "word": "最", "pinyin": "zuì", "translation": "самый", "examples": [
+        { "zh": "他最高。", "ru": "Он самый высокий." },
+        { "zh": "我最喜欢喝茶。", "ru": "Больше всего я люблю чай." }
+      ]},
+      { "word": "更", "pinyin": "gèng", "translation": "ещё более, более", "examples": [
+        { "zh": "今天更冷。", "ru": "Сегодня ещё холоднее." },
+        { "zh": "这个更好。", "ru": "Это ещё лучше." }
+      ]},
+      { "word": "介绍", "pinyin": "jièshào", "translation": "знакомить; представлять", "examples": [
+        { "zh": "请介绍一下自己。", "ru": "Представьтесь, пожалуйста." },
+        { "zh": "我给你介绍一个朋友。", "ru": "Я познакомлю тебя с другом." }
+      ]},
+      { "word": "退休了", "pinyin": "tuìxiū le", "translation": "вышел на пенсию", "examples": [
+        { "zh": "我爸爸退休了。", "ru": "Мой папа вышел на пенсию." },
+        { "zh": "他已经退休了。", "ru": "Он уже вышел на пенсию." }
+      ]},
+      { "word": "当", "pinyin": "dāng", "translation": "быть, работать кем-либо; становиться", "examples": [
+        { "zh": "我想当老师。", "ru": "Я хочу стать учителем." },
+        { "zh": "他当医生了。", "ru": "Он стал врачом." }
+      ]},
+      { "word": "以前", "pinyin": "yǐqián", "translation": "раньше, прежде", "examples": [
+        { "zh": "以前我不住在北京。", "ru": "Раньше я не жил в Пекине." },
+        { "zh": "三天以前他来了。", "ru": "Три дня назад он пришёл." }
+      ]},
+      { "word": "以后", "pinyin": "yǐhòu", "translation": "потом, после", "examples": [
+        { "zh": "以后我去中国。", "ru": "Потом я поеду в Китай." },
+        { "zh": "下课以后我回家。", "ru": "После уроков я иду домой." }
+      ]},
+      { "word": "的时候", "pinyin": "de shíhou", "translation": "когда, в то время как", "examples": [
+        { "zh": "我小的时候喜欢看书。", "ru": "В детстве я любил читать." },
+        { "zh": "吃饭的时候别说话。", "ru": "Не разговаривай во время еды." }
+      ]},
+      { "word": "重要", "pinyin": "zhòngyào", "translation": "важный", "examples": [
+        { "zh": "这件事很重要。", "ru": "Это дело очень важное." },
+        { "zh": "学习很重要。", "ru": "Учиться очень важно." }
+      ]},
+      { "word": "有意思", "pinyin": "yǒu yìsi", "translation": "интересный", "examples": [
+        { "zh": "这本书很有意思。", "ru": "Эта книга очень интересная." },
+        { "zh": "学汉语很有意思。", "ru": "Учить китайский интересно." }
+      ]},
+      { "word": "长大", "pinyin": "zhǎngdà", "translation": "вырасти, повзрослеть", "examples": [
+        { "zh": "我长大了。", "ru": "Я вырос." },
+        { "zh": "你长大想做什么？", "ru": "Кем ты хочешь стать, когда вырастешь?" }
+      ]},
+      { "word": "美丽", "pinyin": "měilì", "translation": "красивый, прекрасный", "examples": [
+        { "zh": "这个城市很美丽。", "ru": "Этот город очень красивый." },
+        { "zh": "她很美丽。", "ru": "Она очень красивая." }
+      ]},
+      { "word": "真", "pinyin": "zhēn", "translation": "настоящий, истинный; действительно, правда", "examples": [
+        { "zh": "这个真贵！", "ru": "Это действительно дорого!" },
+        { "zh": "我真喜欢这本书。", "ru": "Мне действительно нравится эта книга." }
+      ]},
+    ]
+  },
+  {
+    "title": "Набор 25 · Места",
+    "allowPeek": false,
+    "words": [
+      { "word": "学校", "pinyin": "xuéxiào", "translation": "школа", "examples": [
+        { "zh": "我去学校。", "ru": "Я иду в школу." },
+        { "zh": "我们学校很大。", "ru": "Наша школа большая." }
+      ]},
+      { "word": "大学", "pinyin": "dàxué", "translation": "университет", "examples": [
+        { "zh": "我在大学学习。", "ru": "Я учусь в университете." },
+        { "zh": "这个大学很好。", "ru": "Этот университет хороший." }
+      ]},
+      { "word": "医院", "pinyin": "yīyuàn", "translation": "больница", "examples": [
+        { "zh": "医院在哪儿？", "ru": "Где больница?" },
+        { "zh": "他在医院工作。", "ru": "Он работает в больнице." }
+      ]},
+      { "word": "超市", "pinyin": "chāoshì", "translation": "супермаркет", "examples": [
+        { "zh": "我去超市买东西。", "ru": "Я иду в супермаркет за покупками." },
+        { "zh": "超市在学校旁边。", "ru": "Супермаркет рядом со школой." }
+      ]},
+      { "word": "商店", "pinyin": "shāngdiàn", "translation": "магазин", "examples": [
+        { "zh": "商店在哪儿？", "ru": "Где магазин?" },
+        { "zh": "这个商店很大。", "ru": "Этот магазин большой." }
+      ]},
+      { "word": "公司", "pinyin": "gōngsī", "translation": "компания, фирма", "examples": [
+        { "zh": "他在公司工作。", "ru": "Он работает в компании." },
+        { "zh": "这个公司很有名。", "ru": "Эта компания очень известная." }
+      ]},
+      { "word": "银行", "pinyin": "yínháng", "translation": "банк", "examples": [
+        { "zh": "银行在哪儿？", "ru": "Где банк?" },
+        { "zh": "我去银行取钱。", "ru": "Я иду в банк снять деньги." }
+      ]},
+      { "word": "饭店", "pinyin": "fàndiàn", "translation": "ресторан, кафе", "examples": [
+        { "zh": "我们去饭店吃饭。", "ru": "Пойдём поедим в ресторан." },
+        { "zh": "这个饭店很有名。", "ru": "Этот ресторан очень известный." }
+      ]},
+      { "word": "宾馆", "pinyin": "bīnguǎn", "translation": "гостиница", "examples": [
+        { "zh": "我住在宾馆。", "ru": "Я живу в гостинице." },
+        { "zh": "宾馆在车站旁边。", "ru": "Гостиница рядом с вокзалом." }
+      ]},
+      { "word": "法院", "pinyin": "fǎyuàn", "translation": "суд", "examples": [
+        { "zh": "法院在哪儿？", "ru": "Где суд?" },
+        { "zh": "他去法院了。", "ru": "Он пошёл в суд." }
+      ]},
+      { "word": "警察局", "pinyin": "jǐngchájú", "translation": "полицейский участок", "examples": [
+        { "zh": "警察局在那边。", "ru": "Полицейский участок там." },
+        { "zh": "我朋友在警察局工作。", "ru": "Мой друг работает в полиции." }
+      ]},
+      { "word": "出版社", "pinyin": "chūbǎnshè", "translation": "издательство", "examples": [
+        { "zh": "这家出版社很有名。", "ru": "Это издательство очень известное." },
+        { "zh": "我在出版社工作。", "ru": "Я работаю в издательстве." }
+      ]},
+      { "word": "工厂", "pinyin": "gōngchǎng", "translation": "завод, фабрика", "examples": [
+        { "zh": "他在工厂工作。", "ru": "Он работает на заводе." },
+        { "zh": "这个工厂很大。", "ru": "Этот завод большой." }
+      ]},
+      { "word": "理发店", "pinyin": "lǐfàdiàn", "translation": "парикмахерская", "examples": [
+        { "zh": "理发店在哪儿？", "ru": "Где парикмахерская?" },
+        { "zh": "我去理发店剪头发。", "ru": "Я иду в парикмахерскую стричься." }
+      ]},
+      { "word": "汽车工厂", "pinyin": "qìchē gōngchǎng", "translation": "автомобильный завод", "examples": [
+        { "zh": "这个汽车工厂很大。", "ru": "Этот автомобильный завод большой." },
+        { "zh": "他在汽车工厂工作。", "ru": "Он работает на автомобильном заводе." }
+      ]},
+      { "word": "剧院", "pinyin": "jùyuàn", "translation": "театр", "examples": [
+        { "zh": "我们去剧院看戏。", "ru": "Пойдём в театр на спектакль." },
+        { "zh": "剧院很漂亮。", "ru": "Театр очень красивый." }
+      ]}
+    ]
+  }
 
 
 ];
@@ -2070,6 +2738,7 @@
 
   // ========== DOM ==========
   const menuScreen = document.getElementById('menuScreen');
+  const setsGrid = document.getElementById('setsGrid');
   const modeScreen = document.getElementById('modeScreen');
   const trainScreen = document.getElementById('trainScreen');
   const setTitle = document.getElementById('setTitle');
@@ -2236,6 +2905,7 @@
     card.style.opacity = '0';
 
     setTimeout(() => {
+      // Убираем текущую карточку из массива и увеличиваем счётчик
       currentRoundCards.shift();
       processedCount++;
 
@@ -2244,6 +2914,7 @@
       void card.offsetWidth;
 
       if (currentRoundCards.length === 0) {
+        // Это была последняя карточка — сразу обновляем UI и показываем финиш
         cardInner.style.transition = 'none';
         card.classList.remove('flipped');
         void cardInner.offsetWidth;
@@ -2257,6 +2928,7 @@
         return;
       }
 
+      // Если ещё есть карточки — показываем следующую
       fillCardContent(currentRoundCards[0]);
 
       cardInner.style.transition = 'none';
@@ -2368,7 +3040,6 @@
     startRoundWithCards([...WORDS]);
   }
 
-  // ========== ВЫБОР НАБОРА ==========
   function selectSet(index) {
     currentSetIndex = index;
     const set = SETS[index];
@@ -2380,7 +3051,6 @@
     modeScreen.classList.remove('hidden');
   }
 
-  // ========== ВЫБОР РЕЖИМА ==========
   function startWithMode(withPeek) {
     allowPeek = withPeek;
     const set = SETS[currentSetIndex];
@@ -2400,12 +3070,6 @@
     trainScreen.classList.add('hidden');
     modeScreen.classList.add('hidden');
     menuScreen.classList.remove('hidden');
-  }
-
-  function backToMode() {
-    trainScreen.classList.add('hidden');
-    menuScreen.classList.add('hidden');
-    modeScreen.classList.remove('hidden');
   }
 
   // ========== КНОПКА «ПОКАЗАТЬ ПИНЬИНЬ» ==========
@@ -2536,42 +3200,50 @@
     menuScreen.classList.remove('hidden');
   });
 
-  // ========== РЕНДЕР МЕНЮ НАБОРОВ ==========
+  // ========== РЕНДЕР ГРИД-МЕНЮ ==========
   function renderMenu() {
-    // Удаляем все кнопки, кроме заголовка и подзаголовка
-    const existingButtons = menuScreen.querySelectorAll('.set-btn');
-    existingButtons.forEach(b => b.remove());
+    setsGrid.innerHTML = '';
 
     SETS.forEach((set, index) => {
       const btn = document.createElement('button');
       btn.className = 'set-btn';
-      btn.dataset.set = index;
+
+      // Верхняя строка: номер + счётчик
+      const top = document.createElement('div');
+      top.className = 'set-top';
 
       const num = document.createElement('div');
       num.className = 'set-num';
       num.textContent = index + 1;
 
-      const info = document.createElement('div');
-      info.className = 'set-info';
-      const name = document.createElement('div');
-      name.className = 'set-name';
-      name.textContent = set.title.replace(/^Набор \d+ · /, '');
-      const desc = document.createElement('div');
-      desc.className = 'set-desc';
-      desc.textContent = set.words.slice(0, 5).map(w => w.word).join(', ') + (set.words.length > 5 ? '...' : '');
-      info.appendChild(name);
-      info.appendChild(desc);
-
       const count = document.createElement('div');
       count.className = 'set-count';
-      count.textContent = set.words.length;
+      count.textContent = set.words.length + ' слов';
 
-      btn.appendChild(num);
-      btn.appendChild(info);
-      btn.appendChild(count);
+      top.appendChild(num);
+      top.appendChild(count);
+
+      // Информационный блок
+      const infoBlock = document.createElement('div');
+      infoBlock.className = 'set-info-block';
+
+      const name = document.createElement('div');
+      name.className = 'set-name';
+      name.textContent = set.title;
+
+      const desc = document.createElement('div');
+      desc.className = 'set-desc';
+      desc.textContent = set.words.slice(0, 4).map(w => w.word).join(', ') +
+        (set.words.length > 4 ? '...' : '');
+
+      infoBlock.appendChild(name);
+      infoBlock.appendChild(desc);
+
+      btn.appendChild(top);
+      btn.appendChild(infoBlock);
 
       btn.addEventListener('click', () => selectSet(index));
-      menuScreen.appendChild(btn);
+      setsGrid.appendChild(btn);
     });
   }
 
