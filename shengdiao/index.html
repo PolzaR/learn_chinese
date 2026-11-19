@@ -28,7 +28,6 @@
     color:#fff;overflow:hidden;user-select:none;
   }
 
-  /* Анимированный фон */
   #bg-fx{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;}
   #bg-fx .blob{
     position:absolute;border-radius:50%;filter:blur(80px);opacity:.45;
@@ -51,7 +50,6 @@
     box-shadow:0 0 60px rgba(0,0,0,.6);
   }
 
-  /* HUD */
   header{
     display:flex;justify-content:space-between;align-items:center;
     padding:12px 18px;
@@ -64,7 +62,6 @@
   header .stat b#combo{color:#ffd700;text-shadow:0 0 12px rgba(255,215,0,.6);}
   header .stat b#lives{color:#ff5a5a;text-shadow:0 0 12px rgba(255,90,90,.5);}
 
-  /* Аудио контролы в хедере */
   .audio-controls {
     display: flex;
     align-items: center;
@@ -85,9 +82,7 @@
     cursor: pointer;
     transition: all 0.2s;
   }
-  .bgm-btn:hover {
-    background: rgba(255,255,255,0.2);
-  }
+  .bgm-btn:hover { background: rgba(255,255,255,0.2); }
   .volume-slider {
     -webkit-appearance: none;
     width: 60px;
@@ -108,10 +103,8 @@
   }
 
   #game-container{display:flex;flex:1;overflow:hidden;position:relative;}
-
   #playfield{position:relative;flex:1;overflow:hidden;border-right:1px solid var(--glass-brd);}
 
-  /* История */
   #history-sidebar{
     width:118px;background:rgba(0,0,0,.25);
     display:flex;flex-direction:column;overflow:hidden;
@@ -134,7 +127,6 @@
   .history-item .py{font-size:12px;color:#7ee0a0;font-weight:700;margin-top:2px;}
   @keyframes slideIn{from{transform:translateX(40px);opacity:0;}to{transform:translateX(0);opacity:1;}}
 
-  /* Карточки */
   .tile{
     position:absolute;left:50%;transform:translateX(-50%);
     width:240px;padding:16px 20px 20px;
@@ -185,7 +177,6 @@
   }
   #feedback.show{opacity:1;transform:translateX(-50%) scale(1);}
 
-  /* Кнопки тонов */
   #controls{
     display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:14px;
     background:rgba(10,10,30,.7);
@@ -206,7 +197,6 @@
   #controls button.t4{background:linear-gradient(135deg,#ef4444,#dc2626);}
   #controls button.t5{background:linear-gradient(135deg,#6b7280,#4b5563);font-size:15px;}
 
-  /* Оверлеи */
   .overlay{
     position:absolute;inset:0;
     background:rgba(8,6,26,.92);
@@ -239,7 +229,6 @@
   .btn.danger{background:linear-gradient(135deg,#ef4444,#b91c1c);font-size:14px;padding:12px 20px;}
   .btn.ghost{background:transparent;border:1px solid var(--glass-brd);font-size:13px;padding:10px 18px;max-width:200px;color:var(--muted);}
 
-  /* Списки наборов */
   .sets-list{display:flex;flex-direction:column;gap:10px;width:100%;max-width:340px;margin-bottom:6px;}
   .set-item{
     background:var(--glass);border:1px solid var(--glass-brd);
@@ -255,7 +244,6 @@
     border-radius:8px;padding:4px 9px;cursor:pointer;font-weight:900;
   }
 
-  /* Экран режимов */
   .modes-grid{display:flex;flex-direction:column;gap:10px;width:100%;max-width:340px;}
   .mode-card{
     display:flex;align-items:center;gap:14px;
@@ -272,11 +260,6 @@
   .mode-card.classic .icon{background:rgba(245,158,11,.2);}
   .mode-card.hardcore .icon{background:rgba(239,68,68,.2);}
 
-  /* Редактор */
-  #editor-overlay{align-items:stretch;justify-content:flex-start;text-align:left;}
-  .editor-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
-  .editor-header h3{margin:0;font-size:20px;}
-
   .add-form{
     display:flex;flex-direction:column;gap:10px;
     background:rgba(0,0,0,.25);padding:16px;border-radius:16px;
@@ -289,9 +272,7 @@
   }
   .add-form textarea{font-family:monospace;font-size:13px;resize:vertical;min-height:120px;}
   .add-form textarea:focus,.add-form input:focus{border-color:var(--accent);}
-  .add-form .hint{font-size:12px;color:var(--muted);margin-bottom:-4px;}
 
-  /* Ряд кнопок формы: кнопки делят ширину поровну */
   .form-row{
     display:flex;
     gap:10px;
@@ -326,7 +307,6 @@
     <div class="stat">连击 <b id="combo">0</b></div>
     <div class="stat">生命 <b id="lives">3</b></div>
     
-    <!-- Аудио контролы -->
     <div class="audio-controls">
       <button id="bgm-toggle" class="bgm-btn" title="Вкл/Выкл музыку">🔇</button>
       <input type="range" id="bgm-volume" min="0" max="1" step="0.05" value="0.5" class="volume-slider" title="Громкость">
@@ -337,12 +317,10 @@
     <div id="playfield">
       <div id="feedback"></div>
 
-      <!-- ЭКРАН 1: Выбор набора -->
       <div id="set-select-screen" class="overlay">
         <h2>Chinese Tone Tetris</h2>
         <div style="font-size:14px;color:var(--muted);">Шаг 1 · Выберите набор слов</div>
 
-        <!-- Блок создания набора — СВЕРХУ -->
         <button id="create-set-btn" class="btn secondary" style="margin:4px 0 8px;">+ Создать свой набор</button>
 
         <div id="create-set-form" class="add-form hidden" style="width:100%;max-width:340px;margin-top:8px;">
@@ -354,11 +332,9 @@
           </div>
         </div>
 
-        <!-- Список существующих наборов — НИЖЕ -->
         <div class="sets-list" id="sets-list"></div>
       </div>
 
-      <!-- ЭКРАН 2: Выбор режима -->
       <div id="mode-select-screen" class="overlay hidden">
         <h2>Выберите режим</h2>
         <div id="mode-set-label" style="font-size:14px;color:var(--muted);margin-bottom:6px;"></div>
@@ -385,14 +361,22 @@
         <button id="back-to-sets-btn" class="btn ghost" style="margin-top:10px;">← Назад к наборам</button>
       </div>
 
-      <!-- Game Over -->
       <div id="gameover-overlay" class="overlay hidden">
-        <h2>游戏结束</h2>
+        <h2>游戏结束 / Игра окончена</h2>
         <p id="gameover-text">分数: 0</p>
         <div style="display:flex;flex-direction:column;gap:12px;width:100%;align-items:center;margin-top:20px;">
           <button id="restartBtn" class="btn primary">再来一次 / Ещё раз</button>
           <button id="change-mode-btn" class="btn secondary">Сменить режим</button>
           <button id="back-to-menu-btn" class="btn ghost">В меню</button>
+        </div>
+      </div>
+
+      <div id="win-overlay" class="overlay hidden">
+        <h2>Победа! 🎉</h2>
+        <p id="win-text">Вы собрали все слова из набора!</p>
+        <div style="display:flex;flex-direction:column;gap:12px;width:100%;align-items:center;margin-top:20px;">
+          <button id="win-restart-btn" class="btn primary">Играть снова</button>
+          <button id="win-change-set-btn" class="btn secondary">Другой набор</button>
         </div>
       </div>
     </div>
@@ -412,7 +396,6 @@
   </div>
 </div>
 
-<!-- Аудио тег -->
 <audio id="bgm-audio" loop></audio>
 
 <script src="../cards/custom_study_plans/sets.js"></script>
@@ -422,12 +405,10 @@ window.BUILTIN_SETS = window.BUILTIN_SETS || [];
 (function () {
   "use strict";
 
-  // ===== ФОНОВАЯ МУЗЫКА (BGM) =====
   const bgmAudio = document.getElementById("bgm-audio");
   const bgmToggleBtn = document.getElementById("bgm-toggle");
   const bgmVolumeSlider = document.getElementById("bgm-volume");
 
-  // Путь к аудио файлу (положите bgm.mp3 рядом с index.html)
   bgmAudio.src = "bg_music.mp3"; 
 
   let savedVolume = parseFloat(localStorage.getItem("bgm_volume"));
@@ -450,7 +431,7 @@ window.BUILTIN_SETS = window.BUILTIN_SETS || [];
 
   function tryPlayBgm() {
     if (bgmEnabled && bgmAudio.paused && bgmAudio.src) {
-      bgmAudio.play().catch(e => { /* автоплей заблокирован */ });
+      bgmAudio.play().catch(e => {});
     }
   }
 
@@ -478,7 +459,6 @@ window.BUILTIN_SETS = window.BUILTIN_SETS || [];
     }
   });
 
-  // ===== АУДИО ЭФФЕКТЫ =====
   const AudioCtx = window.AudioContext || window.webkitAudioContext;
   let audioCtx = null;
   function initAudio(){ if(!audioCtx) audioCtx = new AudioCtx(); }
@@ -513,70 +493,83 @@ window.BUILTIN_SETS = window.BUILTIN_SETS || [];
     tryPlayBgm();
   }, { once: true });
 
-  // ===== ПАРСЕР ПИНЬИНЯ =====
-  function splitPinyinSyllables(str) {
-    if (/\s/.test(str.trim())) {
-      return str.trim().split(/\s+/);
-    }
-    const vowels = "aāáǎàeēéěèiīíǐìoōóǒòuūúǔùüǖǘǚǜv";
-    const isVowel = c => vowels.includes(c);
-    const syllables = [];
-    let cur = "";
-    for (let i = 0; i < str.length; i++) {
-      const c = str[i];
-      cur += c;
-      if (isVowel(c)) {
-        const next = str[i + 1];
-        const next2 = str[i + 2];
-        if (next && !isVowel(next) && next !== " " &&
-            next2 && isVowel(next2)) {
-          syllables.push(cur);
-          cur = "";
-        }
-      }
-    }
-    if (cur) syllables.push(cur);
-    return syllables.filter(Boolean);
-  }
+  const PINYIN_SYLLABLES = new Set([
+    "a","ai","an","ang","ao",
+    "ba","bai","ban","bang","bao","bei","ben","beng","bi","bian","biao","bie","bin","bing","bo","bu",
+    "ca","cai","can","cang","cao","ce","cen","ceng","cha","chai","chan","chang","chao","che","chen","cheng","chi","chong","chou","chu","chua","chuai","chuan","chuang","chui","chun","chuo","ci","cong","cou","cu","cuan","cui","cun","cuo",
+    "da","dai","dan","dang","dao","de","dei","den","deng","di","dian","diao","die","ding","diu","dong","dou","du","duan","dui","dun","duo",
+    "e","ei","en","eng","er",
+    "fa","fan","fang","fei","fen","feng","fo","fou","fu",
+    "ga","gai","gan","gang","gao","ge","gei","gen","geng","gong","gou","gu","gua","guai","guan","guang","gui","gun","guo",
+    "ha","hai","han","hang","hao","he","hei","hen","heng","hong","hou","hu","hua","huai","huan","huang","hui","hun","huo",
+    "ji","jia","jian","jiang","jiao","jie","jin","jing","jiong","jiu","ju","juan","jue","jun",
+    "ka","kai","kan","kang","kao","ke","ken","keng","kong","kou","ku","kua","kuai","kuan","kuang","kui","kun","kuo",
+    "la","lai","lan","lang","lao","le","lei","leng","li","lia","lian","liang","liao","lie","lin","ling","liu","lo","long","lou","lu","luan","lun","luo",
+    "lv","lve","lü","lüe",
+    "ma","mai","man","mang","mao","me","mei","men","meng","mi","mian","miao","mie","min","ming","miu","mo","mou","mu",
+    "na","nai","nan","nang","nao","ne","nei","nen","neng","ni","nian","niang","niao","nie","nin","ning","niu","nong","nou","nu","nuan","nuo",
+    "nv","nve","nü","nüe",
+    "o","ou",
+    "pa","pai","pan","pang","pao","pei","pen","peng","pi","pian","piao","pie","pin","ping","po","pou","pu",
+    "qi","qia","qian","qiang","qiao","qie","qin","qing","qiong","qiu","qu","quan","que","qun",
+    "ran","rang","rao","re","ren","reng","ri","rong","rou","ru","rua","ruan","rui","run","ruo",
+    "sa","sai","san","sang","sao","se","sen","seng","sha","shai","shan","shang","shao","she","shen","sheng","shi","shou","shu","shua","shuai","shuan","shuang","shui","shun","shuo","si","song","sou","su","suan","sui","sun","suo",
+    "ta","tai","tan","tang","tao","te","teng","ti","tian","tiao","tie","ting","tong","tou","tu","tuan","tui","tun","tuo",
+    "wa","wai","wan","wang","wei","wen","weng","wo","wu",
+    "xi","xia","xian","xiang","xiao","xie","xin","xing","xiong","xiu","xu","xuan","xue","xun",
+    "ya","yan","yang","yao","ye","yi","yin","ying","yo","yong","you","yu","yuan","yue","yun",
+    "za","zai","zan","zang","zao","ze","zei","zen","zeng","zha","zhai","zhan","zhang","zhao","zhe","zhen","zheng","zhi","zhong","zhou","zhu","zhua","zhuai","zhuan","zhuang","zhui","zhun","zhuo","zi","zong","zou","zu","zuan","zui","zun","zuo"
+  ]);
+
+  const TONE_MARKS = {
+    'ā': ['a', 1], 'á': ['a', 2], 'ǎ': ['a', 3], 'à': ['a', 4],
+    'ē': ['e', 1], 'é': ['e', 2], 'ě': ['e', 3], 'è': ['e', 4],
+    'ī': ['i', 1], 'í': ['i', 2], 'ǐ': ['i', 3], 'ì': ['i', 4],
+    'ō': ['o', 1], 'ó': ['o', 2], 'ǒ': ['o', 3], 'ò': ['o', 4],
+    'ū': ['u', 1], 'ú': ['u', 2], 'ǔ': ['u', 3], 'ù': ['u', 4],
+    'ǖ': ['ü', 1], 'ǘ': ['ü', 2], 'ǚ': ['ü', 3], 'ǜ': ['ü', 4]
+  };
 
   function extractTones(pinyinWithTones) {
-    const toneMarks = {
-      'ā': ['a', 1], 'á': ['a', 2], 'ǎ': ['a', 3], 'à': ['a', 4],
-      'ē': ['e', 1], 'é': ['e', 2], 'ě': ['e', 3], 'è': ['e', 4],
-      'ī': ['i', 1], 'í': ['i', 2], 'ǐ': ['i', 3], 'ì': ['i', 4],
-      'ō': ['o', 1], 'ó': ['o', 2], 'ǒ': ['o', 3], 'ò': ['o', 4],
-      'ū': ['u', 1], 'ú': ['u', 2], 'ǔ': ['u', 3], 'ù': ['u', 4],
-      'ǖ': ['ü', 1], 'ǘ': ['ü', 2], 'ǚ': ['ü', 3], 'ǜ': ['ü', 4]
-    };
+    if (!pinyinWithTones || typeof pinyinWithTones !== 'string') {
+      return { basePinyin: "?", tones: [5] };
+    }
+    const cleanStr = pinyinWithTones.trim().toLowerCase().replace(/\s+/g, '');
+    if (!cleanStr) return { basePinyin: "?", tones: [5] };
 
-    const syllables = splitPinyinSyllables(pinyinWithTones);
-    const tones = [];
-    const bases = [];
+    const parsedSyllables = [];
+    let i = 0;
+    while (i < cleanStr.length) {
+      let matched = false;
+      for (let len = 6; len >= 1; len--) {
+        let chunk = cleanStr.slice(i, i + len);
+        let baseChunk = "";
+        for (let ch of chunk) baseChunk += (TONE_MARKS[ch] ? TONE_MARKS[ch][0] : ch);
+        let checkChunk = baseChunk;
+        if (checkChunk === "lv") checkChunk = "lü";
+        if (checkChunk === "nv") checkChunk = "nü";
 
-    for (const syl of syllables) {
-      let tone = 0;
-      let base = "";
-      for (const ch of syl) {
-        if (toneMarks[ch]) {
-          tone = toneMarks[ch][1];
-          base += toneMarks[ch][0];
-        } else {
-          base += ch;
+        if (PINYIN_SYLLABLES.has(checkChunk) || PINYIN_SYLLABLES.has(baseChunk)) {
+          let tone = 0;
+          for (let ch of chunk) {
+            if (TONE_MARKS[ch]) { tone = TONE_MARKS[ch][1]; break; }
+          }
+          parsedSyllables.push({ base: checkChunk, tone: tone || 5 });
+          i += len;
+          matched = true;
+          break;
         }
       }
-      tones.push(tone || 5);
-      bases.push(base);
+      if (!matched) i++;
     }
-
-    return { basePinyin: bases.join(" "), tones };
+    if (parsedSyllables.length === 0) return { basePinyin: cleanStr, tones: [5] };
+    return { basePinyin: parsedSyllables.map(s => s.base).join(" "), tones: parsedSyllables.map(s => s.tone) };
   }
 
-  // ===== НАБОРЫ =====
   let customSets=[];
   try{ const s=localStorage.getItem("chinese_tone_sets"); if(s) customSets=JSON.parse(s);}catch(e){}
   function saveCustomSets(){ localStorage.setItem("chinese_tone_sets", JSON.stringify(customSets)); }
 
-  // ===== РЕЖИМЫ =====
   const MODES = {
     chill:    { label:"Chill",    fallSpeed: 14, spawnInterval: 2400, lives: Infinity },
     slow:     { label:"Slow",     fallSpeed: 18, spawnInterval: 2000, lives: 3 },
@@ -584,11 +577,11 @@ window.BUILTIN_SETS = window.BUILTIN_SETS || [];
     hardcore: { label:"Hardcore", fallSpeed: 44, spawnInterval: 950,  lives: 3 }
   };
 
-  // ===== СОСТОЯНИЕ =====
   const state = {
     running:false, score:0, combo:0, lives:3,
     tiles:[], lastSpawn:0, lastTs:0, rafId:null,
-    fallSpeed:25, spawnInterval:1500, maxLives:3, historyCount:0
+    fallSpeed:25, spawnInterval:1500, maxLives:3, historyCount:0,
+    totalWordsInSet: 0, wordsCollected: 0
   };
   let currentWords=[];
   let wordQueue=[];
@@ -602,21 +595,17 @@ window.BUILTIN_SETS = window.BUILTIN_SETS || [];
   const setsListEl=$("sets-list"), createSetBtn=$("create-set-btn"), createSetForm=$("create-set-form");
   const saveSetBtn=$("save-set-btn"), cancelSetBtn=$("cancel-set-btn");
   const modeSetLabel=$("mode-set-label");
+  const winOverlay = $("win-overlay"), winText = $("win-text");
 
-  // ===== РЕНДЕР НАБОРОВ =====
   function renderSets(){
     setsListEl.innerHTML="";
     const builtin = window.BUILTIN_SETS || [];
-    
-    // ВАЖНО: Кастомные наборы идут ПЕРВЫМИ, затем встроенные
     const all = [...customSets, ...builtin];
-    
     if(all.length===0){
       setsListEl.innerHTML="<div style='color:#8b90b8;padding:10px;'>Нет наборов. Создайте свой!</div>";
       return;
     }
     all.forEach((set,index)=>{
-      // Так как кастомные идут первыми, индекс кастомного набора — это просто index
       const isCustom = index < customSets.length;
       const realIndex = isCustom ? index : -1;
 
@@ -644,20 +633,20 @@ window.BUILTIN_SETS = window.BUILTIN_SETS || [];
     });
   }
 
-  // ===== ПЕРЕХОДЫ МЕЖДУ ЭКРАНАМИ =====
   function showSetScreen(){
     setScreen.classList.remove("hidden");
     modeScreen.classList.add("hidden");
     gameoverOverlay.classList.add("hidden");
+    winOverlay.classList.add("hidden");
   }
   function showModeScreen(){
     setScreen.classList.add("hidden");
     modeScreen.classList.remove("hidden");
     gameoverOverlay.classList.add("hidden");
+    winOverlay.classList.add("hidden");
     modeSetLabel.textContent = selectedSet ? `Набор: ${selectedSet.title}` : "";
   }
 
-  // ===== ФОРМА СОЗДАНИЯ НАБОРА =====
   createSetBtn.addEventListener("click", ()=>{
     createSetForm.classList.remove("hidden");
     createSetBtn.classList.add("hidden");
@@ -682,7 +671,6 @@ window.BUILTIN_SETS = window.BUILTIN_SETS || [];
     createSetForm.classList.add("hidden"); createSetBtn.classList.remove("hidden");
   });
 
-  // ===== ВЫБОР РЕЖИМА =====
   modeScreen.querySelectorAll(".mode-card").forEach(card=>{
     card.addEventListener("click", ()=>{
       selectedModeKey = card.dataset.mode;
@@ -692,18 +680,32 @@ window.BUILTIN_SETS = window.BUILTIN_SETS || [];
   });
   $("back-to-sets-btn").addEventListener("click", showSetScreen);
 
-  // ===== ИГРОВАЯ ЛОГИКА =====
   function canSpawn(){
-    if(state.tiles.length===0) return true;
-    let top=null;
-    for(const t of state.tiles){ if(!top || t.y<top.y) top=t; }
+    if(state.tiles.length === 0) return true;
+    let top = null;
+    for (const t of state.tiles) {
+      if (!top || t.y < top.y) top = t;
+    }
     const h = top.el.offsetHeight || 130;
     return top.y > h + 20;
   }
 
+  // ВОЗВРАЩАЕМ ПРАВИЛЬНЫЙ СПАВН
   function spawnTile(){
-    if(wordQueue.length===0) wordQueue = [...currentWords].sort(()=>Math.random()-.5);
-    const raw = wordQueue.shift(); if(!raw) return;
+    if(wordQueue.length === 0) {
+      wordQueue = [...currentWords].sort(()=>Math.random()-.5);
+    }
+    const raw = wordQueue.shift(); 
+    
+    // Если слова кончились (или пусты) - выходим
+    if(!raw || !raw.word || !raw.pinyin) {
+       // Попробуем взять следующее из очереди, если есть
+       if (wordQueue.length > 0) {
+           spawnTile();
+       }
+       return;
+    }
+    
     const parsed = extractTones(raw.pinyin);
     const wordObj = {
       hanzi: raw.word,
@@ -711,6 +713,7 @@ window.BUILTIN_SETS = window.BUILTIN_SETS || [];
       pinyinToned: raw.pinyin,
       tones: parsed.tones
     };
+    
     const el = document.createElement("div");
     el.className="tile";
     const slotsHtml = wordObj.tones.map(()=>'<div class="slot"></div>').join("");
@@ -774,7 +777,13 @@ window.BUILTIN_SETS = window.BUILTIN_SETS || [];
       target.el.classList.add("wrong");
       showFeedback("✗","#ff4a4a");
       target.resolved = true;
-      wordQueue.push(target.word);
+      
+      // Возвращаем ОРИГИНАЛЬНЫЙ объект в очередь
+      wordQueue.push({
+        word: target.word.hanzi,
+        pinyin: target.word.pinyinToned
+      });
+      
       setTimeout(()=>{
         target.el.classList.add("fly-down");
         setTimeout(()=>removeTile(target),400);
@@ -787,6 +796,9 @@ window.BUILTIN_SETS = window.BUILTIN_SETS || [];
     if(tile.el.parentNode) tile.el.parentNode.removeChild(tile.el);
     const i = state.tiles.indexOf(tile);
     if(i!==-1) state.tiles.splice(i,1);
+    if(wordQueue.length > 0 && state.running) {
+      state.lastSpawn = 0; 
+    }
   }
 
   let feedbackTimer=null;
@@ -804,6 +816,11 @@ window.BUILTIN_SETS = window.BUILTIN_SETS || [];
     div.className="history-item";
     div.innerHTML=`<div class="hz">${word.hanzi}</div><div class="py">${word.pinyinToned}</div>`;
     historyList.insertBefore(div, historyList.firstChild);
+
+    state.wordsCollected++;
+    if (state.wordsCollected >= state.totalWordsInSet) {
+      setTimeout(() => winGame(), 1000);
+    }
   }
 
   function updateHud(){
@@ -818,8 +835,12 @@ window.BUILTIN_SETS = window.BUILTIN_SETS || [];
     const dt = Math.min((ts-state.lastTs)/1000, .1);
     state.lastTs = ts;
 
-    if(ts - state.lastSpawn > state.spawnInterval){
-      if(canSpawn()){ state.lastSpawn = ts; spawnTile(); }
+    const needSpawn = (ts - state.lastSpawn > state.spawnInterval) ||
+                      (wordQueue.length > 0 && state.tiles.length === 0);
+
+    if (needSpawn && canSpawn()) {
+      state.lastSpawn = ts;
+      spawnTile();
     }
 
     const fieldH = playfield.clientHeight;
@@ -839,7 +860,12 @@ window.BUILTIN_SETS = window.BUILTIN_SETS || [];
         if(state.maxLives < 900) state.lives--;
         updateHud();
         showFeedback("⌛","#f59e0b");
-        wordQueue.push(t.word);
+        
+        wordQueue.push({
+          word: t.word.hanzi,
+          pinyin: t.word.pinyinToned
+        });
+        
         t.el.classList.add("wrong");
         t.resolved = true;
         setTimeout(()=>removeTile(t),1000);
@@ -866,6 +892,8 @@ window.BUILTIN_SETS = window.BUILTIN_SETS || [];
     state.lastTs = 0;
     state.lastSpawn = 0;
     state.historyCount = 0;
+    state.wordsCollected = 0;
+    state.totalWordsInSet = words.length;
     wordQueue = [];
 
     historyList.innerHTML = "";
@@ -875,6 +903,7 @@ window.BUILTIN_SETS = window.BUILTIN_SETS || [];
     setScreen.classList.add("hidden");
     modeScreen.classList.add("hidden");
     gameoverOverlay.classList.add("hidden");
+    winOverlay.classList.add("hidden");
 
     state.running = true;
     state.rafId = requestAnimationFrame(loop);
@@ -888,7 +917,14 @@ window.BUILTIN_SETS = window.BUILTIN_SETS || [];
     gameoverText.innerHTML = "分数: <b>"+state.score+"</b><br>Попробуй ещё раз!";
   }
 
-  // ===== ВВОД =====
+  function winGame(){
+    state.running = false;
+    if(state.rafId) cancelAnimationFrame(state.rafId);
+    state.rafId = null;
+    winOverlay.classList.remove("hidden");
+    winText.innerHTML = "Вы собрали все слова!<br>Ваш счёт: <b>" + state.score + "</b>";
+  }
+
   document.addEventListener("keydown", e=>{
     if(state.running && e.key>="1" && e.key<="5" && !e.code.startsWith("Numpad")){
       onToneInput(parseInt(e.key,10));
@@ -899,7 +935,6 @@ window.BUILTIN_SETS = window.BUILTIN_SETS || [];
     if(btn && state.running) onToneInput(parseInt(btn.dataset.tone,10));
   });
 
-  // ===== КНОПКИ GAME OVER =====
   $("restartBtn").addEventListener("click", ()=>{
     if(selectedSet) startGameWithSet(selectedSet.words, MODES[selectedModeKey]);
   });
@@ -916,7 +951,15 @@ window.BUILTIN_SETS = window.BUILTIN_SETS || [];
     showSetScreen();
   });
 
-  // ===== СТАРТ =====
+  $("win-restart-btn").addEventListener("click", ()=>{
+    if(selectedSet) startGameWithSet(selectedSet.words, MODES[selectedModeKey]);
+  });
+  $("win-change-set-btn").addEventListener("click", ()=>{
+    winOverlay.classList.add("hidden");
+    selectedSet = null;
+    showSetScreen();
+  });
+
   renderSets();
 })();
 </script>
