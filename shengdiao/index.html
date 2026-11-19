@@ -415,7 +415,7 @@
 <!-- Аудио тег -->
 <audio id="bgm-audio" loop></audio>
 
-<script src="../../cards/custom_study_plans/sets.js"></script>
+<script src="../cards/custom_study_plans/sets.js"></script>
 <script>
 window.BUILTIN_SETS = window.BUILTIN_SETS || [];
 
@@ -427,7 +427,7 @@ window.BUILTIN_SETS = window.BUILTIN_SETS || [];
   const bgmToggleBtn = document.getElementById("bgm-toggle");
   const bgmVolumeSlider = document.getElementById("bgm-volume");
 
-  // Путь к вашему файлу (положите bgm.mp3 рядом с html)
+  // Путь к аудио файлу (положите bgm.mp3 рядом с index.html)
   bgmAudio.src = "bg_music.mp3"; 
 
   let savedVolume = parseFloat(localStorage.getItem("bgm_volume"));
